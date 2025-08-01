@@ -1,0 +1,107 @@
+# Workflow name displayed in GitHub Actions UI
+name: CI/CD Checks
+
+# Events that trigger this workflow
+on:
+  push:
+    branches:
+      - main # Run on pushes to the main branch
+  pull_request:
+    branches:
+      - main # Run on pull requests targeting the main branch
+  workflow_dispatch: # Allows you to run this workflow manually from the Actions tab
+
+# Define jobs to be executed
+jobs:
+  # Job for code quality checks (formatting, linting, type checking)
+  code-quality-checks:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4 # Action to check out your repository
+
+      # Step 2: Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4 # Action to set up Node.js
+        with:
+          node-version: '20' # Specify the Node.js version to use
+          cache: 'npm' # Cache npm dependencies for faster installs
+
+      # Step 3: Install project dependencies
+      - name: Install Dependencies
+        run: npm ci # 'npm ci' is recommended for CI/CD for clean installs
+
+      # Step 4: Run Prettier check (formatting)
+      # This assumes 'npm run format:check' is configured in package.json
+      - name: Run Prettier Check
+        run: npm run format:check
+
+      # Step 5: Run ESLint check (linting)
+      # This assumes 'npm run lint' is configured in package.json
+      - name: Run ESLint Check
+        run: npm run lint
+
+      # Step 6: Run TypeScript type check
+      # 'tsc --noEmit' checks types without emitting JavaScript files
+      - name: Run TypeScript Type Check
+        run: tsc --noEmit
+
+  # Job for running Cypress tests
+  cypress-tests:
+    name: Cypress Tests
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+    needs: code-quality-checks # This job will only run if 'code-quality-checks' job passes
+
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Step 3: Install project dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # Step 4: Build the application
+      # Cypress needs a built application to run against.
+      # This assumes 'npm run build' is configured package.json.
+      #- name: Build Application
+      #  run: npm run build
+
+      # Step 5: Start the application in the background
+      # Cypress needs the application server to be running.
+      # This assumes 'npm run start' is configured to serve built application.
+      # 'npm install -g wait-on' might be needed if not already in the project
+      # dependencies, or you can add 'npx wait-on' if you have it as a dev dependency.
+      #- name: Start Application
+      #  run: |
+      #    npm run start & # Run application in the background
+      #    npx wait-on http://localhost:3000 # Wait for the app to be accessible on this port
+      #  env:
+      #    PORT: 3000 # Ensure your app listens on this port, or adjust accordingly
+
+      # Step 6: Run Cypress tests
+      # Uses the official Cypress GitHub Action
+      - name: Run Cypress Tests
+        uses: cypress-io/github-action@v6 # Use the latest stable version of Cypress action
+        with:
+          # Specify the path to your Cypress tests if not default (cypress/)
+          # spec: cypress/e2e/**/*.cy.ts
+          # headless: true # Run Cypress in headless mode (default for CI)
+          # record: false # Set to true if you want to record tests to Cypress Cloud
+          # build: npm run build # This can also be used if your build is part of Cypress action
+          # start: npm run start # This can also be used if your start is part of Cypress action
+          # wait-on: 'http://localhost:3000' # This can also be used if your wait-on is part of Cypress action
+          spec: cypress/e2e/*.cy.ts
+          start: npm run dev
+          wait-on: 'http://localhost:5173'
+          wait-on-timeout: 120
