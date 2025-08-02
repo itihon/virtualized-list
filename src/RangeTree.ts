@@ -145,33 +145,14 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
     return leftClosestNode;
   }
 
-  updateRange(key:number, range:number) {
-    let node = this.at(key);
+  setNodeSize(key:number, size:number) {
+    const node = this.at(key);
 
     if (node) {
       if (node.data) {
-        node.data.range = range;
-      }
-
-      while (node) {
-        const parent: AVLNode<number, ItemRangeData> | null = node.parent;
-
-        if (parent) {
-          const parentLeftData = parent.left?.data;
-          const parentRightData = parent.right?.data;
-
-          if (parent.data) {
-            if (parentLeftData) {
-              parent.data.range = parentLeftData.range + parent.data.range;
-            }
-            
-            if (parentRightData) {
-              parent.data.range = parentRightData.range + parent.data.range;
-            }
-          }
-        }
-
-        node = parent;
+        node.data.size = size;
+        this._enqueNodeForUpdate(node);
+        this._updateRanges();
       }
     }
   }
