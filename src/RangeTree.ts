@@ -73,7 +73,6 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
         get: () => originalLeft,
         set (newNode: AVLNode<number, ItemRangeData>) {
           originalLeft = newNode; 
-          console.log('set left', 'this:', this, 'newNode:',  newNode);
           enqueNodeForUpdate(this);
         },
       },
@@ -82,7 +81,6 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
         get: () => originalRight,
         set (newNode: AVLNode<number, ItemRangeData>) {
           originalRight = newNode; 
-          console.log('set right', 'this:', this, 'newNode:',  newNode);
           enqueNodeForUpdate(this);
         },
       },
@@ -91,7 +89,6 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
         get: () => originalParent,
         set (newNode: AVLNode<number, ItemRangeData>) {
           originalParent = newNode; 
-          console.log('set parent', 'this:', this, 'newNode:',  newNode);
           enqueNodeForUpdate(this);
         },
       },
