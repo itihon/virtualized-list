@@ -18,21 +18,40 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
     }
   }
 
+  private _recalculateRange(node: AVLNode<number, ItemRangeData>) {
+    const nodeLeftData = node.left?.data;
+    const nodeRightData = node.right?.data;
+    const nodeData = node.data;
+
+    if (nodeData) {
+      nodeData.range = nodeData.size;
+
+      if (nodeLeftData) {
+        nodeData.range += nodeLeftData.range;
+      }
+      
+      if (nodeRightData) {
+        nodeData.range += nodeRightData.range;
+      }
+    }
+  }
+
   private _updateRanges() {
-    let node: AVLNode<number, ItemRangeData> | null = null;
+    let node: AVLNode<number, ItemRangeData> | null | undefined = null;
 
     for (node of this._leafNodesQueue) {
-      console.log('updateRange leafNode:', node);
+      this._recalculateRange(node);
     }
     
     for (node of this._nodesQueue) {
-      console.log('updateRange node:', node);
+      this._recalculateRange(node);
     }
 
     // propagate changes further to the root
-    while (node) {
-      node = node.parent;
-      console.log('updateRange further node:', node);
+    let parentNode = node?.parent;
+    while (parentNode) {
+      this._recalculateRange(parentNode);
+      parentNode = parentNode.parent;
     }
 
     this._leafNodesQueue.clear();
@@ -158,6 +177,7 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
   }
 
   insert(key: number, data: ItemRangeData): AVLNode<number, ItemRangeData> | null {
+    data.range = data.size;
     const node = this._modifyNode(super.insert(key, data));
     this._updateRanges();
     return node;
