@@ -1,5 +1,5 @@
 import { AVLTree, type AVLNode } from 'avl';
-import type { ItemRangeData } from './typings';
+import type { ItemData, ItemRangeData } from './typings';
 
 const isLeafNode = (node: AVLNode<number, ItemRangeData>): boolean =>
   !node.left && !node.right;
@@ -154,11 +154,15 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
     }
   }
 
-  insert(key: number, data: ItemRangeData): AVLNode<number, ItemRangeData> | null {
-    data.range = data.size;
-    const node = this._modifyNode(super.insert(key, data));
-    this._updateRanges();
-    return node;
+  insert(key: number, data?: ItemData): AVLNode<number, ItemRangeData> | null
+
+  override insert(key: number, data?: ItemRangeData): AVLNode<number, ItemRangeData> | null {
+    if (data) {
+      const node = this._modifyNode(super.insert(key, { ...data, range: data.size }));
+      this._updateRanges();
+      return node;
+    }
+    return null;
   }
 
   remove(key: number): number | null {
