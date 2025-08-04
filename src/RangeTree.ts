@@ -97,6 +97,34 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
     return node;
   }
 
+  private _linkNode(node: AVLNode<number, ItemRangeData> | null) {
+    if (node) {
+      const prevNodeData = this.prev(node)?.data;
+      const nextNodeData = this.next(node)?.data;
+      const nodeData = node.data;
+
+      if (nodeData) {
+        if (prevNodeData) {
+          prevNodeData.next = nodeData;
+        }
+        
+        if (nextNodeData) {
+          nodeData.next = nextNodeData;
+        }
+      }
+    }
+  }
+  
+  // private _unlinkNode(node: AVLNode<number, ItemRangeData> | null) {
+  //   if (node) {
+  //     const prevNodeData = this.prev(node)?.data;
+
+  //     if (prevNodeData) {
+  //       prevNodeData.next = node.data?.next;
+  //     }
+  //   }
+  // }
+
   findByOffset(offset:number) {
     const root = this.root;
     let subtree = root;
@@ -158,16 +186,18 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
 
   override insert(key: number, data?: ItemRangeData): AVLNode<number, ItemRangeData> | null {
     if (data) {
-      const node = this._modifyNode(super.insert(key, { ...data, range: data.size }));
+      const node = this._modifyNode(super.insert(key, { ...data, range: data.size, next: null }));
       this._updateRanges();
+      this._linkNode(node);
       return node;
     }
     return null;
   }
 
-  remove(key: number): number | null {
-    const result = super.remove(key);
-    this._updateRanges();
-    return result;
-  }
+  // remove(key: number): number | null {
+  //   const result = super.remove(key);
+  //   this._updateRanges();
+  //   this._unlinkNode();
+  //   return result;
+  // }
 }
