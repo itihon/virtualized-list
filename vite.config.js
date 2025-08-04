@@ -4,6 +4,9 @@ import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
   if (mode === 'development') {
     return {
+      server: {
+        host: '0.0.0.0',
+      },
       root: './cypress/e2e/',
       // dev specific config
     };
