@@ -8,6 +8,7 @@ export default class VirtualizedList extends HTMLElement {
 
   private _tree: RangeTree;
   private _observer: IntersectionObserver;
+  private _spaceFiller: HTMLElement;
   private _itemsContainer: HTMLElement;
   private _insertionPromises: Map<HTMLElement, { resolve: (index: number | null) => void, index: number }>;
   
@@ -21,6 +22,7 @@ export default class VirtualizedList extends HTMLElement {
       
       // remove the item from the list if it is not visible
       if (!entry.isIntersecting) {
+        this._spaceFiller.style.height = `${this._offsetHeight}px`;
         item.remove();
       }
 
@@ -39,14 +41,26 @@ export default class VirtualizedList extends HTMLElement {
     super();
 
     this._tree = new VirtualizedList.RangeTree();
+    this._spaceFiller = document.createElement('div');
     this._itemsContainer = document.createElement('div');
     this._insertionPromises = new Map();
     this._observer = new IntersectionObserver(
       this._loadInsertedItems, 
       { root: this },
     );
+  }
 
-    this.appendChild(this._itemsContainer);
+  connectedCallback() {
+    const stickyContainer = document.createElement('div');
+
+    stickyContainer.classList.add('sticky-container');
+    this._spaceFiller.classList.add('space-filler');
+    this._itemsContainer.classList.add('visible-items');
+
+    this._spaceFiller.appendChild(this._itemsContainer)
+    stickyContainer.appendChild(this._spaceFiller);
+    this.appendChild(stickyContainer);
+    this.addEventListener('scroll', this._scrollHandler);
   }
 
   insertItem(item: HTMLElement, index: number):Promise<number | null> {
