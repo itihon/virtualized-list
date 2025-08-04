@@ -1,4 +1,5 @@
 virtualized-list {
+  box-sizing: border-box;
   display: block;
   position: relative;
   overflow-y: auto;
