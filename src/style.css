@@ -1,0 +1,22 @@
+virtualized-list {
+  display: block;
+  position: relative;
+  overflow-y: auto;
+  width: 200px;
+  height: 300px;
+}
+
+virtualized-list .sticky-container {
+  position: sticky;
+  top: 0px;
+  height: 0;
+}
+
+/* virtualized-list .space-filler {
+  position: relative;
+} */
+
+virtualized-list .visible-items {
+  position: relative;
+}
+
