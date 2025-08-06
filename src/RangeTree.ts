@@ -132,6 +132,7 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
     let rightTraverseCount = 0;
     let previousOffset = 0;
     let leftClosestNode;
+    let leftClosestNodeOffset = 0;
 
     while (subtree) {
       let currentOffset = previousOffset;
@@ -145,13 +146,18 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
 
       if (currentOffset < offset) {
         leftClosestNode = subtree;
+        leftClosestNodeOffset = currentOffset;
       }
 
       if (!subtree.left && !subtree.right && rightTraverseCount === 0) {
         leftClosestNode = subtree;
+        leftClosestNodeOffset = currentOffset;
       }
       
       if (offset === currentOffset) {
+        if (subtree.data) {
+          subtree.data.currentOffset = currentOffset;
+        }
         return subtree;
       }
       else if (offset < currentOffset) {
@@ -167,6 +173,9 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
       previousOffset = currentOffset;
     }
 
+    if (leftClosestNode?.data) {
+      leftClosestNode.data.currentOffset = leftClosestNodeOffset;
+    }
     return leftClosestNode;
   }
 
@@ -186,7 +195,12 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
 
   override insert(key: number, data?: ItemRangeData): AVLNode<number, ItemRangeData> | null {
     if (data) {
-      const node = this._modifyNode(super.insert(key, { ...data, range: data.size, next: null }));
+      const node = this._modifyNode(
+        super.insert(
+          key, 
+          { ...data, range: data.size, next: null, currentOffset: 0 },
+        ),
+      );
       this._updateRanges();
       this._linkNode(node);
       return node;

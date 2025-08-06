@@ -10,4 +10,6 @@ export interface ItemRangeData extends ItemData {
   range:number;
   /** The data of the next item (singly linked list) */
   next:ItemRangeData | null | undefined;
+  /** Current calculated offset */
+  currentOffset:number;
 }
