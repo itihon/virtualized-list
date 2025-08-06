@@ -2,6 +2,8 @@ import RangeTree from './RangeTree';
 import './style.css';
 import type { ItemRangeData } from './typings';
 
+const reSpaces = /[\s]+/;
+
 export default class VirtualizedList extends HTMLElement {
   // dependency
   static RangeTree = RangeTree;
@@ -18,7 +20,12 @@ export default class VirtualizedList extends HTMLElement {
     const resolver = this._insertionPromises.get(item);
 
     if (resolver) {
-      this._tree.insert(resolver.index, { item, size: height });
+      // this._tree.insert(resolver.index, { item, size: height });
+      this._tree.insert(resolver.index, { 
+        item: item.outerHTML.replace(reSpaces, ' '), 
+        size: height,
+      });
+      this._offsetHeight += height;
       
       // remove the item from the list if it is not visible
       if (!entry.isIntersecting) {
@@ -30,6 +37,13 @@ export default class VirtualizedList extends HTMLElement {
       this._insertionPromises.delete(item);
     }
   };
+  
+  private _renderVisibleItems = () => {
+    const { scrollTop } = this;
+    const offsetY = scrollTop - (this._currentOffset - this._firstVisibleItemSize);
+    this._itemsContainer.style.transform = `translateY(-${offsetY}px)`;
+    this._itemsContainer.innerHTML = this._itemsToRender;
+  }
 
   private _loadInsertedItems: IntersectionObserverCallback = (entries) => {
     entries.forEach(this._handleEntry.bind(this));
