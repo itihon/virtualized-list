@@ -13,6 +13,11 @@ export default class VirtualizedList extends HTMLElement {
   private _spaceFiller: HTMLElement;
   private _itemsContainer: HTMLElement;
   private _insertionPromises: Map<HTMLElement, { resolve: (index: number | null) => void, index: number }>;
+  private _offsetHeight = 0;
+  private _rAF = 0;
+  private _itemsToRender = '';
+  private _currentOffset = 0;
+  private _firstVisibleItemSize = 0;
   
   private _handleEntry(entry: IntersectionObserverEntry) {
     const item = entry.target as HTMLElement;
@@ -49,6 +54,47 @@ export default class VirtualizedList extends HTMLElement {
     entries.forEach(this._handleEntry.bind(this));
     this._insertionPromises.forEach(({ resolve }) => resolve(null)); // resolve with null remained after _handleEntry promises whose item was not discovered by IntersectionObserver
     this._observer.disconnect();
+  }
+
+  private _scrollHandler() {
+    const { scrollTop } = this;
+    const data = this._tree.findByOffset(scrollTop)?.data;
+    // const followingItems: Array<HTMLElement> = [];
+    let followingItems = '';
+    const firstItem = data?.item;
+
+    // if (firstItem) followingItems.push(firstItem);
+    let itemsHeight = 0;
+    if (firstItem) {
+      followingItems += firstItem;
+      // itemsHeight += data.size;
+    }
+    const containerHeight = this.offsetHeight;
+    let nextData: ItemRangeData | null | undefined = data;
+    while (itemsHeight <= containerHeight && nextData) {
+      nextData = nextData?.next;
+      const nextItem = nextData?.item;
+      // if (nextItem) followingItems.push(nextItem);
+      if (nextItem) {
+        followingItems += nextItem;
+        itemsHeight += nextData?.size || 0;
+      }
+    }
+
+    // render one extra element
+    nextData = nextData?.next;
+    const nextItem = nextData?.item;
+    // if (nextItem) followingItems.push(nextItem);
+    if (nextItem) {
+      followingItems += nextItem;
+      itemsHeight += nextData?.size || 0;
+    }
+
+    cancelAnimationFrame(this._rAF);
+    this._itemsToRender = followingItems;
+    this._firstVisibleItemSize = data?.size || 0;
+    this._currentOffset = data?.currentOffset || 0;
+    this._rAF = requestAnimationFrame(this._renderVisibleItems);
   }
 
   constructor() {
