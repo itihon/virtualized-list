@@ -46,7 +46,7 @@ export default class VirtualizedList extends HTMLElement {
   private _insertionPromises: Map<HTMLElement, { resolve: (index: number | null) => void, index: number }>;
   private _offsetHeight = 0;
   private _rAFLoop: RequestAnimationFrameLoop;
-  private _itemsToRender: Queue<ItemsToRestore>;
+  private _intervalsToRender: Queue<number>;
   private _previousScrollTop = 0;
   
   private _handleEntry(entry: IntersectionObserverEntry) {
@@ -71,24 +71,25 @@ export default class VirtualizedList extends HTMLElement {
   
   private _renderVisibleItems = (ctx: RAFLoopCtx, loop: RequestAnimationFrameLoop) => {
     const { scrollTop } = this;
-    let items;
+    let interval;
 
     if (scrollTop === this._previousScrollTop) {
       ctx.stopDelay++;
       if (ctx.stopDelay > 15) {
         ctx.stopDelay = 0;
-        items = this._itemsToRender.last();
-        this._itemsToRender.clear();
+        interval = this._intervalsToRender.last();
+        this._intervalsToRender.clear();
       }
       else {
-        items = this._itemsToRender.dequeue();
+        interval = this._intervalsToRender.dequeue();
       }
     }
     else {
-      items = this._itemsToRender.dequeue();
+      interval = this._intervalsToRender.dequeue();
     }
 
-    if (items) {
+    if (interval) {
+      const items = this._getItemsByOffset(interval);
       const { 
         firstVisibleItemOffset, 
         firstVisibleItemsSize, 
@@ -154,10 +155,13 @@ export default class VirtualizedList extends HTMLElement {
 
     this._previousScrollTop = scrollTop;
 
-    intervals.forEach((interval) => {
-      // if (interval === this._previousScrollTop) return; // previous scrollTop
-      this._itemsToRender.enqueue(this._getItemsByOffset(interval));
-    });
+    const lastAddedInterval = this._intervalsToRender.last();
+
+    for (const interval of intervals) {
+      if (interval === lastAddedInterval) continue; // do not add repeated intervals to render
+      
+      this._intervalsToRender.enqueue(interval);
+    }
     this._rAFLoop.start();
   }
   
@@ -165,7 +169,7 @@ export default class VirtualizedList extends HTMLElement {
     super();
 
     this._tree = new VirtualizedList.RangeTree();
-    this._itemsToRender = new VirtualizedList.Queue<ItemsToRestore>();
+    this._intervalsToRender = new VirtualizedList.Queue<number>();
     this._rAFLoop = new VirtualizedList.RequestAnimationFrameLoop({ stopDelay: 0 });
     this._rAFLoop.each(this._renderVisibleItems);
     this._spaceFiller = document.createElement('div');
