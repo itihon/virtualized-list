@@ -67,7 +67,7 @@ export default class VirtualizedList extends HTMLElement {
 
     if (scrollTop === this._previousScrollTop) {
       ctx.stopDelay++;
-      if (ctx.stopDelay > 20) {
+      if (ctx.stopDelay > 15) {
         ctx.stopDelay = 0;
         items = this._itemsToRender.last();
         this._itemsToRender.clear();
@@ -141,7 +141,7 @@ export default class VirtualizedList extends HTMLElement {
   private _scrollHandler() {
     const { scrollTop } = this;
     const scrollDelta = Math.abs(scrollTop - this._previousScrollTop);
-    const scrollStep = scrollDelta / 64;
+    const scrollStep = scrollDelta / this.offsetHeight * 10;
     const intervals = splitInterval(this._previousScrollTop, scrollTop, scrollStep);
 
     this._previousScrollTop = scrollTop;
