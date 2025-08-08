@@ -1,6 +1,7 @@
 import RangeTree from './RangeTree';
 import './style.css';
-import type { ItemRangeData } from './typings';
+import type { ItemRangeData, ItemsToRestore } from './typings';
+import RequestAnimationFrameLoop from 'request-animation-frame-loop';
 
 const reSpaces = /[\s]+/;
 
@@ -65,8 +66,9 @@ function splitInterval(interval_1: number, interval_2: number, count: number): n
 }
 
 export default class VirtualizedList extends HTMLElement {
-  // dependency
+  // dependencies
   static RangeTree = RangeTree;
+  static RequestAnimationFrameLoop = RequestAnimationFrameLoop;
 
   private _tree: RangeTree;
   private _observer: IntersectionObserver;
@@ -74,10 +76,9 @@ export default class VirtualizedList extends HTMLElement {
   private _itemsContainer: HTMLElement;
   private _insertionPromises: Map<HTMLElement, { resolve: (index: number | null) => void, index: number }>;
   private _offsetHeight = 0;
-  private _rAF = 0;
-  private _itemsToRender = '';
-  private _currentOffset = 0;
-  private _firstVisibleItemSize = 0;
+  private _rAFLoop: RequestAnimationFrameLoop;
+  private _itemsToRender: Queue<ItemsToRestore>;
+  private _previousScrollTop = 0;
   
   private _handleEntry(entry: IntersectionObserverEntry) {
     const item = entry.target as HTMLElement;
@@ -103,11 +104,39 @@ export default class VirtualizedList extends HTMLElement {
     }
   };
   
-  private _renderVisibleItems = () => {
+  private _renderVisibleItems = (ctx: RAFLoopCtx, loop: RequestAnimationFrameLoop) => {
     const { scrollTop } = this;
-    const offsetY = scrollTop - (this._currentOffset - this._firstVisibleItemSize);
-    this._itemsContainer.style.transform = `translateY(-${offsetY}px)`;
-    this._itemsContainer.innerHTML = this._itemsToRender;
+    let items;
+
+    if (scrollTop === this._previousScrollTop) {
+      ctx.stopDelay++;
+      if (ctx.stopDelay > 20) {
+        ctx.stopDelay = 0;
+        items = this._itemsToRender.last();
+        this._itemsToRender.clear();
+      }
+      else {
+        items = this._itemsToRender.dequeue();
+      }
+    }
+    else {
+      items = this._itemsToRender.dequeue();
+    }
+
+    if (items) {
+      const { 
+        firstVisibleItemOffset, 
+        firstVisibleItemsSize, 
+        itemsHTML,
+        offset,
+      } = items;
+      const offsetY = offset - (firstVisibleItemOffset - firstVisibleItemsSize);
+      this._itemsContainer.style.transform = `translateY(-${offsetY}px)`;
+      this._itemsContainer.innerHTML = itemsHTML;
+    }
+    else {
+      loop.stop();
+    }
   }
 
   private _loadInsertedItems: IntersectionObserverCallback = (entries) => {
@@ -157,10 +186,28 @@ export default class VirtualizedList extends HTMLElement {
     this._rAF = requestAnimationFrame(this._renderVisibleItems);
   }
 
+  private _scrollHandler() {
+    const { scrollTop } = this;
+    const scrollDelta = Math.abs(scrollTop - this._previousScrollTop);
+    const scrollStep = scrollDelta / 64;
+    const intervals = splitInterval(this._previousScrollTop, scrollTop, scrollStep);
+
+    this._previousScrollTop = scrollTop;
+
+    intervals.forEach((interval) => {
+      // if (interval === this._previousScrollTop) return; // previous scrollTop
+      this._itemsToRender.enqueue(this._getItemsByOffset(interval));
+    });
+    this._rAFLoop.start();
+  }
+  
   constructor() {
     super();
 
     this._tree = new VirtualizedList.RangeTree();
+    this._itemsToRender = new Queue<ItemsToRestore>();
+    this._rAFLoop = new VirtualizedList.RequestAnimationFrameLoop({ stopDelay: 0 });
+    this._rAFLoop.each(this._renderVisibleItems);
     this._spaceFiller = document.createElement('div');
     this._itemsContainer = document.createElement('div');
     this._insertionPromises = new Map();

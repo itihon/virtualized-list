@@ -69,6 +69,7 @@
     "vite": "^7.0.0"
   },
   "dependencies": {
-    "avl": "^2.0.0"
+    "avl": "^2.0.0",
+    "request-animation-frame-loop": "^1.0.2"
   }
 }
