@@ -69,6 +69,7 @@ export default class VirtualizedList extends HTMLElement {
   // dependencies
   static RangeTree = RangeTree;
   static RequestAnimationFrameLoop = RequestAnimationFrameLoop;
+  static Queue = Queue;
 
   private _tree: RangeTree;
   private _observer: IntersectionObserver;
@@ -205,7 +206,7 @@ export default class VirtualizedList extends HTMLElement {
     super();
 
     this._tree = new VirtualizedList.RangeTree();
-    this._itemsToRender = new Queue<ItemsToRestore>();
+    this._itemsToRender = new VirtualizedList.Queue<ItemsToRestore>();
     this._rAFLoop = new VirtualizedList.RequestAnimationFrameLoop({ stopDelay: 0 });
     this._rAFLoop.each(this._renderVisibleItems);
     this._spaceFiller = document.createElement('div');
