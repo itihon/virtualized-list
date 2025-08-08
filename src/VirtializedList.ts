@@ -146,27 +146,22 @@ export default class VirtualizedList extends HTMLElement {
     this._observer.disconnect();
   }
 
-  private _scrollHandler() {
-    const { scrollTop } = this;
-    const data = this._tree.findByOffset(scrollTop)?.data;
-    // const followingItems: Array<HTMLElement> = [];
-    let followingItems = '';
+  private _getItemsByOffset(offset: number): ItemsToRestore {
+    const data = this._tree.findByOffset(offset)?.data;
+    let itemsHTML = '';
     const firstItem = data?.item;
 
-    // if (firstItem) followingItems.push(firstItem);
     let itemsHeight = 0;
     if (firstItem) {
-      followingItems += firstItem;
-      // itemsHeight += data.size;
+      itemsHTML += firstItem;
     }
     const containerHeight = this.offsetHeight;
     let nextData: ItemRangeData | null | undefined = data;
     while (itemsHeight <= containerHeight && nextData) {
       nextData = nextData?.next;
       const nextItem = nextData?.item;
-      // if (nextItem) followingItems.push(nextItem);
       if (nextItem) {
-        followingItems += nextItem;
+        itemsHTML += nextItem;
         itemsHeight += nextData?.size || 0;
       }
     }
@@ -174,17 +169,17 @@ export default class VirtualizedList extends HTMLElement {
     // render one extra element
     nextData = nextData?.next;
     const nextItem = nextData?.item;
-    // if (nextItem) followingItems.push(nextItem);
     if (nextItem) {
-      followingItems += nextItem;
+      itemsHTML += nextItem;
       itemsHeight += nextData?.size || 0;
     }
-
-    cancelAnimationFrame(this._rAF);
-    this._itemsToRender = followingItems;
-    this._firstVisibleItemSize = data?.size || 0;
-    this._currentOffset = data?.currentOffset || 0;
-    this._rAF = requestAnimationFrame(this._renderVisibleItems);
+   
+    return { 
+      itemsHTML, 
+      firstVisibleItemsSize: data?.size || 0,
+      firstVisibleItemOffset: data?.currentOffset || 0,
+      offset,
+    };
   }
 
   private _scrollHandler() {

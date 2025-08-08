@@ -5,6 +5,13 @@ export interface ItemData {
   item: HTMLElement;
 }
 
+export interface ItemsToRestore {
+  itemsHTML: string; 
+  firstVisibleItemsSize: number;
+  firstVisibleItemOffset: number;
+  offset: number;
+}
+
 export interface ItemRangeData extends ItemData {
   /** Sum of the item's size and all of its children's sizes */
   range:number;
