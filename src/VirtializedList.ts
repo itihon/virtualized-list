@@ -206,7 +206,9 @@ export default class VirtualizedList extends HTMLElement {
   }
 
   getItem(index: number): HTMLElement | undefined {
-    return this._tree.at(index)?.data?.item;
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = this._tree.at(index)?.data?.item || '';
+    return tempContainer.firstChild as HTMLElement;
   }
 
   getAllItems(): Array<ItemRangeData> {

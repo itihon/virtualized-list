@@ -2,7 +2,7 @@ export interface ItemData {
   /** Item's size */
   size: number;
   /** First item in the range */
-  item: HTMLElement;
+  item: string;
 }
 
 export interface ItemsToRestore {
