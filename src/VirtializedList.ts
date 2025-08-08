@@ -25,6 +25,14 @@ function splitInterval(interval_1: number, interval_2: number, count: number): n
   return result;
 }
 
+function debounce(fn: () => void, delay: number): typeof fn {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    setTimeout(fn, delay, ...args);
+  };
+}
+
 export default class VirtualizedList extends HTMLElement {
   // dependencies
   static RangeTree = RangeTree;
@@ -179,7 +187,7 @@ export default class VirtualizedList extends HTMLElement {
     this._spaceFiller.appendChild(this._itemsContainer)
     stickyContainer.appendChild(this._spaceFiller);
     this.appendChild(stickyContainer);
-    this.addEventListener('scroll', this._scrollHandler);
+    this.addEventListener('scroll', debounce(this._scrollHandler.bind(this), 32));
   }
 
   insertItem(item: HTMLElement, index: number = this._tree.size):Promise<number | null> {
