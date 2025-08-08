@@ -47,11 +47,7 @@ export default class VirtualizedList extends HTMLElement {
     const resolver = this._insertionPromises.get(item);
 
     if (resolver) {
-      // this._tree.insert(resolver.index, { item, size: height });
-      this._tree.insert(resolver.index, { 
-        item: item.outerHTML.replace(reSpaces, ' '), 
-        size: height,
-      });
+      this._tree.setNodeSize(resolver.index, height);
       this._offsetHeight += height;
       
       // remove the item from the list if it is not visible
@@ -186,9 +182,13 @@ export default class VirtualizedList extends HTMLElement {
     this.addEventListener('scroll', this._scrollHandler);
   }
 
-  insertItem(item: HTMLElement, index: number):Promise<number | null> {
+  insertItem(item: HTMLElement, index: number = this._tree.size):Promise<number | null> {
     this._itemsContainer.appendChild(item);
     this._observer.observe(item);
+    this._tree.insert(index, { 
+      item: item.outerHTML.replace(reSpaces, ' '), 
+      size: 0,
+    });
 
     return new Promise(resolve => {
       this._insertionPromises.set(item, { resolve, index });
