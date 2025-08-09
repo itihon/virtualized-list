@@ -25,11 +25,18 @@ function splitInterval(interval_1: number, interval_2: number, count: number): n
   return result;
 }
 
-function debounce(fn: () => void, delay: number): typeof fn {
-  let timeout;
+function debounce(fn: (...args: unknown[]) => void, delay: number): typeof fn {
+  let timeout:NodeJS.Timeout | undefined;
+
+  const delayedFn = (...args: unknown[]) => {
+    timeout = undefined; 
+    fn(...args);
+  };
+
   return (...args) => {
+    if (!timeout) fn(...args);
     clearTimeout(timeout);
-    setTimeout(fn, delay, ...args);
+    timeout = setTimeout(delayedFn, delay, ...args);
   };
 }
 
@@ -191,7 +198,7 @@ export default class VirtualizedList extends HTMLElement {
     this._spaceFiller.appendChild(this._itemsContainer)
     stickyContainer.appendChild(this._spaceFiller);
     this.appendChild(stickyContainer);
-    this.addEventListener('scroll', debounce(this._scrollHandler.bind(this), 32));
+    this.addEventListener('scroll', debounce(this._scrollHandler.bind(this), 16));
   }
 
   insertItem(item: HTMLElement, index: number = this._tree.size):Promise<number | null> {
