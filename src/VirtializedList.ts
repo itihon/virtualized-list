@@ -12,6 +12,7 @@ type RAFLoopCtx = {
 
 function splitInterval(interval_1: number, interval_2: number, count: number): number[] {
   const result: number[] = [];
+  count = Math.floor(count);
 
   if (count <= 0) return [interval_1]; // Nothing to split
   if (interval_1 === interval_2) return [interval_1]; // Nothing to split
@@ -95,7 +96,7 @@ export default class VirtualizedList extends HTMLElement {
       interval = this._intervalsToRender.dequeue();
     }
 
-    if (interval) {
+    if (interval !== undefined) {
       const items = this._getItemsByOffset(interval);
       const { 
         firstVisibleItemOffset, 
