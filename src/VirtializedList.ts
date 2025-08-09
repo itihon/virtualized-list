@@ -157,7 +157,7 @@ export default class VirtualizedList extends HTMLElement {
   private _scrollHandler() {
     const { scrollTop } = this;
     const scrollDelta = Math.abs(scrollTop - this._previousScrollTop);
-    const scrollStep = scrollDelta / this.offsetHeight * 10;
+    const scrollStep = Math.max(scrollDelta / this.offsetHeight * 8, 3);
     const intervals = splitInterval(this._previousScrollTop, scrollTop, scrollStep);
 
     this._previousScrollTop = scrollTop;
