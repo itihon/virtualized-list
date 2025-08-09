@@ -6,6 +6,8 @@ import Queue from './Queue';
 
 const reSpaces = /[\s]+/;
 
+const INERTIA = 15;
+
 type RAFLoopCtx = {
   stopDelay: number;
 }
@@ -83,7 +85,7 @@ export default class VirtualizedList extends HTMLElement {
 
     if (scrollTop === this._previousScrollTop) {
       ctx.stopDelay++;
-      if (ctx.stopDelay > 15) {
+      if (ctx.stopDelay > INERTIA) {
         ctx.stopDelay = 0;
         interval = this._intervalsToRender.last();
         this._intervalsToRender.clear();
@@ -158,7 +160,7 @@ export default class VirtualizedList extends HTMLElement {
   private _scrollHandler() {
     const { scrollTop } = this;
     const scrollDelta = Math.abs(scrollTop - this._previousScrollTop);
-    const scrollStep = Math.max(scrollDelta / this.offsetHeight * 8, 3);
+    const scrollStep = Math.max(Math.min(scrollDelta / this.offsetHeight * 8, INERTIA), 3);
     const intervals = splitInterval(this._previousScrollTop, scrollTop, scrollStep);
 
     this._previousScrollTop = scrollTop;
