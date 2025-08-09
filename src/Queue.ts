@@ -28,6 +28,10 @@ export default class Queue<T> {
       return node.value;
     }
   }
+  
+  first():T | undefined {
+    return this._head?.value;
+  }
 
   last():T | undefined {
     return this._tail?.value;
