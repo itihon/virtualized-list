@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite';
-import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 
 export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
   if (mode === 'DEMO_DEV') {
@@ -10,20 +9,18 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
       },
       root: './demo/src/',
     };
-  } else if (mode === 'DEMO_BUILD') {
+  } else if (command === 'build' && mode === 'DEMO_BUILD') {
     return {
       // build specific config
       build: {
-        copyPublicDir: false,
-        lib: {
-          formats: ['es'],
-          entry: './demo/src/index.ts',
-          fileName: 'index',
+        rollupOptions: {
+          input: {
+            main: './demo/src/index.html',
+          },
         },
         outDir: './demo/dist/',
         emptyOutDir: true,
       },
-      plugins: [cssInjectedByJsPlugin()],
     };
   }
 });

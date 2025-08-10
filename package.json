@@ -37,7 +37,7 @@
     "build": "npm run build:bundle && npm run build:types",
     "build:types": "tsc --emitDeclarationOnly",
     "build:bundle": "vite build",
-    "build:demo": "vite -c vite.demo.config.js -m DEMO_BUILD",
+    "build:demo": "vite build -c vite.demo.config.js -m DEMO_BUILD",
     "dev:demo": "vite -c vite.demo.config.js -m DEMO_DEV",
     "preview": "vite preview",
     "format:check": "prettier {src,test}/**/*.{js,ts,css} --check --no-error-on-unmatched-pattern",
