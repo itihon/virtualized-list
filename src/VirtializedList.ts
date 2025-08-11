@@ -180,6 +180,15 @@ export default class VirtualizedList extends HTMLElement {
     const scrollStep = Math.max(Math.min(scrollDelta / this.offsetHeight * SCROLL_MULTIPLIER, INERTIA), MIN_SCROLL_STEP);
     const intervals = splitInterval(previousInterval, scrollTop, scrollStep);
 
+    if (Math.abs(previousInterval - scrollTop) < this.offsetHeight) {
+      // console.log('render one by one');
+      // this._itemsContainer.style.backgroundColor = 'darkred';
+    }
+    else {
+      // console.log('render by offset');
+      // this._itemsContainer.style.backgroundColor = 'royalblue';
+    }
+
     this._previousScrollTop = scrollTop;
     this._intervalsToRender.clear();
 
