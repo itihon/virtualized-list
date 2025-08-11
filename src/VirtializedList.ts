@@ -140,14 +140,14 @@ export default class VirtualizedList extends HTMLElement {
   }
 
   private _scrollHandler() {
-    const { scrollTop } = this;
-    const firstInterval = this._intervalsToRender.first();
+    const { scrollTop, offsetHeight, _intervalsToRender } = this;
+    const firstInterval = _intervalsToRender.first();
     const previousInterval = (firstInterval || this._previousScrollTop);
     const scrollDelta = Math.abs(scrollTop - previousInterval);
-    const scrollStep = Math.max(Math.min(scrollDelta / this.offsetHeight * SCROLL_MULTIPLIER, INERTIA), MIN_SCROLL_STEP);
+    const scrollStep = Math.max(Math.min(scrollDelta / offsetHeight * SCROLL_MULTIPLIER, INERTIA), MIN_SCROLL_STEP);
     const intervals = splitInterval(previousInterval, scrollTop, scrollStep);
 
-    if (Math.abs(previousInterval - scrollTop) < this.offsetHeight) {
+    if (Math.abs(previousInterval - scrollTop) < offsetHeight) {
       // console.log('render one by one');
       // this._itemsContainer.style.backgroundColor = 'darkred';
     }
@@ -157,10 +157,10 @@ export default class VirtualizedList extends HTMLElement {
     }
 
     this._previousScrollTop = scrollTop;
-    this._intervalsToRender.clear();
+    _intervalsToRender.clear();
 
     for (const interval of intervals) {
-      this._intervalsToRender.enqueue(interval);
+      _intervalsToRender.enqueue(interval);
     }
 
     this._rAFLoop.start();
