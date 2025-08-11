@@ -31,7 +31,7 @@ html {
  div[class*='language-'] {
    border-left: 2rem solid rgb(0 31 49);
 /*    margin: 2.25rem 0; */
-   overflow: auto;
+/*    overflow: auto; */
 /*    padding: 2rem; */
   padding-left: 2rem;
  }
