@@ -95,3 +95,10 @@ TODO
 ## Acknowledgments
 
 TODO
+
+
+- [ ] Treat changing scroll direction the same as scroll stop. Get the last data, and clear the queue.
+
+- [ ] VirtualizedList().length does not update since the insertItem() method is acynchronous
+
+- [ ] Selection of invisible lines
