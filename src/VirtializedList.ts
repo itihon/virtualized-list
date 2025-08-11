@@ -96,45 +96,32 @@ export default class VirtualizedList extends HTMLElement {
 
   private _getItemsByOffset(offset: number): ItemsToRestore {
     const data = this._tree.findByOffset(offset)?.data;
-    let itemsHTML = '';
-    const firstItem = data?.item;
-
-    let itemsHeight = 0;
-    if (firstItem) {
-      itemsHTML += firstItem;
-    }
     const containerHeight = this.offsetHeight;
+    const firstItem = data!.item;
+    const itemsToRestore = this._itemsToRestore;
+
     let nextData: ItemRangeData | null | undefined = data;
-    while (itemsHeight <= containerHeight && nextData) {
-      nextData = nextData?.next;
-      const nextItem = nextData?.item;
-      if (nextItem) {
+    let itemsHTML = '';
+    let itemsHeight = 0;
+
+    itemsHTML += firstItem;
+
+    while (nextData && itemsHeight <= containerHeight + nextData.size) {
+      nextData = nextData.next;
+
+      if (nextData) {
+        const nextItem = nextData.item;
+
         itemsHTML += nextItem;
-        itemsHeight += nextData?.size || 0;
+        itemsHeight += nextData.size || 0;
       }
     }
 
-    // render one extra element
-    nextData = nextData?.next;
-    const nextItem = nextData?.item;
-    if (nextItem) {
-      itemsHTML += nextItem;
-      itemsHeight += nextData?.size || 0;
-    }
-
-    const itemsToRestore = this._itemsToRestore;
-
+    // keep one object between calls and mutate it to avoid creating each time new one in order to save some execution time
     itemsToRestore.itemsHTML = itemsHTML;
     itemsToRestore.firstVisibleItemsSize = data?.size || 0;
     itemsToRestore.firstVisibleItemOffset = data?.currentOffset || 0;
     itemsToRestore.offset = offset;
-   
-    // return { 
-    //   itemsHTML, 
-    //   firstVisibleItemsSize: data?.size || 0,
-    //   firstVisibleItemOffset: data?.currentOffset || 0,
-    //   offset,
-    // };
 
     return itemsToRestore;
   }
