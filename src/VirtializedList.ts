@@ -14,17 +14,20 @@ type RAFLoopCtx = {
   stopDelay: number;
 }
 
-function splitInterval(interval_1: number, interval_2: number, count: number): number[] {
-  const result: number[] = [];
+const intervals:Set<number> = new Set();
+
+function splitInterval(interval_1: number, interval_2: number, count: number): Set<number> {
+  const result = intervals;
+  result.clear();
   count = Math.floor(count);
 
-  if (count <= 0) return [interval_1]; // Nothing to split
-  if (interval_1 === interval_2) return [interval_1]; // Nothing to split
+  if (count <= 0) return result.add(interval_1); // Nothing to split
+  if (interval_1 === interval_2) return result.add(interval_1); // Nothing to split
 
   const step = (interval_2 - interval_1) / count;
 
   for (let i = 0; i <= count; i++) {
-    result.push(interval_1 + i * step);
+    result.add(interval_1 + i * step);
   }
 
   return result;
@@ -60,6 +63,7 @@ export default class VirtualizedList extends HTMLElement {
   private _rAFLoop: RequestAnimationFrameLoop;
   private _intervalsToRender: Queue<number>;
   private _previousScrollTop = 0;
+  private _itemsToRestore: ItemsToRestore;
   
   private _handleEntry(entry: IntersectionObserverEntry) {
     const item = entry.target as HTMLElement;
@@ -150,13 +154,22 @@ export default class VirtualizedList extends HTMLElement {
       itemsHTML += nextItem;
       itemsHeight += nextData?.size || 0;
     }
+
+    const itemsToRestore = this._itemsToRestore;
+
+    itemsToRestore.itemsHTML = itemsHTML;
+    itemsToRestore.firstVisibleItemsSize = data?.size || 0;
+    itemsToRestore.firstVisibleItemOffset = data?.currentOffset || 0;
+    itemsToRestore.offset = offset;
    
-    return { 
-      itemsHTML, 
-      firstVisibleItemsSize: data?.size || 0,
-      firstVisibleItemOffset: data?.currentOffset || 0,
-      offset,
-    };
+    // return { 
+    //   itemsHTML, 
+    //   firstVisibleItemsSize: data?.size || 0,
+    //   firstVisibleItemOffset: data?.currentOffset || 0,
+    //   offset,
+    // };
+
+    return itemsToRestore;
   }
 
   private _scrollHandler() {
@@ -191,6 +204,12 @@ export default class VirtualizedList extends HTMLElement {
       this._loadInsertedItems, 
       { root: this },
     );
+    this._itemsToRestore = {
+      itemsHTML: '',
+      offset: 0,
+      firstVisibleItemOffset: 0,
+      firstVisibleItemsSize: 0,
+    };
   }
 
   connectedCallback() {
