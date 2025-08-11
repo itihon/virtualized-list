@@ -36,15 +36,9 @@ function splitInterval(interval_1: number, interval_2: number, count: number): S
 function debounce(fn: (...args: unknown[]) => void, delay: number): typeof fn {
   let timeout:NodeJS.Timeout | undefined;
 
-  const delayedFn = (...args: unknown[]) => {
-    timeout = undefined; 
-    fn(...args);
-  };
-
   return (...args) => {
-    if (!timeout) fn(...args);
     clearTimeout(timeout);
-    timeout = setTimeout(delayedFn, delay, ...args);
+    timeout = setTimeout(fn, delay, ...args);
   };
 }
 
