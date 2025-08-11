@@ -19,4 +19,5 @@ virtualized-list .sticky-container {
 
 virtualized-list .visible-items {
   position: relative;
+  transition: transform .01s;
 }
