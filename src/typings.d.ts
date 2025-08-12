@@ -9,7 +9,9 @@ export interface ItemsToRestore {
   itemsHTML: string; 
   firstVisibleItemsSize: number;
   firstVisibleItemOffset: number;
+  secondVisibleItemOffset: number;
   offset: number;
+  changed: boolean;
 }
 
 export interface ItemRangeData extends ItemData {

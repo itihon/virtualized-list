@@ -94,11 +94,23 @@ export default class VirtualizedList extends HTMLElement {
     this._observer.disconnect();
   }
 
-  private _getItemsByOffset(offset: number): ItemsToRestore {
-    const data = this._tree.findByOffset(offset)?.data;
-    const containerHeight = this.offsetHeight;
-    const firstItem = data!.item;
+  private _getItemsByOffset(offset: number, containerHeight = this.offsetHeight): ItemsToRestore {
     const itemsToRestore = this._itemsToRestore;
+
+    // previously returned item falls in the current range, needless to find it and all subsequent items again
+    if (
+      itemsToRestore.firstVisibleItemOffset < offset && 
+      offset < itemsToRestore.secondVisibleItemOffset
+    ) {
+      itemsToRestore.changed = false;
+      return itemsToRestore;
+    }
+
+    const data = this._tree.findByOffset(offset)?.data;
+    const firstVisibleItemsSize = data?.size || 0;
+    const firstVisibleItemOffset = data?.currentOffset || 0;
+    const secondVisibleItemOffset = firstVisibleItemOffset + (data?.next?.size || 0);
+    const firstItem = data!.item;
 
     let nextData: ItemRangeData | null | undefined = data;
     let itemsHTML = '';
@@ -119,9 +131,11 @@ export default class VirtualizedList extends HTMLElement {
 
     // keep one object between calls and mutate it to avoid creating each time new one in order to save some execution time
     itemsToRestore.itemsHTML = itemsHTML;
-    itemsToRestore.firstVisibleItemsSize = data?.size || 0;
-    itemsToRestore.firstVisibleItemOffset = data?.currentOffset || 0;
+    itemsToRestore.firstVisibleItemsSize = firstVisibleItemsSize;
+    itemsToRestore.firstVisibleItemOffset = firstVisibleItemOffset;
+    itemsToRestore.secondVisibleItemOffset = secondVisibleItemOffset;
     itemsToRestore.offset = offset;
+    itemsToRestore.changed = true;
 
     return itemsToRestore;
   }
@@ -172,6 +186,8 @@ export default class VirtualizedList extends HTMLElement {
       offset: 0,
       firstVisibleItemOffset: 0,
       firstVisibleItemsSize: 0,
+      secondVisibleItemOffset: 0,
+      changed: false,
     };
   }
 
