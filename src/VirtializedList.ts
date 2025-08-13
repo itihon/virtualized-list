@@ -54,6 +54,7 @@ export default class VirtualizedList extends HTMLElement {
   
   private _renderVisibleItems = (ctx: RAFLoopCtx, loop: RequestAnimationFrameLoop) => {
     const { scrollTop } = this;
+    const previousInterval = this._previousScrollTop;
     let interval;
 
     if (scrollTop === this._previousScrollTop) {
@@ -82,6 +83,8 @@ export default class VirtualizedList extends HTMLElement {
       const offsetY = offset - (firstVisibleItemOffset - firstVisibleItemsSize);
       this._itemsContainer.style.transform = `translateY(-${offsetY}px)`;
       this._itemsContainer.innerHTML = itemsHTML;
+
+      this._previousScrollTop = interval;
     }
     else {
       loop.stop();
@@ -148,7 +151,6 @@ export default class VirtualizedList extends HTMLElement {
     const scrollStep = Math.max(Math.min(scrollDelta / offsetHeight * SCROLL_MULTIPLIER, INERTIA), MIN_SCROLL_STEP);
     const intervals = splitInterval(previousInterval, scrollTop, scrollStep);
 
-    this._previousScrollTop = scrollTop;
     _intervalsToRender.clear();
 
     for (const interval of intervals) {
