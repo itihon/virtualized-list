@@ -92,7 +92,9 @@ export default class VirtualizedList extends HTMLElement {
   }
 
   private _loadInsertedItems: IntersectionObserverCallback = (entries) => {
-    entries.forEach(this._handleEntry.bind(this));
+    for (const entry of entries) {
+      this._handleEntry(entry);
+    }
     this._insertionPromises.forEach(({ resolve }) => resolve(null)); // resolve with null remained after _handleEntry promises whose item was not discovered by IntersectionObserver
     this._observer.disconnect();
   }
