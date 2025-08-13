@@ -21,6 +21,10 @@ export default class VirtualizedList extends HTMLElement {
   static RequestAnimationFrameLoop = RequestAnimationFrameLoop;
   static Queue = Queue;
 
+  private static readonly _SCROLL_DIRECTION_UP = Symbol('up');
+  private static readonly _SCROLL_DIRECTION_DOWN = Symbol('down');
+
+  private _scrolling: symbol | null = null;
   private _tree: RangeTree;
   private _observer: IntersectionObserver;
   private _spaceFiller: HTMLElement;
@@ -31,6 +35,32 @@ export default class VirtualizedList extends HTMLElement {
   private _intervalsToRender: Queue<number>;
   private _previousScrollTop = 0;
   private _itemsToRestore: ItemsToRestore;
+
+  private _setScrollingState(interval: number | undefined, previousInterval: number) {
+    if (interval !== undefined) {
+      if (interval > previousInterval) { 
+        this._scrolling = VirtualizedList._SCROLL_DIRECTION_DOWN;
+      }
+      else if (interval < previousInterval) {
+        this._scrolling = VirtualizedList._SCROLL_DIRECTION_UP;
+      }
+    }
+    else {
+      this._scrolling = null;
+    }
+  }
+
+  private _isScrolling(): boolean {
+    return this._scrolling !== null;
+  }
+
+  private _isScrollingDown(): boolean {
+    return this._scrolling === VirtualizedList._SCROLL_DIRECTION_DOWN;
+  }
+  
+  private _isScrollingUp(): boolean {
+    return this._scrolling === VirtualizedList._SCROLL_DIRECTION_UP;
+  }
   
   private _handleEntry(entry: IntersectionObserverEntry) {
     const item = entry.target as HTMLElement;
@@ -71,6 +101,8 @@ export default class VirtualizedList extends HTMLElement {
     else {
       interval = this._intervalsToRender.dequeue();
     }
+
+    this._setScrollingState(interval, previousInterval);
 
     if (interval !== undefined) {
       const items = this._getItemsByOffset(interval);
