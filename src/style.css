@@ -19,5 +19,15 @@ virtualized-list .sticky-container {
 
 virtualized-list .visible-items {
   position: relative;
-  transition: transform .01s;
+/*   transition: transform .01s; */
+}
+
+.visible-items > * {
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  height: 45px;
+  border: 1px solid lightslategray;
+  color: whitesmoke;
+  background-color: #2e2e2e;
 }

@@ -25,3 +25,36 @@ export function debounce(fn: (...args: unknown[]) => void, delay: number): typeo
     timeout = setTimeout(fn, delay, ...args);
   };
 }
+
+export function throttle(func, delay) {
+  let timeoutId = null;
+  let lastArgs = null;
+  let lastThis = null;
+  let lastCallTime = 0;
+
+  const throttled = function(...args) {
+    const now = Date.now();
+    lastArgs = args;
+    lastThis = this;
+
+    if (now - lastCallTime >= delay) {
+      // Execute immediately if delay has passed
+      func.apply(lastThis, lastArgs);
+      lastCallTime = now;
+      lastArgs = null; // Clear last call data as it's been handled
+      lastThis = null;
+    } else {
+      // Schedule the last call if within the delay
+      clearTimeout(timeoutId); // Clear any existing scheduled last call
+      timeoutId = setTimeout(() => {
+        func.apply(lastThis, lastArgs);
+        lastCallTime = Date.now(); // Update last call time for the trailing execution
+        lastArgs = null;
+        lastThis = null;
+        timeoutId = null;
+      }, delay - (now - lastCallTime)); // Calculate remaining time for the delay
+    }
+  };
+
+  return throttled;
+}

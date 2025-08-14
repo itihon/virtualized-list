@@ -3,12 +3,12 @@ import './style.css';
 import type { ItemRangeData, ItemsToRestore } from './typings';
 import RequestAnimationFrameLoop from 'request-animation-frame-loop';
 import Queue from './Queue';
-import { debounce, splitInterval } from './utils';
+import { debounce, splitInterval, throttle } from './utils';
 
 const reSpaces = /[\s]+/;
 
-const INERTIA = 15;
-const MIN_SCROLL_STEP = 3;
+const INERTIA = 5;
+const MIN_SCROLL_STEP = 2;
 const SCROLL_MULTIPLIER = 8;
 
 type RAFLoopCtx = {
@@ -35,6 +35,7 @@ export default class VirtualizedList extends HTMLElement {
   private _intervalsToRender: Queue<number>;
   private _previousScrollTop = 0;
   private _itemsToRestore: ItemsToRestore;
+  private _itemsContainerOffsetY = 0;
 
   private _setScrollingState(interval: number | undefined, previousInterval: number) {
     if (interval !== undefined) {
@@ -61,6 +62,12 @@ export default class VirtualizedList extends HTMLElement {
   private _isScrollingUp(): boolean {
     return this._scrolling === VirtualizedList._SCROLL_DIRECTION_UP;
   }
+
+  private _observeItemsVisiblity() {
+    for (const child of this._itemsContainer.children) {
+      this._observer.observe(child);
+    }
+  }
   
   private _handleEntry(entry: IntersectionObserverEntry) {
     const item = entry.target as HTMLElement;
@@ -70,17 +77,30 @@ export default class VirtualizedList extends HTMLElement {
     if (resolver) {
       this._tree.setNodeSize(resolver.index, height);
       this._offsetHeight += height;
+      this._spaceFiller.style.height = `${this._offsetHeight}px`;
       
-      // remove the item from the list if it is not visible
-      if (!entry.isIntersecting) {
-        this._spaceFiller.style.height = `${this._offsetHeight}px`;
-        item.remove();
-      }
-
       resolver.resolve(resolver.index);
       this._insertionPromises.delete(item);
     }
+
+    // remove the item from the list if it is not visible
+    if (!entry.isIntersecting) {
+      item.remove();
+    }
   };
+
+  private _removeScrolledOutItem(entry: IntersectionObserverEntry) {
+    const item = entry.target as HTMLElement;
+    const { height } = entry.boundingClientRect;
+
+    if (!entry.isIntersecting) {
+      if (this._isScrollingDown()) {
+        this._itemsContainerOffsetY -= height;
+        this._itemsContainer.style.transform = `translateY(-${this._itemsContainerOffsetY}px)`;
+      }
+      item.remove();
+    }
+  }
   
   private _renderVisibleItems = (ctx: RAFLoopCtx, loop: RequestAnimationFrameLoop) => {
     const { scrollTop } = this;
@@ -105,16 +125,51 @@ export default class VirtualizedList extends HTMLElement {
     this._setScrollingState(interval, previousInterval);
 
     if (interval !== undefined) {
-      const items = this._getItemsByOffset(interval);
-      const { 
-        firstVisibleItemOffset, 
-        firstVisibleItemsSize, 
-        itemsHTML,
-        offset,
-      } = items;
-      const offsetY = offset - (firstVisibleItemOffset - firstVisibleItemsSize);
-      this._itemsContainer.style.transform = `translateY(-${offsetY}px)`;
-      this._itemsContainer.innerHTML = itemsHTML;
+      const segmentHeight = Math.abs(interval - previousInterval);
+
+      if (false /*segmentHeight < this.offsetHeight*/) {
+        console.log('render one by one', interval, previousInterval, scrollTop);
+        
+        if (this._isScrollingDown()) {
+          const items = this._getItemsByOffset(interval + (segmentHeight + this._itemsContainer.offsetHeight), segmentHeight);
+          const { 
+            firstVisibleItemOffset, 
+            firstVisibleItemsSize, 
+            itemsHTML,
+            offset,
+            changed,
+          } = items;
+          this._itemsContainerOffsetY = offset - (firstVisibleItemOffset - firstVisibleItemsSize);
+          this._itemsContainer.style.transform = `translateY(-${this._itemsContainerOffsetY}px)`;
+          if (changed) {
+            this._itemsContainer.insertAdjacentHTML('beforeend', itemsHTML);
+            this._observeItemsVisiblity();
+          }
+          console.log(items.itemsHTML, interval, this.scrollTop)
+        }
+        else if (this._isScrollingUp()) {
+          const items = this._getItemsByOffset(interval - (this._itemsContainer.offsetHeight - this.offsetHeight) - this._itemsToRestore.firstVisibleItemsSize, segmentHeight);
+          console.log(items.itemsHTML, interval)
+        }
+      }
+      else {
+        console.log('render by offset');
+        const items = this._getItemsByOffset(interval);
+        console.log(items.itemsHTML, interval)
+        const { 
+          firstVisibleItemOffset, 
+          firstVisibleItemsSize, 
+          itemsHTML,
+          offset,
+          changed,
+        } = items;
+        this._itemsContainerOffsetY = offset - (firstVisibleItemOffset - firstVisibleItemsSize);
+        this._itemsContainer.style.transform = `translateY(-${this._itemsContainerOffsetY}px)`;
+        if (changed) {
+          this._itemsContainer.innerHTML = itemsHTML;
+          // this._observeItemsVisiblity();
+        }
+      }
 
       this._previousScrollTop = interval;
     }
@@ -124,10 +179,17 @@ export default class VirtualizedList extends HTMLElement {
   }
 
   private _loadInsertedItems: IntersectionObserverCallback = (entries) => {
-    for (const entry of entries) {
-      this._handleEntry(entry);
+    if (!this._isScrolling()) {
+      for (const entry of entries) {
+        this._handleEntry(entry);
+      }
+      this._insertionPromises.forEach(({ resolve }) => resolve(null)); // resolve with null remained after _handleEntry promises whose item was not discovered by IntersectionObserver
     }
-    this._insertionPromises.forEach(({ resolve }) => resolve(null)); // resolve with null remained after _handleEntry promises whose item was not discovered by IntersectionObserver
+    else {
+      for (const entry of entries) {
+        this._removeScrolledOutItem(entry);
+      }
+    }
     this._observer.disconnect();
   }
 
@@ -228,7 +290,8 @@ export default class VirtualizedList extends HTMLElement {
     this._spaceFiller.appendChild(this._itemsContainer)
     stickyContainer.appendChild(this._spaceFiller);
     this.appendChild(stickyContainer);
-    this.addEventListener('scroll', debounce(this._scrollHandler.bind(this), 16));
+    // this.addEventListener('scroll', throttle(this._scrollHandler.bind(this), 520));
+    this.addEventListener('scroll', this._scrollHandler.bind(this));
   }
 
   insertItem(item: HTMLElement, index: number = this._tree.size):Promise<number | null> {
