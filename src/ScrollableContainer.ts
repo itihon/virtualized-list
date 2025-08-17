@@ -83,12 +83,12 @@ export default class ScrollableContainer {
     this._onScrollUpLimitCB = cb;
   }
 
-  prepend() {
-
+  append(...nodes: HTMLElement[]) {
+    this._scrolledPane.append(...nodes);
   }
-
-  append(item: HTMLElement) {
-    // this._scrolledPane.appendChild(item);
+  
+  prepend(...nodes: HTMLElement[]) {
+    this._scrolledPane.prepend(...nodes);
   }
   
   prependHTML() {
