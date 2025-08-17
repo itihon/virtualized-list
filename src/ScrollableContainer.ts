@@ -1,6 +1,5 @@
 import ScrolledPane from './ScrolledPane';
 import Filler from './Filler';
-import BooleanToggle from './BooleanToggle';
 import './ScrollableContainer.css';
 
 export type OnScrollLimitCallback = (scrolledPane: ScrolledPane, scrollTop: number) => void;
@@ -14,16 +13,14 @@ export default class ScrollableContainer {
   private _onScrollUpLimitCB: OnScrollLimitCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
-  private _isScrollDownLimit: BooleanToggle;
-  private _isScrollUpLimit: BooleanToggle;
+  private _observerTop: IntersectionObserver;
+  private _observerBottom: IntersectionObserver;
 
   constructor(scrollableParent: HTMLElement) {
     this._scrollableParent = scrollableParent;    
     this._fillerTop = new Filler(scrollableParent);
     this._scrolledPane = new ScrolledPane(scrollableParent);
     this._fillerBottom = new Filler(scrollableParent);
-    this._isScrollDownLimit = new BooleanToggle();
-    this._isScrollUpLimit = new BooleanToggle();
 
     this._scrollableParent.classList.add('class__ScrollableContainer');
 
@@ -37,42 +34,42 @@ export default class ScrollableContainer {
 
     this._resizeObserver.observe(this._scrollableParent);
 
-    this._scrollableParent.addEventListener('scroll', () => {
+    this._observerTop = new IntersectionObserver((entries) => {
+      const entry = entries[entries.length - 1];
       const { scrollTop } = this._scrollableParent;
-      const { offsetTop: scrolledPaneTop, offsetHeight: scrolledPaneHeight } = this._scrolledPane;
 
-      if (scrollTop === 0) {
-        console.log('scrollTop');
-        return;
-      }
-
-      if (
-        this._isScrollDownLimit.set(
-          scrolledPaneTop + scrolledPaneHeight <= scrollTop + this._scrollableParent.offsetHeight,
-          true,
-        )
-      ) {
-        this._onScrollDownLimitCB(this._scrolledPane, scrollTop);
-        console.log('scrollDownLimit');
-        return;
-      }
-
-      if (
-        this._isScrollUpLimit.set(
-          scrolledPaneTop >= scrollTop,
-          true,
-        )
-      ) {
+      if (!entry.isIntersecting && scrollTop > 0) {
+        console.log('top', scrollTop, entry);
+        this._observerTop.disconnect();
         this._onScrollUpLimitCB(this._scrolledPane, scrollTop);
-        console.log('scrollUpLimit');
-        return;
+        this._observerTop.observe(this._scrolledPane.DOMRoot);
       }
-
-      if (Math.round(scrollTop) === this._scrollHeight) {
-        console.log('scrollBottom');
-        return;
-      }
+    }, {
+      root: scrollableParent,
+      rootMargin: '25% 0px -101% 0px',
+      // threshold: Array.from({ length: 101 }, (_, idx) => idx * 0.01),
+      threshold: [0.001],
     });
+    
+    this._observerBottom = new IntersectionObserver((entries) => {
+      const entry = entries[entries.length - 1];
+      const { scrollTop, offsetHeight } = this._scrollableParent;
+
+      if (!entry.isIntersecting && Math.round(scrollTop + offsetHeight) < this._scrollHeight && scrollTop > 0) {
+        console.log('bottom', scrollTop, entry);
+        this._observerBottom.disconnect();
+        this._onScrollDownLimitCB(this._scrolledPane, scrollTop);
+        this._observerBottom.observe(this._scrolledPane.DOMRoot);
+      }
+    }, {
+      root: scrollableParent,
+      rootMargin: '-101% 0px 25% 0px',
+      // threshold: Array.from({ length: 101 }, (_, idx) => idx * 0.01),
+      threshold: [0.001],
+    });
+
+    this._observerTop.observe(this._scrolledPane.DOMRoot);
+    this._observerBottom.observe(this._scrolledPane.DOMRoot);
   }
 
   onScrollDownLimit(cb: OnScrollLimitCallback) {
