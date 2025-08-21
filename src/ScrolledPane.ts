@@ -51,6 +51,10 @@ export default class ScrolledPane {
     return false;
   }
 
+  item(index: number): Element | null {
+    return this._paneElement.children[index];
+  }
+
   get length(): number {
     return this._paneElement.children.length;
   }
