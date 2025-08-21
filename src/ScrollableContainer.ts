@@ -76,13 +76,9 @@ export default class ScrollableContainer {
 
     this._scrollableParent.classList.add('class__ScrollableContainer');
 
-    this._resizeObserver = new ResizeObserver(
-      // () => this.setScrollHeight(this._scrollHeight),
-      () => { 
-        console.log('resize observer'); 
-        this.setScrollHeight(this._scrollHeight); 
-      },
-    );
+    this._resizeObserver = new ResizeObserver(() => { 
+      this.setScrollHeight(this._scrollHeight); 
+    });
 
     this._resizeObserver.observe(this._scrollableParent);
 
