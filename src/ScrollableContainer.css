@@ -12,13 +12,12 @@
 }
 
 .class__ScrolledPane {
-  --scroll-down-limit: 0;
-  --scroll-up-limit: 0;
-  --scroll-limit: calc(var(--scroll-down-limit) + var(--scroll-up-limit));
+  --scroll-limit: 0;
 
   position: sticky;
   top: calc(var(--scroll-limit) * -1);
   bottom: calc(var(--scroll-limit) * -1);
-  height: calc(100% + var(--scroll-limit));
+  min-height: 100%;
+  height: fit-content;
   min-height: 100%;
 }

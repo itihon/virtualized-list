@@ -5,9 +5,7 @@ const container = document.createElement('div');
 const scrollableContainer = new ScrollableContainer(container);
 
 document.body.appendChild(container);
-scrollableContainer.setScrollHeight(2000);
-scrollableContainer.setScrollDownLimit(80);
-scrollableContainer.setScrollUpLimit(80);
+scrollableContainer.setScrollHeight(20000);
 
 function createItem(i: number) {
   const item = document.createElement('div');

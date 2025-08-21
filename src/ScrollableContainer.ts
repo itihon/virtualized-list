@@ -38,6 +38,9 @@ export default class ScrollableContainer {
       const entry = entries[entries.length - 1];
       const scrolledPane = this._scrolledPane;
 
+      this._scrolledPane.scrollLimit = 
+        entry.boundingClientRect.height - this._scrollableParent.offsetHeight;
+
       if (this._isScrolling) {
         if (!entry.isIntersecting) {
 
@@ -143,14 +146,6 @@ export default class ScrollableContainer {
 
   getScrollHeight(): number {
     return this._scrollHeight;
-  }
-
-  setScrollDownLimit(scrollLimit: number) {
-    this._scrolledPane.scrollDownLimit = scrollLimit;
-  }
-  
-  setScrollUpLimit(scrollLimit: number) {
-    this._scrolledPane.scrollUpLimit = scrollLimit;
   }
 
   scroll(position: number) {
