@@ -113,6 +113,14 @@ export default class ScrollableContainer {
     this._scrolledPane.prepend(...nodes);
   }
   
+  removeItem(itemIndex: number): boolean {
+    return this._scrolledPane.removeItem(itemIndex);
+  }
+
+  get length(): number {
+    return this._scrolledPane.length;
+  }
+  
   prependHTML() {
 
   }
