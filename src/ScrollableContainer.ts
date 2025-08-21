@@ -2,7 +2,7 @@ import ScrolledPane from './ScrolledPane';
 import Filler from './Filler';
 import './ScrollableContainer.css';
 
-export type OnScrollLimitCallback = (scrolledPane: ScrolledPane, scrollTop: number) => void;
+export type OnScrollLimitCallback = (scrollTop: number, scrollLimit: number) => void;
 
 const topSymbol: unique symbol = Symbol('top');
 const bottomSymbol: unique symbol = Symbol('bottom');
@@ -46,12 +46,12 @@ export default class ScrollableContainer {
 
           if (position === ScrollableContainer._TOP) 
             this._onScrollUpLimitCB(
-              scrolledPane, this._scrollableParent.scrollTop,
+              this._scrollableParent.scrollTop, scrolledPane.scrollLimit,
             );
 
           if (position === ScrollableContainer._BOTTOM) 
             this._onScrollDownLimitCB(
-              scrolledPane, this._scrollableParent.scrollTop,
+              this._scrollableParent.scrollTop, scrolledPane.scrollLimit,
             );
 
           observer.disconnect();
