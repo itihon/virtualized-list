@@ -42,8 +42,11 @@ export default class ScrollableContainer {
       const entry = entries[entries.length - 1];
       const scrolledPane = this._scrolledPane;
 
+      const { paddingTop } = getComputedStyle(this._scrollableParent);
       this._scrolledPane.scrollLimit = 
-        entry.boundingClientRect.height - this._scrollableParent.clientHeight;
+        entry.boundingClientRect.height 
+          - this._scrollableParent.clientHeight 
+          + parseInt(paddingTop);
 
       if (this._isScrolling) {
         if (!entry.isIntersecting) {
