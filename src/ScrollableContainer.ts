@@ -24,6 +24,8 @@ export default class ScrollableContainer {
   private _scrolledPane: ScrolledPane;
   private _onScrollDownLimitCB: OnScrollLimitCallback = () => {};
   private _onScrollUpLimitCB: OnScrollLimitCallback = () => {};
+  private _onScrollDownOverscanCB: OnScrollLimitCallback = () => {};
+  private _onScrollUpOverscanCB: OnScrollLimitCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
   private _observerTop: IntersectionObserver;
@@ -69,6 +71,24 @@ export default class ScrollableContainer {
           observer.observe(scrolledPane.DOMRoot);
           this._isScrolling = false;
         }
+        else {
+          if (entry.intersectionRatio < 0.3) {
+
+            if (position === ScrollableContainer._TOP) 
+              this._onScrollUpOverscanCB(
+                this._scrollableParent.scrollTop, 
+                scrolledPane.scrollLimit,
+                scrolledPane.DOMRoot.children,
+              );
+
+            if (position === ScrollableContainer._BOTTOM) 
+              this._onScrollDownOverscanCB(
+                this._scrollableParent.scrollTop, 
+                scrolledPane.scrollLimit,
+                scrolledPane.DOMRoot.children,
+              );
+          }
+        }
       }
     }, {
       root: this._scrollableParent,
@@ -110,6 +130,14 @@ export default class ScrollableContainer {
   
   onScrollUpLimit(cb: OnScrollLimitCallback) {
     this._onScrollUpLimitCB = cb;
+  }
+  
+  onScrollDownOverscan(cb: OnScrollLimitCallback) {
+    this._onScrollDownOverscanCB = cb;
+  }
+  
+  onScrollUpOverscan(cb: OnScrollLimitCallback) {
+    this._onScrollUpOverscanCB = cb;
   }
 
   append(...nodes: HTMLElement[]) {
