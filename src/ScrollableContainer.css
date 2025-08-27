@@ -6,6 +6,11 @@
   margin: 0;
 }
 
+.class__Filler {
+  position: relative;
+  z-index: -1;
+}
+
 .class__ScrollableContainer {
   position: relative;
   overflow: auto;
