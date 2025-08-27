@@ -2,10 +2,11 @@ import ScrolledPane from './ScrolledPane';
 import Filler from './Filler';
 import './ScrollableContainer.css';
 
-export type OnScrollLimitCallback = (
+export type OnScrollCallback = (
   scrollTop: number, 
   scrollLimit: number,
   items: HTMLCollection,
+  entry: IntersectionObserverEntry,
 ) => void;
 
 const topSymbol: unique symbol = Symbol('top');
@@ -13,6 +14,7 @@ const bottomSymbol: unique symbol = Symbol('bottom');
 
 type TopSymbol = typeof topSymbol;
 type BottomSymbol = typeof bottomSymbol;
+type OverscanHeight = `${string}px` | `${string}%`;
 
 export default class ScrollableContainer {
   private static readonly _TOP: TopSymbol = topSymbol;
@@ -22,22 +24,29 @@ export default class ScrollableContainer {
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
   private _scrolledPane: ScrolledPane;
-  private _onScrollDownLimitCB: OnScrollLimitCallback = () => {};
-  private _onScrollUpLimitCB: OnScrollLimitCallback = () => {};
-  private _onScrollDownOverscanCB: OnScrollLimitCallback = () => {};
-  private _onScrollUpOverscanCB: OnScrollLimitCallback = () => {};
+  private _onScrollDownLimitCB: OnScrollCallback = () => {};
+  private _onScrollUpLimitCB: OnScrollCallback = () => {};
+  private _onScrollDownOverscanCB: OnScrollCallback = () => {};
+  private _onScrollUpOverscanCB: OnScrollCallback = () => {};
+  private _onScrollDownOverflowCB: OnScrollCallback = () => {};
+  private _onScrollUpOverflowCB: OnScrollCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
-  private _observerTop: IntersectionObserver;
-  private _observerBottom: IntersectionObserver;
+  private _overscanHeight: OverscanHeight = '50%';
+  private _observerTop: IntersectionObserver | undefined;
+  private _observerBottom: IntersectionObserver | undefined;
   private _isScrolling: boolean = false;
 
-  private _createObserver(position: TopSymbol | BottomSymbol): IntersectionObserver {
-
+  private _createObserver(
+    position: TopSymbol | BottomSymbol, 
+    height: OverscanHeight,
+    maxThreshold: number,
+  ): IntersectionObserver {
+    
     const rootMargin = position === ScrollableContainer._TOP 
-      ? '25% 0px -101% 0px' 
+      ? `${height} 0px -101% 0px` 
       : position === ScrollableContainer._BOTTOM 
-        ? '-101% 0px 25% 0px' 
+        ? `-101% 0px ${height} 0px` 
         : '';
 
     const observer = new IntersectionObserver((entries) => {
@@ -58,6 +67,7 @@ export default class ScrollableContainer {
               this._scrollableParent.scrollTop, 
               scrolledPane.scrollLimit,
               scrolledPane.DOMRoot.children,
+              entry,
             );
 
           if (position === ScrollableContainer._BOTTOM) 
@@ -65,20 +75,40 @@ export default class ScrollableContainer {
               this._scrollableParent.scrollTop, 
               scrolledPane.scrollLimit,
               scrolledPane.DOMRoot.children,
+              entry,
             );
-
-          observer.disconnect();
-          observer.observe(scrolledPane.DOMRoot);
-          this._isScrolling = false;
         }
         else {
-          if (entry.intersectionRatio < 0.3) {
+          const intersectionDiff = 
+            entry.rootBounds!.height / entry.boundingClientRect.height -
+            entry.intersectionRatio;
+          
+          if (intersectionDiff < 0.001) {
+
+            if (position === ScrollableContainer._TOP) 
+              this._onScrollUpOverflowCB(
+                this._scrollableParent.scrollTop, 
+                scrolledPane.scrollLimit,
+                scrolledPane.DOMRoot.children,
+                entry,
+              );
+
+            if (position === ScrollableContainer._BOTTOM) 
+              this._onScrollDownOverflowCB(
+                this._scrollableParent.scrollTop, 
+                scrolledPane.scrollLimit,
+                scrolledPane.DOMRoot.children,
+                entry,
+              );
+          }
+          else {
 
             if (position === ScrollableContainer._TOP) 
               this._onScrollUpOverscanCB(
                 this._scrollableParent.scrollTop, 
                 scrolledPane.scrollLimit,
                 scrolledPane.DOMRoot.children,
+                entry,
               );
 
             if (position === ScrollableContainer._BOTTOM) 
@@ -86,14 +116,22 @@ export default class ScrollableContainer {
                 this._scrollableParent.scrollTop, 
                 scrolledPane.scrollLimit,
                 scrolledPane.DOMRoot.children,
+                entry,
               );
           }
         }
+        
+        observer.disconnect();
+        observer.observe(scrolledPane.DOMRoot);
+        this._isScrolling = false;
       }
     }, {
       root: this._scrollableParent,
       rootMargin: rootMargin,
-      threshold: [0.001],
+      threshold: [
+        0.001, 
+        ...Array.from({ length: 100 }, (_, idx) => (idx + 1) * (maxThreshold / 100)),
+      ],
     });
 
     return observer;
@@ -109,35 +147,38 @@ export default class ScrollableContainer {
 
     this._resizeObserver = new ResizeObserver(() => { 
       this.setScrollHeight(this._scrollHeight); 
+      this.setOverscanHeight(this._overscanHeight);
     });
 
     this._resizeObserver.observe(this._scrollableParent);
-
-    this._observerTop = this._createObserver(ScrollableContainer._TOP);
-    this._observerBottom = this._createObserver(ScrollableContainer._BOTTOM);
-
-    this._observerTop.observe(this._scrolledPane.DOMRoot);
-    this._observerBottom.observe(this._scrolledPane.DOMRoot);
 
     this._scrollableParent.addEventListener('scroll', () => {
       this._isScrolling = true;
     });
   }
 
-  onScrollDownLimit(cb: OnScrollLimitCallback) {
+  onScrollDownLimit(cb: OnScrollCallback) {
     this._onScrollDownLimitCB = cb;
   }
   
-  onScrollUpLimit(cb: OnScrollLimitCallback) {
+  onScrollUpLimit(cb: OnScrollCallback) {
     this._onScrollUpLimitCB = cb;
   }
   
-  onScrollDownOverscan(cb: OnScrollLimitCallback) {
+  onScrollDownOverscan(cb: OnScrollCallback) {
     this._onScrollDownOverscanCB = cb;
   }
   
-  onScrollUpOverscan(cb: OnScrollLimitCallback) {
+  onScrollUpOverscan(cb: OnScrollCallback) {
     this._onScrollUpOverscanCB = cb;
+  }
+
+  onScrollDownOverflow(cb: OnScrollCallback) {
+    this._onScrollDownOverflowCB = cb;
+  }
+  
+  onScrollUpOverflow(cb: OnScrollCallback) {
+    this._onScrollUpOverflowCB = cb;
   }
 
   append(...nodes: HTMLElement[]) {
@@ -176,6 +217,36 @@ export default class ScrollableContainer {
   // getLength(): number {
   //   return this._scrolledPane.children.length;
   // }
+  setOverscanHeight(height: OverscanHeight) {
+    const scrollableParentHeight = this._scrollableParent.offsetHeight;
+
+    const maxThreshold: number = height.endsWith('px') 
+      ? scrollableParentHeight / (parseInt(height) * 2 + scrollableParentHeight)
+      : height.endsWith('%')
+        ? scrollableParentHeight / ((parseInt(height) * scrollableParentHeight / 100) * 2 + scrollableParentHeight)
+        : 0;
+
+    if (!maxThreshold) {
+      throw new Error(
+        'Overscan height must be specified in pixels or percents.'
+      );
+    }
+
+    this._observerTop?.disconnect();
+    this._observerBottom?.disconnect();
+    
+    this._observerTop = this._createObserver(
+      ScrollableContainer._TOP, height, maxThreshold,
+    );
+    this._observerBottom = this._createObserver(
+      ScrollableContainer._BOTTOM, height, maxThreshold,
+    );
+
+    this._observerTop.observe(this._scrolledPane.DOMRoot);
+    this._observerBottom.observe(this._scrolledPane.DOMRoot);
+
+    this._overscanHeight = height;
+  }
 
   setScrollHeight(scrollHeight: number) {
     const { scrollTop } = this._scrollableParent;
