@@ -49,7 +49,7 @@ export default class ScrollableContainer {
 
       if (isScrollingUp && entry.boundingClientRect.top > entry.rootBounds!.top) 
         this._onScrollUpOverscanCB(
-          this._scrollableParent.scrollTop, 
+          scrollTop, 
           scrolledPane.scrollLimit,
           paddingTop,
           scrolledPane.DOMRoot.children,
@@ -58,7 +58,7 @@ export default class ScrollableContainer {
 
       if (isScrollingDown && entry.boundingClientRect.bottom < entry.rootBounds!.bottom) 
         this._onScrollDownOverscanCB(
-          this._scrollableParent.scrollTop, 
+          scrollTop, 
           scrolledPane.scrollLimit,
           paddingTop,
           scrolledPane.DOMRoot.children,
