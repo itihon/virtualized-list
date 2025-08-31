@@ -32,7 +32,6 @@ export default class ScrollableContainer {
   private _onScrollUpOverflowCB: OnScrollCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
-  private _overscanHeight: OverscanHeight = '50%';
   private _observerTop: IntersectionObserver | undefined;
   private _observerBottom: IntersectionObserver | undefined;
   private _isScrolling: boolean = false;
@@ -147,7 +146,6 @@ export default class ScrollableContainer {
 
     this._resizeObserver = new ResizeObserver(() => { 
       this.setScrollHeight(this._scrollHeight); 
-      this.setOverscanHeight(this._overscanHeight);
     });
 
     this._resizeObserver.observe(this._scrollableParent);
@@ -218,15 +216,7 @@ export default class ScrollableContainer {
   //   return this._scrolledPane.children.length;
   // }
   setOverscanHeight(height: OverscanHeight) {
-    const scrollableParentHeight = this._scrollableParent.offsetHeight;
-
-    const maxThreshold: number = height.endsWith('px') 
-      ? scrollableParentHeight / (parseInt(height) * 2 + scrollableParentHeight)
-      : height.endsWith('%')
-        ? scrollableParentHeight / ((parseInt(height) * scrollableParentHeight / 100) * 2 + scrollableParentHeight)
-        : 0;
-
-    if (!maxThreshold) {
+    if (!height.endsWith('px') && !height.endsWith('%')) {
       throw new Error(
         'Overscan height must be specified in pixels or percents.'
       );
@@ -245,7 +235,6 @@ export default class ScrollableContainer {
     this._observerTop.observe(this._scrolledPane.DOMRoot);
     this._observerBottom.observe(this._scrolledPane.DOMRoot);
 
-    this._overscanHeight = height;
   }
 
   setScrollHeight(scrollHeight: number) {
