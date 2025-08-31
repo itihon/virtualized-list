@@ -24,12 +24,8 @@ export default class ScrollableContainer {
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
   private _scrolledPane: ScrolledPane;
-  private _onScrollDownLimitCB: OnScrollCallback = () => {};
-  private _onScrollUpLimitCB: OnScrollCallback = () => {};
   private _onScrollDownOverscanCB: OnScrollCallback = () => {};
   private _onScrollUpOverscanCB: OnScrollCallback = () => {};
-  private _onScrollDownOverflowCB: OnScrollCallback = () => {};
-  private _onScrollUpOverflowCB: OnScrollCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
   private _observerTop: IntersectionObserver | undefined;
@@ -56,68 +52,23 @@ export default class ScrollableContainer {
           - this._scrollableParent.clientHeight 
           + parseInt(paddingTop);
 
-        if (!entry.isIntersecting) {
+      if (entry.boundingClientRect.top > entry.rootBounds!.top && position === ScrollableContainer._BOTTOM && scrollTop > this._scrollableParent.scrollTop) 
+        this._onScrollUpOverscanCB(
+          this._scrollableParent.scrollTop, 
+          scrolledPane.scrollLimit,
+          scrolledPane.DOMRoot.children,
+          entry,
+        );
 
-          if (position === ScrollableContainer._TOP) 
-            this._onScrollUpLimitCB(
-              this._scrollableParent.scrollTop, 
-              scrolledPane.scrollLimit,
-              scrolledPane.DOMRoot.children,
-              entry,
-            );
+      if (entry.boundingClientRect.bottom < entry.rootBounds!.bottom && position === ScrollableContainer._BOTTOM && scrollTop < this._scrollableParent.scrollTop) 
+        this._onScrollDownOverscanCB(
+          this._scrollableParent.scrollTop, 
+          scrolledPane.scrollLimit,
+          scrolledPane.DOMRoot.children,
+          entry,
+        );
 
-          if (position === ScrollableContainer._BOTTOM) 
-            this._onScrollDownLimitCB(
-              this._scrollableParent.scrollTop, 
-              scrolledPane.scrollLimit,
-              scrolledPane.DOMRoot.children,
-              entry,
-            );
-        }
-        else {
-          const intersectionDiff = 
-            entry.rootBounds!.height / entry.boundingClientRect.height -
-            entry.intersectionRatio;
-          
-          if (intersectionDiff < 0.001) {
-
-            if (position === ScrollableContainer._TOP) 
-              this._onScrollUpOverflowCB(
-                this._scrollableParent.scrollTop, 
-                scrolledPane.scrollLimit,
-                scrolledPane.DOMRoot.children,
-                entry,
-              );
-
-            if (position === ScrollableContainer._BOTTOM) 
-              this._onScrollDownOverflowCB(
-                this._scrollableParent.scrollTop, 
-                scrolledPane.scrollLimit,
-                scrolledPane.DOMRoot.children,
-                entry,
-              );
-          }
-          else {
-
-            if (position === ScrollableContainer._TOP) 
-              this._onScrollUpOverscanCB(
-                this._scrollableParent.scrollTop, 
-                scrolledPane.scrollLimit,
-                scrolledPane.DOMRoot.children,
-                entry,
-              );
-
-            if (entry.boundingClientRect.bottom < entry.rootBounds!.bottom && position === ScrollableContainer._BOTTOM && scrollTop < this._scrollableParent.scrollTop) 
-              this._onScrollDownOverscanCB(
-                this._scrollableParent.scrollTop, 
-                scrolledPane.scrollLimit,
-                scrolledPane.DOMRoot.children,
-                entry,
-              );
-
-            scrollTop = this._scrollableParent.scrollTop;
-          }
-        }
+      scrollTop = this._scrollableParent.scrollTop;
         
     }, {
       root: this._scrollableParent,
@@ -150,28 +101,12 @@ export default class ScrollableContainer {
     });
   }
 
-  onScrollDownLimit(cb: OnScrollCallback) {
-    this._onScrollDownLimitCB = cb;
-  }
-  
-  onScrollUpLimit(cb: OnScrollCallback) {
-    this._onScrollUpLimitCB = cb;
-  }
-  
   onScrollDownOverscan(cb: OnScrollCallback) {
     this._onScrollDownOverscanCB = cb;
   }
   
   onScrollUpOverscan(cb: OnScrollCallback) {
     this._onScrollUpOverscanCB = cb;
-  }
-
-  onScrollDownOverflow(cb: OnScrollCallback) {
-    this._onScrollDownOverflowCB = cb;
-  }
-  
-  onScrollUpOverflow(cb: OnScrollCallback) {
-    this._onScrollUpOverflowCB = cb;
   }
 
   append(...nodes: HTMLElement[]) {
