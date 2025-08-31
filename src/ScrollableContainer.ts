@@ -226,10 +226,6 @@ export default class ScrollableContainer {
     this._observerBottom = this._createObserver(
       ScrollableContainer._BOTTOM, height,
     );
-
-    this._observerTop.observe(this._scrolledPane.DOMRoot);
-    this._observerBottom.observe(this._scrolledPane.DOMRoot);
-
   }
 
   setScrollHeight(scrollHeight: number) {
