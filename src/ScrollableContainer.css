@@ -1,0 +1,36 @@
+.class__ScrollableContainer,
+.class__ScrollHeight,
+.class__Filler,
+.class__ScrolledPane {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+.class__ScrollHeight {
+  position: relative;
+  width: 0;
+  min-height: 100%;
+  z-index: -1;
+  float: left;
+}
+
+.class__Filler {
+  position: relative;
+  z-index: -1;
+}
+
+.class__ScrollableContainer {
+  position: relative;
+  overflow: auto;
+}
+
+.class__ScrolledPane {
+  --scroll-limit: 0px;
+
+  position: sticky;
+  top: calc(var(--scroll-limit) * -1);
+  bottom: calc(var(--scroll-limit) * -1);
+  min-height: 100%;
+  height: fit-content;
+}
