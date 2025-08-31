@@ -3,7 +3,7 @@ import Filler from './Filler';
 import ScrollHeight from './ScrollHeight';
 import './ScrollableContainer.css';
 
-export type OnScrollCallback = (
+export type OnOverscanCallback = (
   scrollTop: number, 
   scrollLimit: number,
   paddingTop: number,
@@ -19,8 +19,8 @@ export default class ScrollableContainer {
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
   private _scrolledPane: ScrolledPane;
-  private _onScrollDownOverscanCB: OnScrollCallback = () => {};
-  private _onScrollUpOverscanCB: OnScrollCallback = () => {};
+  private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
+  private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
   private _observer: IntersectionObserver | undefined;
@@ -96,11 +96,11 @@ export default class ScrollableContainer {
     });
   }
 
-  onScrollDownOverscan(cb: OnScrollCallback) {
+  onScrollDownOverscan(cb: OnOverscanCallback) {
     this._onScrollDownOverscanCB = cb;
   }
   
-  onScrollUpOverscan(cb: OnScrollCallback) {
+  onScrollUpOverscan(cb: OnOverscanCallback) {
     this._onScrollUpOverscanCB = cb;
   }
 
