@@ -9,17 +9,9 @@ export type OnScrollCallback = (
   entry: IntersectionObserverEntry,
 ) => void;
 
-const topSymbol: unique symbol = Symbol('top');
-const bottomSymbol: unique symbol = Symbol('bottom');
-
-type TopSymbol = typeof topSymbol;
-type BottomSymbol = typeof bottomSymbol;
 type OverscanHeight = `${string}px` | `${string}%`;
 
 export default class ScrollableContainer {
-  private static readonly _TOP: TopSymbol = topSymbol;
-  private static readonly _BOTTOM: BottomSymbol = bottomSymbol;
-
   private _scrollableParent: HTMLElement;
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
@@ -28,19 +20,13 @@ export default class ScrollableContainer {
   private _onScrollUpOverscanCB: OnScrollCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
-  private _observerTop: IntersectionObserver | undefined;
-  private _observerBottom: IntersectionObserver | undefined;
+  private _observer: IntersectionObserver | undefined;
 
-  private _createObserver(
-    position: TopSymbol | BottomSymbol, 
-    height: OverscanHeight,
-  ): IntersectionObserver {
+  private _createObserver(height: OverscanHeight): IntersectionObserver {
+
+    let scrollTop = 0;
     
-    const rootMargin = position === ScrollableContainer._TOP 
-      ? `${height} 0px -101% 0px` 
-      : position === ScrollableContainer._BOTTOM 
-        ? `-101% 0px ${height} 0px` 
-        : '';
+    const rootMargin = `${height} 0px ${height} 0px`;
 
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[entries.length - 1];
@@ -52,7 +38,7 @@ export default class ScrollableContainer {
           - this._scrollableParent.clientHeight 
           + parseInt(paddingTop);
 
-      if (entry.boundingClientRect.top > entry.rootBounds!.top && position === ScrollableContainer._BOTTOM && scrollTop > this._scrollableParent.scrollTop) 
+      if (entry.boundingClientRect.top > entry.rootBounds!.top && scrollTop > this._scrollableParent.scrollTop) 
         this._onScrollUpOverscanCB(
           this._scrollableParent.scrollTop, 
           scrolledPane.scrollLimit,
@@ -60,7 +46,7 @@ export default class ScrollableContainer {
           entry,
         );
 
-      if (entry.boundingClientRect.bottom < entry.rootBounds!.bottom && position === ScrollableContainer._BOTTOM && scrollTop < this._scrollableParent.scrollTop) 
+      if (entry.boundingClientRect.bottom < entry.rootBounds!.bottom && scrollTop < this._scrollableParent.scrollTop) 
         this._onScrollDownOverscanCB(
           this._scrollableParent.scrollTop, 
           scrolledPane.scrollLimit,
@@ -93,11 +79,8 @@ export default class ScrollableContainer {
     this._resizeObserver.observe(this._scrollableParent);
 
     this._scrollableParent.addEventListener('scroll', () => {
-      this._observerTop?.disconnect();
-      this._observerBottom?.disconnect();
-
-      this._observerTop?.observe(this._scrolledPane.DOMRoot);
-      this._observerBottom?.observe(this._scrolledPane.DOMRoot);
+      this._observer?.disconnect();
+      this._observer?.observe(this._scrolledPane.DOMRoot);
     });
   }
 
@@ -152,15 +135,8 @@ export default class ScrollableContainer {
       );
     }
 
-    this._observerTop?.disconnect();
-    this._observerBottom?.disconnect();
-    
-    this._observerTop = this._createObserver(
-      ScrollableContainer._TOP, height,
-    );
-    this._observerBottom = this._createObserver(
-      ScrollableContainer._BOTTOM, height,
-    );
+    this._observer?.disconnect();
+    this._observer = this._createObserver(height);
   }
 
   setScrollHeight(scrollHeight: number) {
