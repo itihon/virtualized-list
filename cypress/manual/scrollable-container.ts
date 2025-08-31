@@ -27,7 +27,7 @@ else {
   }
 
   let i = 0;
-  scrollableContainer.onScrollDownOverscan((scrollTop, scrollLimit, padding, items, entry: IntersectionObserverEntry) => {
+  scrollableContainer.onScrollDownOverscan((scrollTop, previousScrollTop, scrollLimit, padding, items, entry: IntersectionObserverEntry) => {
     console.log('onScrollDownOverscan', items.length);
 
     let addedItemsSize = 0;
@@ -59,7 +59,7 @@ else {
     scrollableContainer.scroll(scrolledPaneOffsetTop + removedItemsSize - padding);
   });
   // 
-  scrollableContainer.onScrollUpOverscan((scrollTop, scrollLimit, padding, items, entry) => {
+  scrollableContainer.onScrollUpOverscan((scrollTop, previousScrollTop, scrollLimit, padding, items, entry) => {
     console.log('onScrollUpOverscan', items.length);
 
     let addedItemsSize = 0;
