@@ -156,8 +156,8 @@ export default class ScrollableContainer {
     const { offsetHeight: scrolledPaneHeight } = this._scrolledPane;
 
     this._scrollHeightFiller.setScrollHeight(scrollHeight);
-    this._fillerTop.offsetHeight = Math.round(scrollTop);
-    this._fillerBottom.offsetHeight = Math.round(scrollHeight - scrollTop - scrolledPaneHeight);
+    this._fillerTop.offsetHeight = scrollTop;
+    this._fillerBottom.offsetHeight = scrollHeight - scrollTop - scrolledPaneHeight;
     
     this._scrollHeight = scrollHeight;
   }
