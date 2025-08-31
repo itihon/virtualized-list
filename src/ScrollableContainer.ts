@@ -34,7 +34,6 @@ export default class ScrollableContainer {
   private _scrollHeight: number = 0;
   private _observerTop: IntersectionObserver | undefined;
   private _observerBottom: IntersectionObserver | undefined;
-  private _isScrolling: boolean = false;
 
   private _createObserver(
     position: TopSymbol | BottomSymbol, 
@@ -58,7 +57,6 @@ export default class ScrollableContainer {
           - this._scrollableParent.clientHeight 
           + parseInt(paddingTop);
 
-      if (this._isScrolling) {
         if (!entry.isIntersecting) {
 
           if (position === ScrollableContainer._TOP) 
@@ -120,10 +118,6 @@ export default class ScrollableContainer {
           }
         }
         
-        observer.disconnect();
-        observer.observe(scrolledPane.DOMRoot);
-        this._isScrolling = false;
-      }
     }, {
       root: this._scrollableParent,
       rootMargin: rootMargin,
@@ -151,7 +145,11 @@ export default class ScrollableContainer {
     this._resizeObserver.observe(this._scrollableParent);
 
     this._scrollableParent.addEventListener('scroll', () => {
-      this._isScrolling = true;
+      this._observerTop?.disconnect();
+      this._observerBottom?.disconnect();
+
+      this._observerTop?.observe(this._scrolledPane.DOMRoot);
+      this._observerBottom?.observe(this._scrolledPane.DOMRoot);
     });
   }
 
