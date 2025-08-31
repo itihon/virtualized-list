@@ -38,7 +38,6 @@ export default class ScrollableContainer {
   private _createObserver(
     position: TopSymbol | BottomSymbol, 
     height: OverscanHeight,
-    maxThreshold: number,
   ): IntersectionObserver {
     
     const rootMargin = position === ScrollableContainer._TOP 
@@ -108,23 +107,21 @@ export default class ScrollableContainer {
                 entry,
               );
 
-            if (position === ScrollableContainer._BOTTOM) 
+            if (entry.boundingClientRect.bottom < entry.rootBounds!.bottom && position === ScrollableContainer._BOTTOM && scrollTop < this._scrollableParent.scrollTop) 
               this._onScrollDownOverscanCB(
                 this._scrollableParent.scrollTop, 
                 scrolledPane.scrollLimit,
                 scrolledPane.DOMRoot.children,
                 entry,
               );
+
+            scrollTop = this._scrollableParent.scrollTop;
           }
         }
         
     }, {
       root: this._scrollableParent,
       rootMargin: rootMargin,
-      threshold: [
-        0.001, 
-        ...Array.from({ length: 100 }, (_, idx) => (idx + 1) * (maxThreshold / 100)),
-      ],
     });
 
     return observer;
@@ -224,10 +221,10 @@ export default class ScrollableContainer {
     this._observerBottom?.disconnect();
     
     this._observerTop = this._createObserver(
-      ScrollableContainer._TOP, height, maxThreshold,
+      ScrollableContainer._TOP, height,
     );
     this._observerBottom = this._createObserver(
-      ScrollableContainer._BOTTOM, height, maxThreshold,
+      ScrollableContainer._BOTTOM, height,
     );
 
     this._observerTop.observe(this._scrolledPane.DOMRoot);
