@@ -5,6 +5,7 @@ import './ScrollableContainer.css';
 export type OnScrollCallback = (
   scrollTop: number, 
   scrollLimit: number,
+  paddingTop: number,
   items: HTMLCollection,
   entry: IntersectionObserverEntry,
 ) => void;
@@ -31,17 +32,20 @@ export default class ScrollableContainer {
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[entries.length - 1];
       const scrolledPane = this._scrolledPane;
+      const paddingTop = parseInt(
+        getComputedStyle(this._scrollableParent).paddingTop
+      );
 
-      const { paddingTop } = getComputedStyle(this._scrollableParent);
       this._scrolledPane.scrollLimit = 
         entry.boundingClientRect.height 
           - this._scrollableParent.clientHeight 
-          + parseInt(paddingTop);
+          + paddingTop;
 
       if (entry.boundingClientRect.top > entry.rootBounds!.top && scrollTop > this._scrollableParent.scrollTop) 
         this._onScrollUpOverscanCB(
           this._scrollableParent.scrollTop, 
           scrolledPane.scrollLimit,
+          paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
         );
@@ -50,6 +54,7 @@ export default class ScrollableContainer {
         this._onScrollDownOverscanCB(
           this._scrollableParent.scrollTop, 
           scrolledPane.scrollLimit,
+          paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
         );
