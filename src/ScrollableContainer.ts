@@ -153,7 +153,7 @@ export default class ScrollableContainer {
 
   setScrollHeight(scrollHeight: number) {
     const { scrollTop } = this._scrollableParent;
-    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane;
+    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane.DOMRoot;
 
     this._scrollHeightFiller.setScrollHeight(scrollHeight);
     this._fillerTop.offsetHeight = scrollTop;
@@ -167,7 +167,7 @@ export default class ScrollableContainer {
   }
 
   scroll(position: number) {
-    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane;
+    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane.DOMRoot;
     const scrollHeight = this._scrollHeight;
 
     if (position < 0) {

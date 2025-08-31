@@ -9,14 +9,6 @@ export default class ScrolledPane {
     this._paneElement.classList.add('class__ScrolledPane');
     this._scrollableParent.appendChild(this._paneElement);
   }
-  
-  get offsetHeight(): number {
-    return this._paneElement.offsetHeight;
-  }
-  
-  get offsetTop(): number {
-    return this._paneElement.offsetTop;
-  }
 
   set scrollLimit(limit: number) {
     const roundLimit = Math.round(limit);
