@@ -39,16 +39,15 @@ export default class ScrollableContainer {
         getComputedStyle(this._scrollableParent).paddingTop
       );
 
-      const { scrollTop } = this._scrollableParent;
+      const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
       const isScrollingDown = previousScrollTop < scrollTop;
       const isScrollingUp = previousScrollTop > scrollTop;
+      const { height, top, bottom } = entry.boundingClientRect;
 
-      this._scrolledPane.scrollLimit = 
-        entry.boundingClientRect.height 
-          - this._scrollableParent.clientHeight 
-          + paddingTop;
+      scrolledPane.computedOffsetHeight = height;
+      scrolledPane.scrollLimit = height - rootHeight + paddingTop;
 
-      if (isScrollingUp && entry.boundingClientRect.top > entry.rootBounds!.top) 
+      if (isScrollingUp && top > entry.rootBounds!.top) 
         this._onScrollUpOverscanCB(
           scrollTop, 
           previousScrollTop,
@@ -58,7 +57,7 @@ export default class ScrollableContainer {
           entry,
         );
 
-      if (isScrollingDown && entry.boundingClientRect.bottom < entry.rootBounds!.bottom) 
+      if (isScrollingDown && bottom < entry.rootBounds!.bottom) 
         this._onScrollDownOverscanCB(
           scrollTop, 
           previousScrollTop,
@@ -170,7 +169,7 @@ export default class ScrollableContainer {
   }
 
   scroll(position: number) {
-    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane.DOMRoot;
+    const { computedOffsetHeight: scrolledPaneHeight } = this._scrolledPane;
     const scrollHeight = this._scrollHeight;
 
     if (position < 0) {

@@ -3,6 +3,8 @@ export default class ScrolledPane {
   private _paneElement: HTMLElement;
   private _scrollLimit = 0;
 
+  computedOffsetHeight: number = 0;
+
   constructor(scrollableParent: HTMLElement) {
     this._scrollableParent = scrollableParent;    
     this._paneElement = document.createElement('div');
