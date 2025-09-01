@@ -7,6 +7,7 @@ export type OnOverscanCallback = (
   scrollTop: number, 
   previousScrollTop: number, 
   scrollLimit: number,
+  offsetTop: number,
   paddingTop: number,
   items: HTMLCollection,
   entry: IntersectionObserverEntry,
@@ -43,6 +44,7 @@ export default class ScrollableContainer {
       const isScrollingDown = previousScrollTop < scrollTop;
       const isScrollingUp = previousScrollTop > scrollTop;
       const { height, top, bottom } = entry.boundingClientRect;
+      const scrolledPaneOffsetTop = scrolledPane.DOMRoot.offsetTop;
 
       scrolledPane.computedOffsetHeight = height;
       scrolledPane.scrollLimit = height - rootHeight + paddingTop;
@@ -52,6 +54,7 @@ export default class ScrollableContainer {
           scrollTop, 
           previousScrollTop,
           scrolledPane.scrollLimit,
+          scrolledPaneOffsetTop,
           paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
@@ -62,6 +65,7 @@ export default class ScrollableContainer {
           scrollTop, 
           previousScrollTop,
           scrolledPane.scrollLimit,
+          scrolledPaneOffsetTop,
           paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
