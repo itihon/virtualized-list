@@ -10,8 +10,8 @@ export type OnOverscanCallback = (
   offsetTop: number,
   paddingTop: number,
   items: HTMLCollection,
-  entry: IntersectionObserverEntry,
-  entries: Array<IntersectionObserverEntry>,
+  scrolledPaneEntry: IntersectionObserverEntry,
+  notIntersectedEntries: Array<IntersectionObserverEntry>,
 ) => void;
 
 export type OverscanHeight = `${string}px` | `${string}%`;
@@ -36,7 +36,7 @@ export default class ScrollableContainer {
 
     const observer = new IntersectionObserver((entries) => {
 
-      let entry: IntersectionObserverEntry | undefined;
+      let scrolledPaneEntry: IntersectionObserverEntry | undefined;
       const notIntersectedEntries: Array<IntersectionObserverEntry> = [];
       const scrolledPane = this._scrolledPane;
 
@@ -44,7 +44,7 @@ export default class ScrollableContainer {
         const { target } = observerEntry;
 
         if (target === scrolledPane.DOMRoot) {
-          entry = observerEntry;
+          scrolledPaneEntry = observerEntry;
         }
         else {
           if (!observerEntry.isIntersecting) {
@@ -57,7 +57,7 @@ export default class ScrollableContainer {
         }
       }
 
-      if (!entry) return;
+      if (!scrolledPaneEntry) return;
 
       const paddingTop = parseInt(
         getComputedStyle(this._scrollableParent).paddingTop
@@ -66,13 +66,13 @@ export default class ScrollableContainer {
       const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
       const isScrollingDown = previousScrollTop < scrollTop;
       const isScrollingUp = previousScrollTop > scrollTop;
-      const { height, top, bottom } = entry.boundingClientRect;
+      const { height, top, bottom } = scrolledPaneEntry.boundingClientRect;
       const scrolledPaneOffsetTop = scrolledPane.DOMRoot.offsetTop;
 
       scrolledPane.offsetHeight = height;
       scrolledPane.scrollLimit = height - rootHeight + paddingTop;
 
-      if (isScrollingUp && top > entry.rootBounds!.top) 
+      if (isScrollingUp && top > scrolledPaneEntry.rootBounds!.top) 
         this._onScrollUpOverscanCB(
           scrollTop, 
           previousScrollTop,
@@ -80,11 +80,11 @@ export default class ScrollableContainer {
           scrolledPaneOffsetTop,
           paddingTop,
           scrolledPane.DOMRoot.children,
-          entry,
+          scrolledPaneEntry,
           notIntersectedEntries,
         );
 
-      if (isScrollingDown && bottom < entry.rootBounds!.bottom) 
+      if (isScrollingDown && bottom < scrolledPaneEntry.rootBounds!.bottom) 
         this._onScrollDownOverscanCB(
           scrollTop, 
           previousScrollTop,
@@ -92,7 +92,7 @@ export default class ScrollableContainer {
           scrolledPaneOffsetTop,
           paddingTop,
           scrolledPane.DOMRoot.children,
-          entry,
+          scrolledPaneEntry,
           notIntersectedEntries,
         );
 
