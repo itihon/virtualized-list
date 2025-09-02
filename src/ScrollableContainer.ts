@@ -14,7 +14,7 @@ export type OnOverscanCallback = (
   entries: Array<IntersectionObserverEntry>,
 ) => void;
 
-type OverscanHeight = `${string}px` | `${string}%`;
+export type OverscanHeight = `${string}px` | `${string}%`;
 
 export default class ScrollableContainer {
   private _scrollableParent: HTMLElement;
