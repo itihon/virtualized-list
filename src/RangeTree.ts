@@ -106,10 +106,12 @@ export default class RangeTree extends AVLTree<number, ItemRangeData> {
       if (nodeData) {
         if (prevNodeData) {
           prevNodeData.next = nodeData;
+          nodeData.previous = prevNodeData;
         }
         
         if (nextNodeData) {
           nodeData.next = nextNodeData;
+          nextNodeData.previous = nodeData;
         }
       }
     }
