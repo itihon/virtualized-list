@@ -41,13 +41,18 @@ export default class ScrollableContainer {
       const scrolledPane = this._scrolledPane;
 
       for (const observerEntry of entries) {
-        if (observerEntry.target === scrolledPane.DOMRoot) {
+        const { target } = observerEntry;
+
+        if (target === scrolledPane.DOMRoot) {
           entry = observerEntry;
         }
         else {
           if (!observerEntry.isIntersecting) {
-            observer.unobserve(observerEntry.target);
             notIntersectedEntries.push(observerEntry);
+          }
+
+          if (target.parentElement !== scrolledPane.DOMRoot) {
+            observer.unobserve(target);
           }
         }
       }
