@@ -46,7 +46,7 @@ export default class ScrollableContainer {
       const { height, top, bottom } = entry.boundingClientRect;
       const scrolledPaneOffsetTop = scrolledPane.DOMRoot.offsetTop;
 
-      scrolledPane.computedOffsetHeight = height;
+      scrolledPane.offsetHeight = height;
       scrolledPane.scrollLimit = height - rootHeight + paddingTop;
 
       if (isScrollingUp && top > entry.rootBounds!.top) 
@@ -172,21 +172,23 @@ export default class ScrollableContainer {
     return this._scrollHeight;
   }
 
-  scroll(position: number) {
-    const { computedOffsetHeight: scrolledPaneHeight } = this._scrolledPane;
+  scroll(position: number, offsetHeightDelta: number = 0) {
+    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane;
     const scrollHeight = this._scrollHeight;
+    const newScrolledPaneHeight = scrolledPaneHeight - offsetHeightDelta;
+    this._scrolledPane.offsetHeight = newScrolledPaneHeight;
 
     if (position < 0) {
       this._fillerTop.offsetHeight = 0;
-      this._fillerBottom.offsetHeight = scrollHeight - scrolledPaneHeight;
+      this._fillerBottom.offsetHeight = scrollHeight - newScrolledPaneHeight;
     }
-    else if (position + scrolledPaneHeight > scrollHeight) {
-      this._fillerTop.offsetHeight = scrollHeight - scrolledPaneHeight;
+    else if (position + newScrolledPaneHeight > scrollHeight) {
+      this._fillerTop.offsetHeight = scrollHeight - newScrolledPaneHeight;
       this._fillerBottom.offsetHeight = 0;
     }
     else {
       this._fillerTop.offsetHeight = position;
-      this._fillerBottom.offsetHeight = scrollHeight - position - scrolledPaneHeight;
+      this._fillerBottom.offsetHeight = scrollHeight - position - newScrolledPaneHeight;
     }
   }
 }
