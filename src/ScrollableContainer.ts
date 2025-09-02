@@ -11,6 +11,7 @@ export type OnOverscanCallback = (
   paddingTop: number,
   items: HTMLCollection,
   entry: IntersectionObserverEntry,
+  entries: Array<IntersectionObserverEntry>,
 ) => void;
 
 type OverscanHeight = `${string}px` | `${string}%`;
@@ -34,8 +35,25 @@ export default class ScrollableContainer {
     const rootMargin = `${height} 0px ${height} 0px`;
 
     const observer = new IntersectionObserver((entries) => {
-      const entry = entries[entries.length - 1];
+
+      let entry: IntersectionObserverEntry | undefined;
+      const notIntersectedEntries: Array<IntersectionObserverEntry> = [];
       const scrolledPane = this._scrolledPane;
+
+      for (const observerEntry of entries) {
+        if (observerEntry.target === scrolledPane.DOMRoot) {
+          entry = observerEntry;
+        }
+        else {
+          if (!observerEntry.isIntersecting) {
+            observer.unobserve(observerEntry.target);
+            notIntersectedEntries.push(observerEntry);
+          }
+        }
+      }
+
+      if (!entry) return;
+
       const paddingTop = parseInt(
         getComputedStyle(this._scrollableParent).paddingTop
       );
@@ -58,6 +76,7 @@ export default class ScrollableContainer {
           paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
+          notIntersectedEntries,
         );
 
       if (isScrollingDown && bottom < entry.rootBounds!.bottom) 
@@ -69,6 +88,7 @@ export default class ScrollableContainer {
           paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
+          notIntersectedEntries,
         );
 
       previousScrollTop = scrollTop;
@@ -99,6 +119,9 @@ export default class ScrollableContainer {
     this._scrollableParent.addEventListener('scroll', () => {
       this._observer?.disconnect();
       this._observer?.observe(this._scrolledPane.DOMRoot);
+      for (const item of this._scrolledPane.DOMRoot.children) {
+        this._observer?.observe(item);
+      }
     });
   }
 
@@ -112,10 +135,16 @@ export default class ScrollableContainer {
 
   append(...nodes: HTMLElement[]) {
     this._scrolledPane.append(...nodes);
+    for (const node of nodes) {
+      this._observer?.observe(node);
+    }
   }
   
   prepend(...nodes: HTMLElement[]) {
     this._scrolledPane.prepend(...nodes);
+    for (const node of nodes) {
+      this._observer?.observe(node);
+    }
   }
   
   removeItem(itemIndex: number): boolean {
