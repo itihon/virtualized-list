@@ -19,8 +19,4 @@ export default class Filler {
   get offsetHeight(): number {
     return this._offsetHeight;
   }
-  
-  get offsetTop(): number {
-    return this._fillerElement.offsetTop;
-  }
 }

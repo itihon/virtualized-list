@@ -7,9 +7,11 @@ export type OnOverscanCallback = (
   scrollTop: number, 
   previousScrollTop: number, 
   scrollLimit: number,
+  offsetTop: number,
   paddingTop: number,
   items: HTMLCollection,
   entry: IntersectionObserverEntry,
+  entries: Array<IntersectionObserverEntry>,
 ) => void;
 
 type OverscanHeight = `${string}px` | `${string}%`;
@@ -33,39 +35,65 @@ export default class ScrollableContainer {
     const rootMargin = `${height} 0px ${height} 0px`;
 
     const observer = new IntersectionObserver((entries) => {
-      const entry = entries[entries.length - 1];
+
+      let entry: IntersectionObserverEntry | undefined;
+      const notIntersectedEntries: Array<IntersectionObserverEntry> = [];
       const scrolledPane = this._scrolledPane;
+
+      for (const observerEntry of entries) {
+        const { target } = observerEntry;
+
+        if (target === scrolledPane.DOMRoot) {
+          entry = observerEntry;
+        }
+        else {
+          if (!observerEntry.isIntersecting) {
+            notIntersectedEntries.push(observerEntry);
+          }
+
+          if (target.parentElement !== scrolledPane.DOMRoot) {
+            observer.unobserve(target);
+          }
+        }
+      }
+
+      if (!entry) return;
+
       const paddingTop = parseInt(
         getComputedStyle(this._scrollableParent).paddingTop
       );
 
-      const { scrollTop } = this._scrollableParent;
+      const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
       const isScrollingDown = previousScrollTop < scrollTop;
       const isScrollingUp = previousScrollTop > scrollTop;
+      const { height, top, bottom } = entry.boundingClientRect;
+      const scrolledPaneOffsetTop = scrolledPane.DOMRoot.offsetTop;
 
-      this._scrolledPane.scrollLimit = 
-        entry.boundingClientRect.height 
-          - this._scrollableParent.clientHeight 
-          + paddingTop;
+      scrolledPane.offsetHeight = height;
+      scrolledPane.scrollLimit = height - rootHeight + paddingTop;
 
-      if (isScrollingUp && entry.boundingClientRect.top > entry.rootBounds!.top) 
+      if (isScrollingUp && top > entry.rootBounds!.top) 
         this._onScrollUpOverscanCB(
           scrollTop, 
           previousScrollTop,
           scrolledPane.scrollLimit,
+          scrolledPaneOffsetTop,
           paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
+          notIntersectedEntries,
         );
 
-      if (isScrollingDown && entry.boundingClientRect.bottom < entry.rootBounds!.bottom) 
+      if (isScrollingDown && bottom < entry.rootBounds!.bottom) 
         this._onScrollDownOverscanCB(
           scrollTop, 
           previousScrollTop,
           scrolledPane.scrollLimit,
+          scrolledPaneOffsetTop,
           paddingTop,
           scrolledPane.DOMRoot.children,
           entry,
+          notIntersectedEntries,
         );
 
       previousScrollTop = scrollTop;
@@ -96,6 +124,9 @@ export default class ScrollableContainer {
     this._scrollableParent.addEventListener('scroll', () => {
       this._observer?.disconnect();
       this._observer?.observe(this._scrolledPane.DOMRoot);
+      for (const item of this._scrolledPane.DOMRoot.children) {
+        this._observer?.observe(item);
+      }
     });
   }
 
@@ -109,10 +140,16 @@ export default class ScrollableContainer {
 
   append(...nodes: HTMLElement[]) {
     this._scrolledPane.append(...nodes);
+    for (const node of nodes) {
+      this._observer?.observe(node);
+    }
   }
   
   prepend(...nodes: HTMLElement[]) {
     this._scrolledPane.prepend(...nodes);
+    for (const node of nodes) {
+      this._observer?.observe(node);
+    }
   }
   
   removeItem(itemIndex: number): boolean {
@@ -169,21 +206,23 @@ export default class ScrollableContainer {
     return this._scrollHeight;
   }
 
-  scroll(position: number) {
-    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane.DOMRoot;
+  scroll(position: number, offsetHeightDelta: number = 0) {
+    const { offsetHeight: scrolledPaneHeight } = this._scrolledPane;
     const scrollHeight = this._scrollHeight;
+    const newScrolledPaneHeight = scrolledPaneHeight - offsetHeightDelta;
+    this._scrolledPane.offsetHeight = newScrolledPaneHeight;
 
     if (position < 0) {
       this._fillerTop.offsetHeight = 0;
-      this._fillerBottom.offsetHeight = scrollHeight - scrolledPaneHeight;
+      this._fillerBottom.offsetHeight = scrollHeight - newScrolledPaneHeight;
     }
-    else if (position + scrolledPaneHeight > scrollHeight) {
-      this._fillerTop.offsetHeight = scrollHeight - scrolledPaneHeight;
+    else if (position + newScrolledPaneHeight > scrollHeight) {
+      this._fillerTop.offsetHeight = scrollHeight - newScrolledPaneHeight;
       this._fillerBottom.offsetHeight = 0;
     }
     else {
       this._fillerTop.offsetHeight = position;
-      this._fillerBottom.offsetHeight = scrollHeight - position - scrolledPaneHeight;
+      this._fillerBottom.offsetHeight = scrollHeight - position - newScrolledPaneHeight;
     }
   }
 }
