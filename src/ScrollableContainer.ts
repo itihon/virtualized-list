@@ -14,6 +14,10 @@ export type OnOverscanCallback = (
   notIntersectedEntries: Array<IntersectionObserverEntry>,
 ) => void;
 
+export type OnNewItemsCallback = (
+  newEntries: Array<IntersectionObserverEntry>,
+) => void;
+
 export type OverscanHeight = `${string}px` | `${string}%`;
 
 export default class ScrollableContainer {
@@ -24,9 +28,11 @@ export default class ScrollableContainer {
   private _scrolledPane: ScrolledPane;
   private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
   private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
+  private _onNewItemsCB: OnNewItemsCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
   private _observer: IntersectionObserver | undefined;
+  private _newItems: Set<Element> = new Set();
 
   private _createObserver(height: OverscanHeight): IntersectionObserver {
 
@@ -38,7 +44,9 @@ export default class ScrollableContainer {
 
       let scrolledPaneEntry: IntersectionObserverEntry | undefined;
       const notIntersectedEntries: Array<IntersectionObserverEntry> = [];
+      const newEntries: Array<IntersectionObserverEntry> = [];
       const scrolledPane = this._scrolledPane;
+      const newItems = this._newItems;
 
       for (const observerEntry of entries) {
         const { target } = observerEntry;
@@ -47,6 +55,11 @@ export default class ScrollableContainer {
           scrolledPaneEntry = observerEntry;
         }
         else {
+          if (newItems.has(target)) {
+            newEntries.push(observerEntry);
+            newItems.delete(target);
+          }
+
           if (!observerEntry.isIntersecting) {
             notIntersectedEntries.push(observerEntry);
           }
@@ -56,6 +69,8 @@ export default class ScrollableContainer {
           }
         }
       }
+
+      if (newEntries.length) this._onNewItemsCB(newEntries);
 
       if (!scrolledPaneEntry) return;
 
@@ -142,9 +157,14 @@ export default class ScrollableContainer {
     this._onScrollUpOverscanCB = cb;
   }
 
+  onNewItems(cb: OnNewItemsCallback) {
+    this._onNewItemsCB = cb;
+  }
+
   append(...nodes: HTMLElement[]) {
     this._scrolledPane.append(...nodes);
     for (const node of nodes) {
+      this._newItems.add(node)
       this._observer?.observe(node);
     }
   }
@@ -152,6 +172,7 @@ export default class ScrollableContainer {
   prepend(...nodes: HTMLElement[]) {
     this._scrolledPane.prepend(...nodes);
     for (const node of nodes) {
+      this._newItems.add(node)
       this._observer?.observe(node);
     }
   }
