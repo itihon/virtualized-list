@@ -66,11 +66,11 @@ export default class ScrollableContainer {
       const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
       const isScrollingDown = previousScrollTop < scrollTop;
       const isScrollingUp = previousScrollTop > scrollTop;
-      const { height, top, bottom } = scrolledPaneEntry.boundingClientRect;
+      const { top, bottom } = scrolledPaneEntry.boundingClientRect;
       const scrolledPaneOffsetTop = scrolledPane.DOMRoot.offsetTop;
 
-      scrolledPane.offsetHeight = height;
-      scrolledPane.scrollLimit = height - rootHeight + paddingTop;
+      scrolledPane.offsetHeight = scrolledPane.DOMRoot.scrollHeight;
+      scrolledPane.scrollLimit = scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop;
 
       if (isScrollingUp && top > scrolledPaneEntry.rootBounds!.top) 
         this._onScrollUpOverscanCB(
