@@ -67,10 +67,14 @@ export default class ScrollableContainer {
       const isScrollingDown = previousScrollTop < scrollTop;
       const isScrollingUp = previousScrollTop > scrollTop;
       const { top, bottom } = scrolledPaneEntry.boundingClientRect;
-      const scrolledPaneOffsetTop = scrolledPane.DOMRoot.offsetTop;
+      const { 
+        offsetTop: scrolledPaneOffsetTop, 
+        children: scrolledPaneItems,
+        scrollHeight, 
+      } = scrolledPane.DOMRoot;
 
-      scrolledPane.offsetHeight = scrolledPane.DOMRoot.scrollHeight;
-      scrolledPane.scrollLimit = scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop;
+      scrolledPane.offsetHeight = scrollHeight;
+      scrolledPane.scrollLimit = scrollHeight - rootHeight + paddingTop;
 
       if (isScrollingUp && top > scrolledPaneEntry.rootBounds!.top) 
         this._onScrollUpOverscanCB(
@@ -79,7 +83,7 @@ export default class ScrollableContainer {
           scrolledPane.scrollLimit,
           scrolledPaneOffsetTop,
           paddingTop,
-          scrolledPane.DOMRoot.children,
+          scrolledPaneItems,
           scrolledPaneEntry,
           notIntersectedEntries,
         );
@@ -91,7 +95,7 @@ export default class ScrollableContainer {
           scrolledPane.scrollLimit,
           scrolledPaneOffsetTop,
           paddingTop,
-          scrolledPane.DOMRoot.children,
+          scrolledPaneItems,
           scrolledPaneEntry,
           notIntersectedEntries,
         );
