@@ -184,6 +184,14 @@ export default class ScrollableContainer {
   get length(): number {
     return this._scrolledPane.length;
   }
+
+  getFirstItem(): HTMLElement | null {
+    return this._scrolledPane.DOMRoot.firstElementChild as HTMLElement;
+  }
+  
+  getLastItem(): HTMLElement | null {
+    return this._scrolledPane.DOMRoot.lastElementChild as HTMLElement;
+  }
   
   prependHTML() {
 
