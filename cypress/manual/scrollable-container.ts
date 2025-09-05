@@ -58,7 +58,7 @@ else {
     // console.log('scrolledPaneOffsetTop:', scrolledPaneOffsetTop, 'removedItemsSize:', removedItemsSize, 'addedItemsSize:', addedItemsSize, 'freeSpace', freeSpace, 'exceededSpace', exceededSpace);
     // scrollableContainer.scroll(scrollTop - halfScrollLimit - (halfScrollLimit - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
     // scrollableContainer.scroll(scrollTop - halfScrollLimit + removedItemsSize + (exceededSpace - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
-    scrollableContainer.scroll(offsetTop + removedItemsSize - padding, removedItemsSize - addedItemsSize);
+    scrollableContainer.scroll(offsetTop + removedItemsSize - padding,  addedItemsSize - removedItemsSize);
   });
   // 
   scrollableContainer.onScrollUpOverscan((scrollTop, previousScrollTop, scrollLimit, offsetTop, padding, items, entry, notIntersectedEntries) => {
@@ -93,7 +93,7 @@ else {
     // console.log('scrolledPaneOffsetTop:', scrolledPaneOffsetTop, 'removedItemsSize:', removedItemsSize, 'addedItemsSize:', addedItemsSize, 'freeSpace', freeSpace, 'exceededSpace', exceededSpace);
     // scrollableContainer.scroll(scrollTop - halfScrollLimit - (halfScrollLimit - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
     // scrollableContainer.scroll(scrollTop - halfScrollLimit + removedItemsSize + (exceededSpace - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
-    scrollableContainer.scroll(offsetTop - removedItemsSize - padding, removedItemsSize - addedItemsSize);
+    scrollableContainer.scroll(offsetTop - removedItemsSize - padding,  addedItemsSize - removedItemsSize);
   });
   // 
   // scrollableContainer.onScrollDownOverflow((scrollTop, scrollLimit, items) => {
