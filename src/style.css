@@ -1,4 +1,18 @@
-virtualized-list {
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+virtualized-list,
+.virtualized-list {
   box-sizing: border-box;
   display: block;
   position: relative;
@@ -22,7 +36,12 @@ virtualized-list .visible-items {
 /*   transition: transform .01s; */
 }
 
-.visible-items > * {
+.class__ScrollableContainer {
+  background-color: #2e2e2e;
+}
+
+.visible-items > * ,
+.class__ScrolledPane > * {
   display: flex;
   align-items: center;
   padding-left: 8px;
