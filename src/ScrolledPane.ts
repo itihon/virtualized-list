@@ -1,12 +1,30 @@
 export default class ScrolledPane {
   private _scrollableParent: HTMLElement;
   private _paneElement: HTMLElement;
+  private _offsetHeight: number = 0;
+  private _scrollHeight: number = 0;
 
   constructor(scrollableParent: HTMLElement) {
     this._scrollableParent = scrollableParent;    
     this._paneElement = document.createElement('div');
     this._paneElement.classList.add('class__ScrolledPane');
     this._scrollableParent.appendChild(this._paneElement);
+  }
+
+  preserveOffsetHeight(): number {
+    return this._offsetHeight = this._paneElement.offsetHeight;
+  }
+  
+  get offsetHeight(): number {
+    return this._offsetHeight;
+  }
+
+  preserveScrollHeight(): number {
+    return this._scrollHeight = this._paneElement.scrollHeight;
+  }
+  
+  get scrollHeight(): number {
+    return this._scrollHeight;
   }
 
   setScrollLimit(limit: number) {
