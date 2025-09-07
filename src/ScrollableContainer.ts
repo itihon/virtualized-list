@@ -60,10 +60,10 @@ export default class ScrollableContainer {
       const { 
         offsetTop: scrolledPaneOffsetTop, 
         children: scrolledPaneItems,
-        scrollHeight, 
+        scrollHeight: scrolledPaneScrollHeight, 
       } = scrolledPane.DOMRoot;
 
-      scrolledPane.setScrollLimit(scrollHeight - rootHeight + paddingTop);
+      scrolledPane.setScrollLimit(scrolledPaneScrollHeight - rootHeight + paddingTop);
 
       itemsHeightAcc.reset();
       remainedItemsHeightAcc.reset();
