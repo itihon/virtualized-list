@@ -4,14 +4,7 @@ import ScrollHeight from './ScrollHeight';
 import './ScrollableContainer.css';
 import HeightAccumulator from './HeightAccumulator';
 
-export type OnOverscanCallback = (
-  scrollTop: number, 
-  previousScrollTop: number, 
-  offsetTop: number,
-  paddingTop: number,
-  items: HTMLCollection,
-  notIntersectedEntries: Array<IntersectionObserverEntry>,
-) => void;
+export type OnOverscanCallback = () => void;
 
 export type OnNewItemsCallback = (
   newEntries: Array<IntersectionObserverEntry>,
@@ -57,10 +50,7 @@ export default class ScrollableContainer {
         getComputedStyle(this._scrollableParent).paddingTop,
       );
 
-      const { 
-        offsetTop: scrolledPaneOffsetTop, 
-        children: scrolledPaneItems,
-      } = scrolledPane.DOMRoot;
+      const { offsetTop: scrolledPaneOffsetTop } = scrolledPane.DOMRoot;
       
       const scrolledPaneScrollHeight = scrolledPane.preserveScrollHeight();
 
@@ -100,14 +90,7 @@ export default class ScrollableContainer {
           entry.target.remove();
         }
 
-        this._onScrollUpOverscanCB(
-          scrollTop, 
-          previousScrollTop,
-          scrolledPaneOffsetTop,
-          paddingTop,
-          scrolledPaneItems,
-          notIntersectedEntries,
-        );
+        this._onScrollUpOverscanCB();
 
         // scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
         this.scroll(scrolledPaneOffsetTop - (itemsHeightAcc.getBottom() - remainedItemsHeightAcc.getBottom()) - paddingTop);
@@ -119,14 +102,7 @@ export default class ScrollableContainer {
           entry.target.remove();
         }
 
-        this._onScrollDownOverscanCB(
-          scrollTop, 
-          previousScrollTop,
-          scrolledPaneOffsetTop,
-          paddingTop,
-          scrolledPaneItems,
-          notIntersectedEntries,
-        );
+        this._onScrollDownOverscanCB();
 
         // scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
         this.scroll(scrolledPaneOffsetTop + remainedItemsHeightAcc.getTop() - itemsHeightAcc.getTop() - paddingTop);
