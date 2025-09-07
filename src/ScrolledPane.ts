@@ -1,8 +1,6 @@
 export default class ScrolledPane {
   private _scrollableParent: HTMLElement;
   private _paneElement: HTMLElement;
-  private _scrollLimit = 0;
-  private _offsetHeight: number = 0;
 
   constructor(scrollableParent: HTMLElement) {
     this._scrollableParent = scrollableParent;    
@@ -11,26 +9,11 @@ export default class ScrolledPane {
     this._scrollableParent.appendChild(this._paneElement);
   }
 
-  set offsetHeight(height: number) {
-    const roundHeight = Math.round(height)
-    this._paneElement.style.height = `${roundHeight}px`;
-    this._offsetHeight = roundHeight;
-  }
-
-  get offsetHeight(): number {
-    return this._offsetHeight;
-  }
-
-  set scrollLimit(limit: number) {
+  setScrollLimit(limit: number) {
     const roundLimit = Math.round(limit);
     this._paneElement.style.setProperty('--scroll-limit', `${roundLimit}px`);
-    this._scrollLimit = roundLimit;
   }
 
-  get scrollLimit(): number {
-    return this._scrollLimit;
-  }
-  
   append(...items: HTMLElement[]) {
     for (const item of items) {
       this._paneElement.append(item);
