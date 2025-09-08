@@ -31,11 +31,11 @@ export default class ScrolledPane extends DOMConstructor {
     this._paneElement.style.setProperty('--scroll-limit', `${roundLimit}px`);
   }
 
-  append(...items: HTMLElement[]) {
+  append(...items: Node[]) {
     this._paneElement.append(...items);
   }
   
-  prepend(...items: HTMLElement[]) {
+  prepend(...items: Node[]) {
     this._paneElement.prepend(...items);
   }
 
