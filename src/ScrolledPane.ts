@@ -1,14 +1,13 @@
-export default class ScrolledPane {
-  private _scrollableParent: HTMLElement;
+import DOMConstructor from "./DOMConstructor";
+
+export default class ScrolledPane extends DOMConstructor {
   private _paneElement: HTMLElement;
   private _offsetHeight: number = 0;
   private _scrollHeight: number = 0;
 
   constructor(scrollableParent: HTMLElement) {
-    this._scrollableParent = scrollableParent;    
-    this._paneElement = document.createElement('div');
-    this._paneElement.classList.add('class__ScrolledPane');
-    this._scrollableParent.appendChild(this._paneElement);
+    super(scrollableParent, ['class__ScrolledPane']);
+    this._paneElement = super.DOMRoot;
   }
 
   preserveOffsetHeight(): number {
@@ -57,9 +56,5 @@ export default class ScrolledPane {
 
   get length(): number {
     return this._paneElement.children.length;
-  }
-
-  get DOMRoot(): HTMLElement {
-    return this._paneElement;
   }
 }

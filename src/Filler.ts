@@ -1,13 +1,12 @@
-export default class Filler {
-  private _scrollableParent: HTMLElement;
+import DOMConstructor from "./DOMConstructor";
+
+export default class Filler extends DOMConstructor {
   private _fillerElement: HTMLElement;
   private _offsetHeight: number = 0;
 
   constructor(scrollableParent: HTMLElement) {
-    this._scrollableParent = scrollableParent;    
-    this._fillerElement = document.createElement('div');
-    this._fillerElement.classList.add('class__Filler');
-    this._scrollableParent.appendChild(this._fillerElement);
+    super(scrollableParent, ['class__Filler']);
+    this._fillerElement = super.DOMRoot;
   }
 
   set offsetHeight(height: number) {

@@ -1,12 +1,11 @@
-export default class ScrollHeight {
-  private _scrollableParent: HTMLElement;
+import DOMConstructor from "./DOMConstructor";
+
+export default class ScrollHeight extends DOMConstructor {
   private _scrollHeightElement: HTMLElement;
 
   constructor(scrollableParent: HTMLElement) {
-    this._scrollableParent = scrollableParent;    
-    this._scrollHeightElement = document.createElement('div');
-    this._scrollHeightElement.classList.add('class__ScrollHeight');
-    this._scrollableParent.appendChild(this._scrollHeightElement);
+    super(scrollableParent, ['class__ScrollHeight']);
+    this._scrollHeightElement = super.DOMRoot;
   }
 
   setScrollHeight(value: number) {
