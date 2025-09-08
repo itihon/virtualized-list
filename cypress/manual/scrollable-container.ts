@@ -26,15 +26,16 @@ else {
     scrollableContainer.append(item);
   }
 
-  let i = 0;
-  scrollableContainer.onScrollDownOverscan((scrollTop, previousScrollTop, scrollLimit, offsetTop, padding, items, entry, notIntersectedEntries) => {
-    console.log('onScrollDownOverscan', items.length);
+  let itemNum = 0;
+  scrollableContainer.onScrollDownOverscan(() => {
+    console.log('onScrollDownOverscan');
 
-    let addedItemsSize = 0;
-    let removedItemsSize = 0;
+    // let addedItemsSize = 0;
+    // let removedItemsSize = 0;
 
     // const halfScrollLimit = scrollLimit / 2;
-    const freeSpace = entry.rootBounds!.bottom - entry.boundingClientRect.bottom;
+    // const freeSpace = entry.rootBounds!.bottom - entry.boundingClientRect.bottom;
+    const overscanRowCount = 10;
     // const scrollableContainerHeight = 300;
     // const exceededSpace = entry.rootBounds!.top - entry.boundingClientRect.top;
 
@@ -44,31 +45,34 @@ else {
     //   item.remove();
     // }
 
-    for (const entry of notIntersectedEntries) {
-      removedItemsSize += entry.boundingClientRect.height;
-      entry.target.remove();
-    }
 
-    while (addedItemsSize < freeSpace) {
-      const item = createItem(i++);
+    // for (const entry of notIntersectedEntries) {
+    //   // removedItemsSize += entry.boundingClientRect.height;
+    //   entry.target.remove();
+    // }
+
+    // while (addedItemsSize < freeSpace) {
+    for (let i = 0; i < overscanRowCount; i++) {
+      const item = createItem(itemNum++);
       scrollableContainer.append(item);
-      addedItemsSize += 40;
+      // addedItemsSize += 40;
     }
 
     // console.log('scrolledPaneOffsetTop:', scrolledPaneOffsetTop, 'removedItemsSize:', removedItemsSize, 'addedItemsSize:', addedItemsSize, 'freeSpace', freeSpace, 'exceededSpace', exceededSpace);
     // scrollableContainer.scroll(scrollTop - halfScrollLimit - (halfScrollLimit - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
     // scrollableContainer.scroll(scrollTop - halfScrollLimit + removedItemsSize + (exceededSpace - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
-    scrollableContainer.scroll(offsetTop + removedItemsSize - padding,  addedItemsSize - removedItemsSize);
+    // scrollableContainer.scroll(offsetTop + removedItemsSize - padding,  addedItemsSize - removedItemsSize);
   });
   // 
-  scrollableContainer.onScrollUpOverscan((scrollTop, previousScrollTop, scrollLimit, offsetTop, padding, items, entry, notIntersectedEntries) => {
-    console.log('onScrollUpOverscan', items.length);
+  scrollableContainer.onScrollUpOverscan(() => {
+    console.log('onScrollUpOverscan');
 
-    let addedItemsSize = 0;
-    let removedItemsSize = 0;
+    // let addedItemsSize = 0;
+    // let removedItemsSize = 0;
 
     // const halfScrollLimit = scrollLimit / 2;
-    const freeSpace = entry.boundingClientRect.top - entry.rootBounds!.top;
+    // const freeSpace = entry.boundingClientRect.top - entry.rootBounds!.top;
+    const overscanRowCount = 10;
     // const scrollableContainerHeight = 300;
     // const exceededSpace = entry.rootBounds!.top - entry.boundingClientRect.top;
     // console.log('freeSpace', freeSpace, 'exceeded space', exceededSpace)
@@ -79,21 +83,22 @@ else {
     //   item.remove();
     // }
 
-    for (const entry of notIntersectedEntries) {
-      removedItemsSize += entry.boundingClientRect.height;
-      entry.target.remove();
-    }
+    // for (const entry of notIntersectedEntries) {
+    //   // removedItemsSize += entry.boundingClientRect.height;
+    //   entry.target.remove();
+    // }
 
-    while (addedItemsSize < freeSpace) {
-      const item = createItem(i++);
+    // while (addedItemsSize < freeSpace) {
+    for (let i = 0; i < overscanRowCount; i++) {
+      const item = createItem(itemNum++);
       scrollableContainer.prepend(item);
-      addedItemsSize += 40;
+      // addedItemsSize += 40;
     }
 
     // console.log('scrolledPaneOffsetTop:', scrolledPaneOffsetTop, 'removedItemsSize:', removedItemsSize, 'addedItemsSize:', addedItemsSize, 'freeSpace', freeSpace, 'exceededSpace', exceededSpace);
     // scrollableContainer.scroll(scrollTop - halfScrollLimit - (halfScrollLimit - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
     // scrollableContainer.scroll(scrollTop - halfScrollLimit + removedItemsSize + (exceededSpace - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
-    scrollableContainer.scroll(offsetTop - removedItemsSize - padding,  addedItemsSize - removedItemsSize);
+    // scrollableContainer.scroll(offsetTop - removedItemsSize - padding,  addedItemsSize - removedItemsSize);
   });
   // 
   // scrollableContainer.onScrollDownOverflow((scrollTop, scrollLimit, items) => {
