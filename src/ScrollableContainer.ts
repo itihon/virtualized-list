@@ -30,6 +30,7 @@ export default class ScrollableContainer {
   private _onNewItemsCB: OnNewItemsCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
+  private _scrollTop: number = 0;
   private _previousScrollTop: number = 0;
   private _observer: IntersectionObserver | undefined;
   private _newItems: Set<Element> = new Set();
@@ -37,9 +38,8 @@ export default class ScrollableContainer {
   private _remainedItemsHeightAcc: HeightAccumulator = new HeightAccumulator();
 
   private _checkBuffers = () => { 
-    const { scrollTop } = this._scrollableParent;
-    const isScrollingDown = this._previousScrollTop < scrollTop;
-    const isScrollingUp = this._previousScrollTop > scrollTop;
+    const isScrollingDown = this._previousScrollTop < this._scrollTop;
+    const isScrollingUp = this._previousScrollTop > this._scrollTop;
 
     if (isScrollingDown && !this._scrolledPaneBottomBuffer.length) {
       this._onScrollDownEmptyBufferCB(this._scrolledPaneBottomBuffer); 
@@ -162,6 +162,8 @@ export default class ScrollableContainer {
       }
 
       requestAnimationFrame(this._checkBuffers);
+
+      this._scrollTop = this._scrollableParent.scrollTop;
     });
   }
 
