@@ -5,6 +5,7 @@ import './ScrollableContainer.css';
 import HeightAccumulator from './HeightAccumulator';
 
 export type OnOverscanCallback = () => void;
+export type OnEmptyBufferCallback = () => void;
 
 export type OnNewItemsCallback = (
   newEntries: Array<IntersectionObserverEntry>,
@@ -22,18 +23,33 @@ export default class ScrollableContainer {
   private _scrolledPaneBottomBuffer: ScrolledPane;
   private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
   private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
+  private _onScrollDownEmptyBufferCB: OnEmptyBufferCallback = () => {};
+  private _onScrollUpEmptyBufferCB: OnEmptyBufferCallback = () => {};
   private _onNewItemsCB: OnNewItemsCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
+  private _previousScrollTop: number = 0;
   private _observer: IntersectionObserver | undefined;
   private _newItems: Set<Element> = new Set();
   private _itemsHeightAcc: HeightAccumulator = new HeightAccumulator();
   private _remainedItemsHeightAcc: HeightAccumulator = new HeightAccumulator();
 
+  private _checkBuffers = () => { 
+    const { scrollTop } = this._scrollableParent;
+    const isScrollingDown = this._previousScrollTop < scrollTop;
+    const isScrollingUp = this._previousScrollTop > scrollTop;
+
+    if (isScrollingDown && !this._scrolledPaneBottomBuffer.length) {
+      this._onScrollDownEmptyBufferCB(); 
+    }
+    
+    if (isScrollingUp && !this._scrolledPaneTopBuffer.length) {
+      this._onScrollUpEmptyBufferCB(); 
+    }
+  };
+
   private _createObserver(height: OverscanHeight): IntersectionObserver {
 
-    let previousScrollTop = 0;
-    
     const rootMargin = `${height} 0px ${height} 0px`;
 
     const observer = new IntersectionObserver((entries) => {
@@ -46,8 +62,8 @@ export default class ScrollableContainer {
       const itemsHeightAcc = this._itemsHeightAcc;
       const remainedItemsHeightAcc = this._remainedItemsHeightAcc;
       const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
-      const isScrollingDown = previousScrollTop < scrollTop;
-      const isScrollingUp = previousScrollTop > scrollTop;
+      const isScrollingDown = this._previousScrollTop < scrollTop;
+      const isScrollingUp = this._previousScrollTop > scrollTop;
       const paddingTop = parseInt(
         getComputedStyle(this._scrollableParent).paddingTop,
       );
@@ -110,7 +126,7 @@ export default class ScrollableContainer {
         this.scroll(scrolledPaneOffsetTop + remainedItemsHeightAcc.getTop() - itemsHeightAcc.getTop() - paddingTop);
       }
 
-      previousScrollTop = scrollTop;
+      this._previousScrollTop = scrollTop;
         
     }, {
       root: this._scrollableParent,
@@ -142,6 +158,8 @@ export default class ScrollableContainer {
       for (const item of this._scrolledPane.DOMRoot.children) {
         this._observer?.observe(item);
       }
+
+      requestAnimationFrame(this._checkBuffers);
     });
   }
 
@@ -151,6 +169,14 @@ export default class ScrollableContainer {
   
   onScrollUpOverscan(cb: OnOverscanCallback) {
     this._onScrollUpOverscanCB = cb;
+  }
+  
+  onScrollDownEmptyBuffer(cb: OnEmptyBufferCallback) {
+    this._onScrollDownEmptyBufferCB = cb;
+  }
+  
+  onScrollUpEmptyBuffer(cb: OnEmptyBufferCallback) {
+    this._onScrollUpEmptyBufferCB = cb;
   }
 
   onNewItems(cb: OnNewItemsCallback) {

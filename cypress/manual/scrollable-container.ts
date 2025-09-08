@@ -127,7 +127,16 @@ else {
   // 
   // // scrollableContainer.setOverscanHeight('300px');
   scrollableContainer.setOverscanHeight('100%');
+
+  scrollableContainer.onScrollDownEmptyBuffer(() => {
+    console.log('scroll down empty buffer');
+  });
+  
+  scrollableContainer.onScrollUpEmptyBuffer(() => {
+    console.log('scroll up empty buffer');
+  });
 }
+
 
 document.body.appendChild(container);
 
