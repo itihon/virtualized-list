@@ -18,6 +18,8 @@ export default class ScrollableContainer {
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
   private _scrolledPane: ScrolledPane;
+  private _scrolledPaneTopBuffer: ScrolledPane;
+  private _scrolledPaneBottomBuffer: ScrolledPane;
   private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
   private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
   private _onNewItemsCB: OnNewItemsCallback = () => {};
@@ -122,7 +124,9 @@ export default class ScrollableContainer {
     this._scrollableParent = scrollableParent;    
     this._scrollHeightFiller = new ScrollHeight(scrollableParent);
     this._fillerTop = new Filler(scrollableParent);
+    this._scrolledPaneTopBuffer = new ScrolledPane(scrollableParent, ['ScrolledPane__Buffer']);
     this._scrolledPane = new ScrolledPane(scrollableParent);
+    this._scrolledPaneBottomBuffer = new ScrolledPane(scrollableParent, ['ScrolledPane__Buffer']);
     this._fillerBottom = new Filler(scrollableParent);
 
     this._scrollableParent.classList.add('class__ScrollableContainer');

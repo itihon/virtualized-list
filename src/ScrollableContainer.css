@@ -35,3 +35,10 @@
   height: 100%;
   overflow: visible;
 }
+
+.class__ScrolledPane.ScrolledPane__Buffer {
+  position: absolute;
+  width: 100%;
+  top: 0;
+  visibility: hidden;
+}

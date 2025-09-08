@@ -5,8 +5,8 @@ export default class ScrolledPane extends DOMConstructor {
   private _offsetHeight: number = 0;
   private _scrollHeight: number = 0;
 
-  constructor(scrollableParent: HTMLElement) {
-    super(scrollableParent, ['class__ScrolledPane']);
+  constructor(scrollableParent: HTMLElement, classList: string[] = []) {
+    super(scrollableParent, ['class__ScrolledPane', ...classList]);
     this._paneElement = super.DOMRoot;
   }
 
