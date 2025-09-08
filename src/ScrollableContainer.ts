@@ -4,8 +4,10 @@ import ScrollHeight from './ScrollHeight';
 import './ScrollableContainer.css';
 import HeightAccumulator from './HeightAccumulator';
 
+type ScrolledPaneBuffer = ScrolledPane;
+
 export type OnOverscanCallback = () => void;
-export type OnEmptyBufferCallback = () => void;
+export type OnEmptyBufferCallback = (buffer: ScrolledPaneBuffer) => void;
 
 export type OnNewItemsCallback = (
   newEntries: Array<IntersectionObserverEntry>,
@@ -40,11 +42,11 @@ export default class ScrollableContainer {
     const isScrollingUp = this._previousScrollTop > scrollTop;
 
     if (isScrollingDown && !this._scrolledPaneBottomBuffer.length) {
-      this._onScrollDownEmptyBufferCB(); 
+      this._onScrollDownEmptyBufferCB(this._scrolledPaneBottomBuffer); 
     }
     
     if (isScrollingUp && !this._scrolledPaneTopBuffer.length) {
-      this._onScrollUpEmptyBufferCB(); 
+      this._onScrollUpEmptyBufferCB(this._scrolledPaneTopBuffer); 
     }
   };
 
