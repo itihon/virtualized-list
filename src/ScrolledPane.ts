@@ -32,15 +32,11 @@ export default class ScrolledPane extends DOMConstructor {
   }
 
   append(...items: HTMLElement[]) {
-    for (const item of items) {
-      this._paneElement.append(item);
-    }
+    this._paneElement.append(...items);
   }
   
   prepend(...items: HTMLElement[]) {
-    for (const item of items) {
-      this._paneElement.prepend(item);
-    }
+    this._paneElement.prepend(...items);
   }
 
   removeItem(itemIndex: number): boolean {
