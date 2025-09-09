@@ -36,10 +36,16 @@
   overflow: visible;
 }
 
-.class__ScrolledPane.ScrolledPane__Buffer {
+.class__ScrolledPane.class__ScrolledPaneBuffer {
   position: absolute;
   width: 100%;
   top: 0;
   visibility: hidden;
   z-index: -1;
+}
+
+.ScrolledPaneBuffer__Marker {
+  position: relative;
+  width: 100%;
+  grid-column: 1 / -1;
 }

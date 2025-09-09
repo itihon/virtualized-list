@@ -3,8 +3,7 @@ import Filler from './Filler';
 import ScrollHeight from './ScrollHeight';
 import './ScrollableContainer.css';
 import HeightAccumulator from './HeightAccumulator';
-
-type ScrolledPaneBuffer = ScrolledPane;
+import ScrolledPaneBuffer from './ScrolledPaneBuffer';
 
 export type OnOverscanCallback = () => void;
 export type OnEmptyBufferCallback = (buffer: ScrolledPaneBuffer) => void;
@@ -21,8 +20,8 @@ export default class ScrollableContainer {
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
   private _scrolledPane: ScrolledPane;
-  private _scrolledPaneTopBuffer: ScrolledPane;
-  private _scrolledPaneBottomBuffer: ScrolledPane;
+  private _scrolledPaneTopBuffer: ScrolledPaneBuffer;
+  private _scrolledPaneBottomBuffer: ScrolledPaneBuffer;
   private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
   private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
   private _onScrollDownEmptyBufferCB: OnEmptyBufferCallback = () => {};
@@ -142,9 +141,9 @@ export default class ScrollableContainer {
     this._scrollableParent = scrollableParent;    
     this._scrollHeightFiller = new ScrollHeight(scrollableParent);
     this._fillerTop = new Filler(scrollableParent);
-    this._scrolledPaneTopBuffer = new ScrolledPane(scrollableParent, ['ScrolledPane__Buffer']);
+    this._scrolledPaneTopBuffer = new ScrolledPaneBuffer(scrollableParent);
     this._scrolledPane = new ScrolledPane(scrollableParent);
-    this._scrolledPaneBottomBuffer = new ScrolledPane(scrollableParent, ['ScrolledPane__Buffer']);
+    this._scrolledPaneBottomBuffer = new ScrolledPaneBuffer(scrollableParent);
     this._fillerBottom = new Filler(scrollableParent);
 
     this._scrollableParent.classList.add('class__ScrollableContainer');
