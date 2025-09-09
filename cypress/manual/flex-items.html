@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Flex items calculation test</title>
+    <meta name="description" content="This is a description.">
+    <style>
+      .box {
+        border: 2px dotted rgb(96 139 168);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        height: 600px;
+      }
+      .box div {
+        background-color: rgb(96 139 168 / 0.2);
+        border: 2px solid rgb(96 139 168);
+        border-radius: 5px;
+        padding: 20px;
+      }
+      .box .stretch {
+        align-self: stretch;
+      }
+      .box .selected {
+        align-self: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <div>One</div>
+      <div class="selected">Two</div>
+      <div class="stretch">Three</div>
+      <div>Four</div>
+      <div>Five</div>
+      <div>Six</div>
+      <div class="selected">Seven</div>
+      <div class="selected">Eight</div>
+      <div>Nine</div>
+      <div>Ten</div>
+      <div>Eleven</div>
+      <div class="selected">Twelve</div>
+      <div class="selected">Thirteen</div>
+      <div>Fourteen</div>
+      <div>Fifteen</div>
+      <div>Sixteen</div>
+      <div class="selected">Seventeen</div>
+      <div class="selected">Eighteen</div>
+      <div>Nineteen</div>
+      <div>Twenty</div>
+      <div>Twenty one</div>
+      <div class="selected">Twenty two</div>
+      <div class="selected">Twenty three</div>
+      <div>Twenty four</div>
+      <div>Twenty five</div>
+      <div>Twenty six</div>
+    </div>
+
+  </body>
+</html>
