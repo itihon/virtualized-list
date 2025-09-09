@@ -35,7 +35,7 @@ else {
 
     // const halfScrollLimit = scrollLimit / 2;
     // const freeSpace = entry.rootBounds!.bottom - entry.boundingClientRect.bottom;
-    const overscanRowCount = 10;
+    // const overscanRowCount = 10;
     // const scrollableContainerHeight = 300;
     // const exceededSpace = entry.rootBounds!.top - entry.boundingClientRect.top;
 
@@ -52,11 +52,11 @@ else {
     // }
 
     // while (addedItemsSize < freeSpace) {
-    for (let i = 0; i < overscanRowCount; i++) {
-      const item = createItem(itemNum++);
-      scrollableContainer.append(item);
-      // addedItemsSize += 40;
-    }
+    // for (let i = 0; i < overscanRowCount; i++) {
+    //   const item = createItem(itemNum++);
+    //   scrollableContainer.append(item);
+    //   // addedItemsSize += 40;
+    // }
 
     // console.log('scrolledPaneOffsetTop:', scrolledPaneOffsetTop, 'removedItemsSize:', removedItemsSize, 'addedItemsSize:', addedItemsSize, 'freeSpace', freeSpace, 'exceededSpace', exceededSpace);
     // scrollableContainer.scroll(scrollTop - halfScrollLimit - (halfScrollLimit - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
@@ -72,7 +72,7 @@ else {
 
     // const halfScrollLimit = scrollLimit / 2;
     // const freeSpace = entry.boundingClientRect.top - entry.rootBounds!.top;
-    const overscanRowCount = 10;
+    // const overscanRowCount = 10;
     // const scrollableContainerHeight = 300;
     // const exceededSpace = entry.rootBounds!.top - entry.boundingClientRect.top;
     // console.log('freeSpace', freeSpace, 'exceeded space', exceededSpace)
@@ -89,11 +89,11 @@ else {
     // }
 
     // while (addedItemsSize < freeSpace) {
-    for (let i = 0; i < overscanRowCount; i++) {
-      const item = createItem(itemNum++);
-      scrollableContainer.prepend(item);
-      // addedItemsSize += 40;
-    }
+    // for (let i = 0; i < overscanRowCount; i++) {
+    //   const item = createItem(itemNum++);
+    //   scrollableContainer.prepend(item);
+    //   // addedItemsSize += 40;
+    // }
 
     // console.log('scrolledPaneOffsetTop:', scrolledPaneOffsetTop, 'removedItemsSize:', removedItemsSize, 'addedItemsSize:', addedItemsSize, 'freeSpace', freeSpace, 'exceededSpace', exceededSpace);
     // scrollableContainer.scroll(scrollTop - halfScrollLimit - (halfScrollLimit - removedItemsSize)); // 40:130+8 50:200+46 60:270+86 
@@ -128,12 +128,24 @@ else {
   // // scrollableContainer.setOverscanHeight('300px');
   scrollableContainer.setOverscanHeight('100%');
 
-  scrollableContainer.onScrollDownEmptyBuffer(() => {
+  scrollableContainer.onScrollDownEmptyBuffer((buffer) => {
     console.log('scroll down empty buffer');
+
+    const overscanRowCount = 10;
+
+    buffer.append(
+      ...Array.from({ length: overscanRowCount }, () => createItem(itemNum++)),
+    )
   });
   
-  scrollableContainer.onScrollUpEmptyBuffer(() => {
+  scrollableContainer.onScrollUpEmptyBuffer((buffer) => {
     console.log('scroll up empty buffer');
+
+    const overscanRowCount = 10;
+
+    buffer.append(
+      ...Array.from({ length: overscanRowCount }, () => createItem(itemNum++)),
+    )
   });
 }
 
