@@ -67,17 +67,17 @@ export type NotIntersectedRowsAccumulator = {
 
 export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry>(
   (acc, entry, entries) => {
-    if (!acc.isRowNotIntersected) return acc;
-
     const { right } = entry.boundingClientRect;
 
     if (right < acc.currentRight) {
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
-      acc.rows.push(acc.currentRow);
-      acc.rowsTop += top;
-      acc.rowsBottom += bottom
-      acc.rowsHeight += height;
+      if (acc.isRowNotIntersected) {
+        acc.rows.push(acc.currentRow);
+        acc.rowsTop += top;
+        acc.rowsBottom += bottom
+        acc.rowsHeight += height;
+      } 
 
       acc.currentRow = [];
       acc.isRowNotIntersected = true;
@@ -88,8 +88,6 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     if (right >= acc.currentRight) {
       acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
 
-      if (!acc.isRowNotIntersected) return acc;
-
       acc.currentRow.push(entry);
       acc.itemsHeightReducer.run(entry, entries);
       acc.currentRight = right;
@@ -98,10 +96,12 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     if (entry === entries[entries.length - 1]) {
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
-      acc.rows.push(acc.currentRow);
-      acc.rowsTop += top;
-      acc.rowsBottom += bottom
-      acc.rowsHeight += height;
+      if (acc.isRowNotIntersected) {
+        acc.rows.push(acc.currentRow);
+        acc.rowsTop += top;
+        acc.rowsBottom += bottom
+        acc.rowsHeight += height;
+      }
     }
 
     return acc;
