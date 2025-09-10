@@ -7,6 +7,12 @@
     <title>Flex items calculation test</title>
     <meta name="description" content="This is a description.">
     <style>
+      body {
+        height: 300vh;
+        display: flex;
+        align-items: center;
+      }
+
       .box {
         border: 2px dotted rgb(96 139 168);
         display: flex;
@@ -57,6 +63,32 @@
       <div>Twenty five</div>
       <div>Twenty six</div>
     </div>
+
+    <script type="module">
+      import { createNotIntersectedFlexItemsReducer } from '../../src/reducers';
+
+      const box = document.querySelector('.box');
+      const notIntersectedFlexItemsReducer = createNotIntersectedFlexItemsReducer();
+
+      const observer = new IntersectionObserver(entries => {
+        // console.log(getNotIntersectedFlexItems(entries));
+        notIntersectedFlexItemsReducer.reset();
+
+        for (const entry of entries) {
+          notIntersectedFlexItemsReducer.run(entry, entries);
+        }
+
+        console.log(notIntersectedFlexItemsReducer.getAccumulator());
+
+      });
+
+      addEventListener('scroll', () => {
+        observer.disconnect();
+        for (const item of box.children) {
+          observer.observe(item);
+        }
+      });
+    </script>
 
   </body>
 </html>
