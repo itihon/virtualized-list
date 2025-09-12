@@ -4,10 +4,16 @@ export default class ScrolledPane extends DOMConstructor {
   private _paneElement: HTMLElement;
   private _offsetHeight: number = 0;
   private _scrollHeight: number = 0;
+  private _contentBoxWidth: number = 0;
+  private _resizeObserver: ResizeObserver;
 
   constructor(scrollableParent: HTMLElement, classList: string[] = []) {
     super(scrollableParent, ['class__ScrolledPane', ...classList]);
     this._paneElement = super.DOMRoot;
+
+    this._resizeObserver = new ResizeObserver((entries) => {
+      this._contentBoxWidth = entries[0].contentBoxSize[0].inlineSize;
+    });
   }
 
   preserveOffsetHeight(): number {
@@ -24,6 +30,15 @@ export default class ScrolledPane extends DOMConstructor {
   
   get scrollHeight(): number {
     return this._scrollHeight;
+  }
+
+  scheduleSizeUpdate() {
+    this._resizeObserver.disconnect();
+    this._resizeObserver.observe(this._paneElement);
+  }
+
+  getContentBoxWidth(): number {
+    return this._contentBoxWidth;
   }
 
   setScrollLimit(limit: number) {
