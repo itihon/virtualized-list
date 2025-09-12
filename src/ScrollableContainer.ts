@@ -81,8 +81,8 @@ export default class ScrollableContainer {
       scrolledPane.preserveOffsetHeight();
       scrolledPane.setScrollLimit(scrolledPaneScrollHeight - rootHeight + paddingTop);
 
-      itemsHeightAcc.reset();
-      remainedItemsHeightAcc.reset();
+      itemsHeightAcc.init();
+      remainedItemsHeightAcc.init();
 
       for (const observerEntry of entries) {
         const { target } = observerEntry;
