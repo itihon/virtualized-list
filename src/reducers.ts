@@ -1,7 +1,7 @@
 type ReducerFunction<A, I, K> = (acc: A, item: I, arr: K) => A;
-type InitCallback<A, V> = (acc: A, value: V | undefined) => void;
+type InitCallback<A, V extends unknown[]> = (acc: A, ...value: V) => void;
 
-export default class Reducer<A, I, V = undefined> {
+export default class Reducer<A, I, V extends unknown[] = undefined[]> {
   private _acc: A;
   private _reducerFn: ReducerFunction<A, I, Array<I>>;
   private _initCb: InitCallback<A, V>;
@@ -16,8 +16,8 @@ export default class Reducer<A, I, V = undefined> {
     this._acc = this._reducerFn(this._acc, item, items);
   }
 
-  init(value?: V) {
-    this._initCb(this._acc, value);
+  init(...value: V) {
+    this._initCb(this._acc, ...value);
   }
 
   getAccumulator(): A {
@@ -75,7 +75,7 @@ export type NotIntersectedRowsAccumulator = {
  *  - width of each item
  */
 
-export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry, number>(
+export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
   (acc, entry, entries) => {
     const { width } = entry.boundingClientRect;
     const itemStyle = getComputedStyle(entry.target);
@@ -132,7 +132,7 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
     currentRowWidth: 0,
     flexboxColumnGap: 0,
   },
-  (acc, contentBoxInlineSize) => {
+  (acc, flexbox, contentBoxInlineSize) => {
     const flexboxStyle = getComputedStyle(flexbox);
     const columnGap = parseInt(flexboxStyle.columnGap) || 0;
 
@@ -143,7 +143,7 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
     acc.currentRow = [];
     acc.isRowNotIntersected = true;
     acc.itemsHeightReducer.init();
-    acc.flexboxWidth = contentBoxInlineSize || 0;
+    acc.flexboxWidth = contentBoxInlineSize;
     acc.currentRowWidth = 0;
     acc.flexboxColumnGap = columnGap;
   },
