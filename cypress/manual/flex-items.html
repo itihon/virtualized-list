@@ -116,11 +116,11 @@
       }
 
       const box = document.querySelector('.box');
-      const notIntersectedFlexItemsReducer = createNotIntersectedFlexItemsReducer(box);
+      const notIntersectedFlexItemsReducer = createNotIntersectedFlexItemsReducer();
 
       const observer = new IntersectionObserver(entries => {
         // console.log(getNotIntersectedFlexItems(entries));
-        notIntersectedFlexItemsReducer.init(flexBoxInineSize);
+        notIntersectedFlexItemsReducer.init(box, flexBoxInineSize);
         removeHeightlightFlexRows();
 
         for (const entry of entries) {
