@@ -11,6 +11,8 @@
         height: 300vh;
         display: flex;
         align-items: center;
+        padding: 0;
+        margin: 0;
       }
 
       .box {
@@ -19,6 +21,7 @@
         flex-wrap: wrap;
         align-items: flex-start;
         height: 600px;
+        padding: 16px;
       }
       .box div {
         background-color: rgb(96 139 168 / 0.2);
@@ -68,22 +71,78 @@
     <script type="module">
       import { createNotIntersectedFlexItemsReducer } from '../../src/reducers';
 
+      function hightlightFlexRow(row) {
+        const highlightArea = document.createElement('div');
+        const { scrollLeft, scrollTop } = document.documentElement;
+
+        let highlightTop = Infinity;
+        let highlightRight = -Infinity;
+        let highlightBottom = -Infinity;
+        let highlightLeft = Infinity;
+
+        for (let entry of row) {
+          const { top, right, bottom, left } = entry.boundingClientRect;
+          
+          highlightTop = Math.min(highlightTop, top);
+          highlightRight = Math.max(highlightRight, right);
+          highlightBottom = Math.max(highlightBottom, bottom);
+          highlightLeft = Math.min(highlightLeft, left);
+        }
+
+        const style = {
+          position: 'absolute',
+          backgroundColor: 'rgb(231 197 145 / 20%)',
+          border: '2px solid rgb(254 202 91)',
+          left: `${highlightLeft + scrollLeft}px`,
+          top: `${highlightTop + scrollTop}px`,
+          width: `${highlightRight - highlightLeft}px`,
+          height: `${highlightBottom - highlightTop}px`,
+        };
+
+        Object.assign(highlightArea.style, style);
+        highlightArea.classList.add('flex-row-highlight-area');
+
+        document.body.appendChild(highlightArea);
+      }
+
+      function removeHeightlightFlexRows() {
+        const highlightAreas = document.querySelectorAll('.flex-row-highlight-area');
+
+        if (highlightAreas) {
+          for (const highlightArea of highlightAreas) {
+            highlightArea.remove();
+          }
+        }
+      }
+
       const box = document.querySelector('.box');
-      const notIntersectedFlexItemsReducer = createNotIntersectedFlexItemsReducer();
+      const notIntersectedFlexItemsReducer = createNotIntersectedFlexItemsReducer(box);
 
       const observer = new IntersectionObserver(entries => {
         // console.log(getNotIntersectedFlexItems(entries));
-        notIntersectedFlexItemsReducer.reset();
+        notIntersectedFlexItemsReducer.init(flexBoxInineSize);
+        removeHeightlightFlexRows();
 
         for (const entry of entries) {
           notIntersectedFlexItemsReducer.run(entry, entries);
         }
 
-        console.log(notIntersectedFlexItemsReducer.getAccumulator());
+        const acc = notIntersectedFlexItemsReducer.getAccumulator();
 
+        for (const row of acc.rows) {
+          hightlightFlexRow(row);
+        }
+      });
+
+      let flexBoxInineSize = 0;
+
+      const resizeObserver = new ResizeObserver((entries) => {
+        flexBoxInineSize = entries[0].contentBoxSize[0].inlineSize;
       });
 
       addEventListener('scroll', () => {
+        resizeObserver.disconnect();
+        resizeObserver.observe(box, {box: 'content-box'});
         observer.disconnect();
         for (const item of box.children) {
           observer.observe(item);

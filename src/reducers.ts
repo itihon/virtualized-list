@@ -1,23 +1,23 @@
 type ReducerFunction<A, I, K> = (acc: A, item: I, arr: K) => A;
-type ResetterCallback<A> = (acc: A) => void;
+type InitCallback<A, V> = (acc: A, value: V | undefined) => void;
 
-export default class Reducer<A, I> {
+export default class Reducer<A, I, V = undefined> {
   private _acc: A;
   private _reducerFn: ReducerFunction<A, I, Array<I>>;
-  private _resetterCb: ResetterCallback<A>;
+  private _initCb: InitCallback<A, V>;
 
-  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: ResetterCallback<A>) {
+  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: InitCallback<A, V>) {
     this._acc = acc;
     this._reducerFn = fn;
-    this._resetterCb = cb;
+    this._initCb = cb;
   }
 
   run(item: I, items: Array<I>) {
     this._acc = this._reducerFn(this._acc, item, items);
   }
 
-  reset() {
-    this._resetterCb(this._acc);
+  init(value?: V) {
+    this._initCb(this._acc, value);
   }
 
   getAccumulator(): A {
@@ -61,15 +61,31 @@ export type NotIntersectedRowsAccumulator = {
   rowsHeight: number;
   currentRow: Array<IntersectionObserverEntry>;
   isRowNotIntersected: boolean;
-  currentRight: number;
   itemsHeightReducer: ReturnType<typeof createItemsHeightReducer>;
+  flexboxWidth: number;
+  flexboxColumnGap: number;
+  currentRowWidth: number;
 }
 
-export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry>(
-  (acc, entry, entries) => {
-    const { right } = entry.boundingClientRect;
+/**
+ * To calculate flexbox rows we have to take into consideration:
+ *  - parent container's left and right `padding`, better use (content box size of ResizeObserverEntry)
+ *  - parent container's `gap`
+ *  - left and right `margin` of each item
+ *  - width of each item
+ */
 
-    if (right < acc.currentRight) {
+export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry, number>(
+  (acc, entry, entries) => {
+    const { width } = entry.boundingClientRect;
+    const itemStyle = getComputedStyle(entry.target);
+    const marginLeft = parseInt(itemStyle.marginLeft) || 0;
+    const marginRight = parseInt(itemStyle.marginRight) || 0;
+    const itemOccupiedSpace = marginLeft + width + marginRight;
+    const resultingRowWidth = acc.currentRowWidth + itemOccupiedSpace;
+    const isLastItem = entry === entries[entries.length - 1];
+
+    if (resultingRowWidth > acc.flexboxWidth) {
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
       if (acc.isRowNotIntersected) {
@@ -81,19 +97,17 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
 
       acc.currentRow = [];
       acc.isRowNotIntersected = true;
-      acc.currentRight = right;
-      acc.itemsHeightReducer.reset();
+      acc.currentRowWidth = 0;
+      acc.itemsHeightReducer.init();
     }
+    
+    acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
 
-    if (right >= acc.currentRight) {
-      acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
+    acc.currentRow.push(entry);
+    acc.itemsHeightReducer.run(entry, entries);
+    acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
 
-      acc.currentRow.push(entry);
-      acc.itemsHeightReducer.run(entry, entries);
-      acc.currentRight = right;
-    }
-
-    if (entry === entries[entries.length - 1]) {
+    if (isLastItem) {
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
       if (acc.isRowNotIntersected) {
@@ -113,17 +127,24 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     rowsHeight: 0,
     currentRow: [],
     isRowNotIntersected: true,
-    currentRight: 0,
     itemsHeightReducer: createItemsHeightReducer(),
+    flexboxWidth: 0,
+    currentRowWidth: 0,
+    flexboxColumnGap: 0,
   },
-  (acc) => {
+  (acc, contentBoxInlineSize) => {
+    const flexboxStyle = getComputedStyle(flexbox);
+    const columnGap = parseInt(flexboxStyle.columnGap) || 0;
+
     acc.rows = [];
     acc.rowsTop = 0;
     acc.rowsBottom = 0;
     acc.rowsHeight = 0;
     acc.currentRow = [];
     acc.isRowNotIntersected = true;
-    acc.currentRight = 0;
-    acc.itemsHeightReducer.reset();
+    acc.itemsHeightReducer.init();
+    acc.flexboxWidth = contentBoxInlineSize || 0;
+    acc.currentRowWidth = 0;
+    acc.flexboxColumnGap = columnGap;
   },
 );
