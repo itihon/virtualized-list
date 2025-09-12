@@ -16,6 +16,7 @@ export default class Reducer<A, I> {
     this._acc = this._reducerFn(this._acc, item, items);
   }
 
+  // rename reset to init
   reset() {
     this._resetterCb(this._acc);
   }
@@ -61,15 +62,41 @@ export type NotIntersectedRowsAccumulator = {
   rowsHeight: number;
   currentRow: Array<IntersectionObserverEntry>;
   isRowNotIntersected: boolean;
-  currentRight: number;
   itemsHeightReducer: ReturnType<typeof createItemsHeightReducer>;
+  flexboxWidth: number;
+  flexboxColumnGap: number;
+  currentRowWidth: number;
 }
 
-export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry>(
-  (acc, entry, entries) => {
-    const { right } = entry.boundingClientRect;
+/**
+ * To calculate flexbox rows we have to take into consideration:
+ *  - parent container's `flex-wrap` must be set to `wrap` otherwise it is just one row
+ *  - parent container's left and right `padding`
+ *  - parent container's `gap`
+ *  - left and right `margin` of each item
+ *  - width of each item
+ */
 
-    if (right < acc.currentRight) {
+export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry>(
+  (acc, entry, entries) => {
+    const { width } = entry.boundingClientRect;
+    const itemStyle = getComputedStyle(entry.target);
+    const marginLeft = parseInt(itemStyle.marginLeft) || 0;
+    const marginRight = parseInt(itemStyle.marginRight) || 0;
+    const itemOccupiedSpace = (marginLeft + width + marginRight);
+    const resultingRowWidth = (acc.currentRowWidth + itemOccupiedSpace);
+    const isLastItem = entry === entries[entries.length - 1];
+
+    const diff = acc.flexboxWidth - resultingRowWidth;
+    if (-1.5 < diff && diff < 1.5) {
+      console.warn('diff:', diff);
+    }
+
+    console.log('item', entry.target.textContent, resultingRowWidth, acc.flexboxWidth)
+
+    // if (resultingRowWidth > acc.flexboxWidth) {
+    if (diff < 1.45) {
+      console.log('new row', entry.target.textContent, resultingRowWidth, acc.flexboxWidth)
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
       if (acc.isRowNotIntersected) {
@@ -81,22 +108,25 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
 
       acc.currentRow = [];
       acc.isRowNotIntersected = true;
-      acc.currentRight = right;
+      acc.currentRowWidth = 0;
       acc.itemsHeightReducer.reset();
     }
-
-    if (right >= acc.currentRight) {
+    
+    // if (acc.currentRowWidth + itemOccupiedSpace <= acc.flexboxWidth) {
+      // console.log('accumulate row', entry.target.textContent, acc.currentRowWidth, itemOccupiedSpace, acc.flexboxWidth)
       acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
 
       acc.currentRow.push(entry);
       acc.itemsHeightReducer.run(entry, entries);
-      acc.currentRight = right;
-    }
+      acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
+    // }
 
-    if (entry === entries[entries.length - 1]) {
+    if (isLastItem) {
+      // console.log('last item', entry.target.textContent)
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
       if (acc.isRowNotIntersected) {
+        // console.log('save to acc')
         acc.rows.push(acc.currentRow);
         acc.rowsTop += top;
         acc.rowsBottom += bottom
@@ -113,17 +143,34 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     rowsHeight: 0,
     currentRow: [],
     isRowNotIntersected: true,
-    currentRight: 0,
     itemsHeightReducer: createItemsHeightReducer(),
+    flexboxWidth: 0,
+    currentRowWidth: 0,
+    flexboxColumnGap: 0,
   },
   (acc) => {
+    const width = flexbox.getBoundingClientRect().width;
+    // const width = flexbox.clientWidth;
+    const flexboxStyle = getComputedStyle(flexbox);
+    const paddingLeft = parseInt(flexboxStyle.paddingLeft) || 0;
+    const paddingRight = parseInt(flexboxStyle.paddingRight) || 0;
+    const borderLeft = parseInt(flexboxStyle.borderLeft) || 0;
+    const borderRight = parseInt(flexboxStyle.borderRight) || 0;
+    const columnGap = parseInt(flexboxStyle.columnGap) || 0;
+
     acc.rows = [];
     acc.rowsTop = 0;
     acc.rowsBottom = 0;
     acc.rowsHeight = 0;
     acc.currentRow = [];
     acc.isRowNotIntersected = true;
-    acc.currentRight = 0;
     acc.itemsHeightReducer.reset();
+    acc.flexboxWidth = width - (paddingLeft + paddingRight + borderLeft + borderRight);
+    // acc.flexboxWidth = width - (paddingLeft + paddingRight);
+    acc.currentRowWidth = 0;
+    acc.flexboxColumnGap = columnGap;
+
+    // ---------
+    flexbox.dataset.computed = acc.flexboxWidth;
   },
 );
