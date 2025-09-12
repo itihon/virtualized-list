@@ -69,33 +69,23 @@ export type NotIntersectedRowsAccumulator = {
 
 /**
  * To calculate flexbox rows we have to take into consideration:
- *  - parent container's `flex-wrap` must be set to `wrap` otherwise it is just one row
- *  - parent container's left and right `padding`
+ *  - parent container's left and right `padding`, better use (content box size of ResizeObserverEntry)
  *  - parent container's `gap`
  *  - left and right `margin` of each item
  *  - width of each item
  */
 
-export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry>(
+export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry, number>(
   (acc, entry, entries) => {
     const { width } = entry.boundingClientRect;
     const itemStyle = getComputedStyle(entry.target);
     const marginLeft = parseInt(itemStyle.marginLeft) || 0;
     const marginRight = parseInt(itemStyle.marginRight) || 0;
-    const itemOccupiedSpace = (marginLeft + width + marginRight);
-    const resultingRowWidth = (acc.currentRowWidth + itemOccupiedSpace);
+    const itemOccupiedSpace = marginLeft + width + marginRight;
+    const resultingRowWidth = acc.currentRowWidth + itemOccupiedSpace;
     const isLastItem = entry === entries[entries.length - 1];
 
-    const diff = acc.flexboxWidth - resultingRowWidth;
-    if (-1.5 < diff && diff < 1.5) {
-      console.warn('diff:', diff);
-    }
-
-    console.log('item', entry.target.textContent, resultingRowWidth, acc.flexboxWidth)
-
-    // if (resultingRowWidth > acc.flexboxWidth) {
-    if (diff < 1.45) {
-      console.log('new row', entry.target.textContent, resultingRowWidth, acc.flexboxWidth)
+    if (resultingRowWidth > acc.flexboxWidth) {
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
       if (acc.isRowNotIntersected) {
@@ -111,21 +101,16 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
       acc.itemsHeightReducer.init();
     }
     
-    // if (acc.currentRowWidth + itemOccupiedSpace <= acc.flexboxWidth) {
-      // console.log('accumulate row', entry.target.textContent, acc.currentRowWidth, itemOccupiedSpace, acc.flexboxWidth)
-      acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
+    acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
 
-      acc.currentRow.push(entry);
-      acc.itemsHeightReducer.run(entry, entries);
-      acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
-    // }
+    acc.currentRow.push(entry);
+    acc.itemsHeightReducer.run(entry, entries);
+    acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
 
     if (isLastItem) {
-      // console.log('last item', entry.target.textContent)
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
       if (acc.isRowNotIntersected) {
-        // console.log('save to acc')
         acc.rows.push(acc.currentRow);
         acc.rowsTop += top;
         acc.rowsBottom += bottom
@@ -147,14 +132,8 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
     currentRowWidth: 0,
     flexboxColumnGap: 0,
   },
-  (acc) => {
-    const width = flexbox.getBoundingClientRect().width;
-    // const width = flexbox.clientWidth;
+  (acc, contentBoxInlineSize) => {
     const flexboxStyle = getComputedStyle(flexbox);
-    const paddingLeft = parseInt(flexboxStyle.paddingLeft) || 0;
-    const paddingRight = parseInt(flexboxStyle.paddingRight) || 0;
-    const borderLeft = parseInt(flexboxStyle.borderLeft) || 0;
-    const borderRight = parseInt(flexboxStyle.borderRight) || 0;
     const columnGap = parseInt(flexboxStyle.columnGap) || 0;
 
     acc.rows = [];
@@ -164,8 +143,7 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
     acc.currentRow = [];
     acc.isRowNotIntersected = true;
     acc.itemsHeightReducer.init();
-    acc.flexboxWidth = width - (paddingLeft + paddingRight + borderLeft + borderRight);
-    // acc.flexboxWidth = width - (paddingLeft + paddingRight);
+    acc.flexboxWidth = contentBoxInlineSize || 0;
     acc.currentRowWidth = 0;
     acc.flexboxColumnGap = columnGap;
   },
