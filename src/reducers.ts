@@ -136,6 +136,13 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
     const flexboxStyle = getComputedStyle(flexbox);
     const columnGap = parseInt(flexboxStyle.columnGap) || 0;
 
+    if (!contentBoxInlineSize) {
+      throw new Error(
+        'Flexbox content box inline size is needed to be pased' + 
+        ' in the init() method for reducer to work.'
+      );
+    }
+
     acc.rows = [];
     acc.rowsTop = 0;
     acc.rowsBottom = 0;
@@ -143,7 +150,7 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
     acc.currentRow = [];
     acc.isRowNotIntersected = true;
     acc.itemsHeightReducer.init();
-    acc.flexboxWidth = contentBoxInlineSize || 0;
+    acc.flexboxWidth = contentBoxInlineSize;
     acc.currentRowWidth = 0;
     acc.flexboxColumnGap = columnGap;
   },
