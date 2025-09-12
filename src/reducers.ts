@@ -1,24 +1,23 @@
 type ReducerFunction<A, I, K> = (acc: A, item: I, arr: K) => A;
-type ResetterCallback<A> = (acc: A) => void;
+type InitCallback<A> = (acc: A) => void;
 
 export default class Reducer<A, I> {
   private _acc: A;
   private _reducerFn: ReducerFunction<A, I, Array<I>>;
-  private _resetterCb: ResetterCallback<A>;
+  private _initCb: InitCallback<A>;
 
-  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: ResetterCallback<A>) {
+  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: InitCallback<A>) {
     this._acc = acc;
     this._reducerFn = fn;
-    this._resetterCb = cb;
+    this._initCb = cb;
   }
 
   run(item: I, items: Array<I>) {
     this._acc = this._reducerFn(this._acc, item, items);
   }
 
-  // rename reset to init
-  reset() {
-    this._resetterCb(this._acc);
+  init() {
+    this._initCb(this._acc);
   }
 
   getAccumulator(): A {
@@ -109,7 +108,7 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
       acc.currentRow = [];
       acc.isRowNotIntersected = true;
       acc.currentRowWidth = 0;
-      acc.itemsHeightReducer.reset();
+      acc.itemsHeightReducer.init();
     }
     
     // if (acc.currentRowWidth + itemOccupiedSpace <= acc.flexboxWidth) {
@@ -164,13 +163,10 @@ export const createNotIntersectedFlexItemsReducer = (flexbox: HTMLElement) => ne
     acc.rowsHeight = 0;
     acc.currentRow = [];
     acc.isRowNotIntersected = true;
-    acc.itemsHeightReducer.reset();
+    acc.itemsHeightReducer.init();
     acc.flexboxWidth = width - (paddingLeft + paddingRight + borderLeft + borderRight);
     // acc.flexboxWidth = width - (paddingLeft + paddingRight);
     acc.currentRowWidth = 0;
     acc.flexboxColumnGap = columnGap;
-
-    // ---------
-    flexbox.dataset.computed = acc.flexboxWidth;
   },
 );
