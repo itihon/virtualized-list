@@ -1,12 +1,12 @@
 type ReducerFunction<A, I, K> = (acc: A, item: I, arr: K) => A;
-type InitCallback<A> = (acc: A) => void;
+type InitCallback<A, V> = (acc: A, value: V | undefined) => void;
 
-export default class Reducer<A, I> {
+export default class Reducer<A, I, V = undefined> {
   private _acc: A;
   private _reducerFn: ReducerFunction<A, I, Array<I>>;
-  private _initCb: InitCallback<A>;
+  private _initCb: InitCallback<A, V>;
 
-  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: InitCallback<A>) {
+  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: InitCallback<A, V>) {
     this._acc = acc;
     this._reducerFn = fn;
     this._initCb = cb;
@@ -16,8 +16,8 @@ export default class Reducer<A, I> {
     this._acc = this._reducerFn(this._acc, item, items);
   }
 
-  init() {
-    this._initCb(this._acc);
+  init(value?: V) {
+    this._initCb(this._acc, value);
   }
 
   getAccumulator(): A {
