@@ -79,8 +79,8 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
   (acc, entry, entries) => {
     const { width } = entry.boundingClientRect;
     const itemStyle = getComputedStyle(entry.target);
-    const marginLeft = parseInt(itemStyle.marginLeft) || 0;
-    const marginRight = parseInt(itemStyle.marginRight) || 0;
+    const marginLeft = parseFloat(itemStyle.marginLeft) || 0;
+    const marginRight = parseFloat(itemStyle.marginRight) || 0;
     const itemOccupiedSpace = marginLeft + width + marginRight;
     const resultingRowWidth = acc.currentRowWidth + itemOccupiedSpace;
     const isLastItem = entry === entries[entries.length - 1];
@@ -134,7 +134,7 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
   },
   (acc, flexbox, contentBoxInlineSize) => {
     const flexboxStyle = getComputedStyle(flexbox);
-    const columnGap = parseInt(flexboxStyle.columnGap) || 0;
+    const columnGap = parseFloat(flexboxStyle.columnGap) || 0;
 
     acc.rows = [];
     acc.rowsTop = 0;
