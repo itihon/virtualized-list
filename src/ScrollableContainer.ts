@@ -3,7 +3,7 @@ import Filler from './Filler';
 import ScrollHeight from './ScrollHeight';
 import ScrolledPaneBuffer from './ScrolledPaneBuffer';
 import './ScrollableContainer.css';
-import { createItemsHeightReducer } from './reducers';
+import { createItemsHeightReducer, createNotIntersectedFlexItemsReducer } from './reducers';
 
 export type OnOverscanCallback = () => void;
 export type OnEmptyBufferCallback = (buffer: ScrolledPaneBuffer) => void;
@@ -35,8 +35,10 @@ export default class ScrollableContainer {
   private _newItems: Set<Element> = new Set();
   private _itemsHeightAcc = createItemsHeightReducer();
   private _remainedItemsHeightAcc = createItemsHeightReducer();
+  private _notIntersectedEntriesAcc = createNotIntersectedFlexItemsReducer();
   private _itemsHeightAccResult = this._itemsHeightAcc.getAccumulator();
   private _remainedItemsHeightAccResult = this._remainedItemsHeightAcc.getAccumulator();
+  private _notIntersectedEntriesAccResult = this._notIntersectedEntriesAcc.getAccumulator();
 
   private _checkBuffers = () => { 
     const isScrollingDown = this._previousScrollTop < this._scrollTop;
@@ -57,15 +59,16 @@ export default class ScrollableContainer {
 
     const observer = new IntersectionObserver((entries) => {
 
-      const notIntersectedEntries: Array<IntersectionObserverEntry> = [];
       const newEntries: Array<IntersectionObserverEntry> = [];
       const scrolledPane = this._scrolledPane;
       const newItems = this._newItems;
       const rootBounds = entries[0].rootBounds!;
       const itemsHeightAcc = this._itemsHeightAcc;
       const remainedItemsHeightAcc = this._remainedItemsHeightAcc;
+      const notIntersectedEntriesAcc = this._notIntersectedEntriesAcc;
       const itemsHeightAccResult = this._itemsHeightAccResult;
       const remainedItemsHeightAccResult = this._remainedItemsHeightAccResult;
+      const notIntersectedEntriesAccResult = this._notIntersectedEntriesAccResult;
       const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
       const isScrollingDown = this._previousScrollTop < scrollTop;
       const isScrollingUp = this._previousScrollTop > scrollTop;
@@ -82,11 +85,13 @@ export default class ScrollableContainer {
 
       itemsHeightAcc.init();
       remainedItemsHeightAcc.init();
+      notIntersectedEntriesAcc.init(scrolledPane.DOMRoot, scrolledPane.getContentBoxWidth());
 
       for (const observerEntry of entries) {
         const { target } = observerEntry;
 
         itemsHeightAcc.run(observerEntry, entries);
+        notIntersectedEntriesAcc.run(observerEntry, entries);
 
         if (newItems.has(target)) {
           newEntries.push(observerEntry);
@@ -94,7 +99,6 @@ export default class ScrollableContainer {
         }
 
         if (!observerEntry.isIntersecting) {
-          notIntersectedEntries.push(observerEntry);
         }
         else {
           remainedItemsHeightAcc.run(observerEntry, entries);
@@ -109,8 +113,10 @@ export default class ScrollableContainer {
 
       if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
 
-        for (const entry of notIntersectedEntries) {
-          entry.target.remove();
+        for (const row of notIntersectedEntriesAccResult.rows) {
+          for (const entry of row) {
+            entry.target.remove();
+          }
         }
 
         this._onScrollUpOverscanCB();
@@ -121,8 +127,10 @@ export default class ScrollableContainer {
 
       if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
 
-        for (const entry of notIntersectedEntries) {
-          entry.target.remove();
+        for (const row of notIntersectedEntriesAccResult.rows) {
+          for (const entry of row) {
+            entry.target.remove();
+          }
         }
 
         this._onScrollDownOverscanCB();
