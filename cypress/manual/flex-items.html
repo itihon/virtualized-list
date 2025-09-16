@@ -71,6 +71,30 @@
     <script type="module">
       import { createNotIntersectedFlexItemsReducer } from '../../src/reducers';
 
+      function hightlightAllFlexRows(top, bottom) {
+        const highlightArea = document.createElement('div');
+        const { scrollLeft, scrollTop } = document.documentElement;
+
+        let highlightTop = top;
+        let highlightBottom = bottom;
+
+        const style = {
+          position: 'absolute',
+          backgroundColor: 'rgb(145 231 197 / 20%)',
+          border: '2px solid rgb(145 231 197)',
+          left: `0px`,
+          top: `${highlightTop + scrollTop}px`,
+          width: `100%`,
+          height: `${highlightBottom - highlightTop}px`,
+        };
+
+        requestAnimationFrame(() => {
+          Object.assign(highlightArea.style, style);
+          highlightArea.classList.add('flex-row-highlight-area');
+          document.body.appendChild(highlightArea);
+        });
+      }
+
       function hightlightFlexRow(row) {
         const highlightArea = document.createElement('div');
         const { scrollLeft, scrollTop } = document.documentElement;
@@ -125,7 +149,7 @@
         requestAnimationFrame(removeHeightlightFlexRows);
 
         for (const entry of entries) {
-          notIntersectedFlexItemsReducer.run(entry, entries);
+          notIntersectedFlexItemsReducer.exec(entry, entries);
         }
 
         const acc = notIntersectedFlexItemsReducer.getAccumulator();
@@ -133,6 +157,8 @@
         for (const row of acc.rows) {
           hightlightFlexRow(row);
         }
+
+        hightlightAllFlexRows(acc.rowsTop, acc.rowsBottom);
       });
 
       let flexBoxInineSize = 0;

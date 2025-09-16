@@ -1,23 +1,23 @@
-type ReducerFunction<A, I, K> = (acc: A, item: I, arr: K) => A;
-type InitCallback<A, V extends unknown[]> = (acc: A, ...value: V) => void;
+type ReducerFunction<A, I> = (acc: A, item: I, arr: Array<I>) => A;
+type InitCallback<A, V extends unknown[]> = (acc: A, ...value: V) => A;
 
 export default class Reducer<A, I, V extends unknown[] = undefined[]> {
   private _acc: A;
-  private _reducerFn: ReducerFunction<A, I, Array<I>>;
+  private _reducerFn: ReducerFunction<A, I>;
   private _initCb: InitCallback<A, V>;
 
-  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: InitCallback<A, V>) {
+  constructor(fn: ReducerFunction<A, I>, acc: A, cb: InitCallback<A, V>) {
     this._acc = acc;
     this._reducerFn = fn;
     this._initCb = cb;
   }
 
-  run(item: I, items: Array<I>) {
+  exec(item: I, items: Array<I>) {
     this._acc = this._reducerFn(this._acc, item, items);
   }
 
   init(...value: V) {
-    this._initCb(this._acc, ...value);
+    this._acc = this._initCb(this._acc, ...value);
   }
 
   getAccumulator(): A {
@@ -31,7 +31,7 @@ export type ItemsHeightAccumulator = {
   height: number;
 };
 
-export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator, IntersectionObserverEntry>(
+export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator, IntersectionObserverEntry, [number | undefined, number | undefined] | []>(
   (acc, entry) => {
     const { top: entryTop, bottom: entryBottom } = entry.boundingClientRect;
     const { top, bottom } = acc;
@@ -47,14 +47,15 @@ export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator
     bottom: -Infinity,
     height: 0,
   },
-  (acc) => {
-    acc.top = Infinity;
-    acc.bottom = -Infinity;
+  (acc, top = Infinity, bottom = -Infinity) => {
+    acc.top = top;
+    acc.bottom = bottom;
     acc.height = 0;
+    return acc;
   },
 )
 
-export type NotIntersectedRowsAccumulator = {
+export type FlexRowsAccumulator = {
   rows: Array<Array<IntersectionObserverEntry>>;
   rowsTop: number;
   rowsBottom: number;
@@ -65,6 +66,8 @@ export type NotIntersectedRowsAccumulator = {
   flexboxWidth: number;
   flexboxColumnGap: number;
   currentRowWidth: number;
+  readonly ignoreLastRow: boolean;
+  readonly ignoreRowIntersection: boolean;
 }
 
 /**
@@ -75,7 +78,7 @@ export type NotIntersectedRowsAccumulator = {
  *  - width of each item
  */
 
-export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
+export const createNotIntersectedFlexItemsReducer = () => new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
   (acc, entry, entries) => {
     const { width } = entry.boundingClientRect;
     const itemStyle = getComputedStyle(entry.target);
@@ -88,33 +91,36 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     if (resultingRowWidth > acc.flexboxWidth) {
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
-      if (acc.isRowNotIntersected) {
+      if (acc.isRowNotIntersected || acc.ignoreRowIntersection) {
         acc.rows.push(acc.currentRow);
-        acc.rowsTop += top;
-        acc.rowsBottom += bottom
-        acc.rowsHeight += height;
+        acc.rowsTop = top;
+        acc.rowsBottom = bottom
+        acc.rowsHeight = height;
+        acc.itemsHeightReducer.init(top, bottom);
       } 
+      else {
+        acc.itemsHeightReducer.init();
+      }
 
       acc.currentRow = [];
       acc.isRowNotIntersected = true;
       acc.currentRowWidth = 0;
-      acc.itemsHeightReducer.init();
     }
     
     acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
 
     acc.currentRow.push(entry);
-    acc.itemsHeightReducer.run(entry, entries);
+    acc.itemsHeightReducer.exec(entry, entries);
     acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
 
-    if (isLastItem) {
+    if (isLastItem && !acc.ignoreLastRow) {
       const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
 
-      if (acc.isRowNotIntersected) {
+      if (acc.isRowNotIntersected || acc.ignoreRowIntersection) {
         acc.rows.push(acc.currentRow);
-        acc.rowsTop += top;
-        acc.rowsBottom += bottom
-        acc.rowsHeight += height;
+        acc.rowsTop = top;
+        acc.rowsBottom = bottom
+        acc.rowsHeight = height;
       }
     }
 
@@ -131,6 +137,8 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     flexboxWidth: 0,
     currentRowWidth: 0,
     flexboxColumnGap: 0,
+    ignoreLastRow: false,
+    ignoreRowIntersection: false,
   },
   (acc, flexbox, contentBoxInlineSize) => {
     const flexboxStyle = getComputedStyle(flexbox);
@@ -146,5 +154,6 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     acc.flexboxWidth = contentBoxInlineSize;
     acc.currentRowWidth = 0;
     acc.flexboxColumnGap = columnGap;
+    return acc;
   },
 );
