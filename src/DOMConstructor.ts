@@ -12,4 +12,8 @@ export default class DOMConstructor {
   get DOMRoot(): HTMLElement {
     return this._DOMRoot;
   }
+
+  get parentContainer(): HTMLElement {
+    return this._parentContainer;
+  }
 }
