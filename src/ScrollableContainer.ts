@@ -52,6 +52,14 @@ export default class ScrollableContainer {
     }
   };
 
+  private _removeNotIntersectedItems = () => {
+    for (const row of this._notIntersectedEntriesAccResult.rows) {
+      for (const entry of row) {
+        entry.target.remove();
+      }
+    }
+  };
+
   private _createObserver(height: OverscanHeight): IntersectionObserver {
 
     const rootMargin = `${height} 0px ${height} 0px`;
@@ -107,29 +115,32 @@ export default class ScrollableContainer {
 
       if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
 
-        for (const row of notIntersectedEntriesAccResult.rows) {
-          for (const entry of row) {
-            entry.target.remove();
-          }
+        if (notIntersectedEntriesAccResult.rows.length) {
+          requestAnimationFrame(this._removeNotIntersectedItems);
         }
 
         this._onScrollUpOverscanCB();
 
-        // scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
+        // requestAnimationFrame
+        requestAnimationFrame(() => {
+          scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
+        });
         this.scroll(scrolledPaneOffsetTop - (itemsHeightAccResult.bottom - remainedItemsHeightAccResult.bottom) - paddingTop);
       }
 
       if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
 
-        for (const row of notIntersectedEntriesAccResult.rows) {
-          for (const entry of row) {
-            entry.target.remove();
-          }
+        if (notIntersectedEntriesAccResult.rows.length) {
+          requestAnimationFrame(this._removeNotIntersectedItems);
         }
 
         this._onScrollDownOverscanCB();
 
-        // scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
+        // requestAnimationFrame
+        // (previouslyMeasuredScrollHeight - removedItemsHeight + addedItemsHeight) - rootHeight + padding
+        requestAnimationFrame(() => {
+          scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
+        });
         this.scroll(scrolledPaneOffsetTop + remainedItemsHeightAccResult.top - itemsHeightAccResult.top - paddingTop);
       }
 
