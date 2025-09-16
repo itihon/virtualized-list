@@ -77,11 +77,6 @@ export default class ScrollableContainer {
 
       const { offsetTop: scrolledPaneOffsetTop } = scrolledPane.DOMRoot;
       
-      const scrolledPaneScrollHeight = scrolledPane.preserveScrollHeight();
-
-      scrolledPane.preserveOffsetHeight();
-      scrolledPane.setScrollLimit(scrolledPaneScrollHeight - rootHeight + paddingTop);
-
       itemsHeightAcc.init();
       remainedItemsHeightAcc.init();
       notIntersectedEntriesAcc.init(scrolledPane.DOMRoot, scrolledPane.getContentBoxWidth());
@@ -172,6 +167,7 @@ export default class ScrollableContainer {
       }
 
       requestAnimationFrame(this._checkBuffers);
+      this._scrolledPane.scheduleSizeUpdate();
 
       this._scrollTop = this._scrollableParent.scrollTop;
     });
@@ -276,7 +272,7 @@ export default class ScrollableContainer {
   }
 
   scroll(position: number) {
-    const { offsetHeight: scrolledPaneHeight, scrollHeight: scrolledPaneScrollHeight } = this._scrolledPane;
+    const { offsetHeight: scrolledPaneHeight, scrollHeight: scrolledPaneScrollHeight } = this._scrolledPane.DOMRoot;
     const scrollHeight = this._scrollHeight;
 
     // this._scrolledPane.setScrollLimit(scrolledPaneScrollHeight - this._scrollableParent.clientHeight);

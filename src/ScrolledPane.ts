@@ -2,8 +2,6 @@ import DOMConstructor from "./DOMConstructor";
 
 export default class ScrolledPane extends DOMConstructor {
   private _paneElement: HTMLElement;
-  private _offsetHeight: number = 0;
-  private _scrollHeight: number = 0;
   private _contentBoxWidth: number = 0;
   private _resizeObserver: ResizeObserver;
 
@@ -14,22 +12,6 @@ export default class ScrolledPane extends DOMConstructor {
     this._resizeObserver = new ResizeObserver((entries) => {
       this._contentBoxWidth = entries[0].contentBoxSize[0].inlineSize;
     });
-  }
-
-  preserveOffsetHeight(): number {
-    return this._offsetHeight = this._paneElement.offsetHeight;
-  }
-  
-  get offsetHeight(): number {
-    return this._offsetHeight;
-  }
-
-  preserveScrollHeight(): number {
-    return this._scrollHeight = this._paneElement.scrollHeight;
-  }
-  
-  get scrollHeight(): number {
-    return this._scrollHeight;
   }
 
   scheduleSizeUpdate() {
