@@ -55,7 +55,7 @@ export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator
   },
 )
 
-export type NotIntersectedRowsAccumulator = {
+export type FlexRowsAccumulator = {
   rows: Array<Array<IntersectionObserverEntry>>;
   rowsTop: number;
   rowsBottom: number;
@@ -76,7 +76,7 @@ export type NotIntersectedRowsAccumulator = {
  *  - width of each item
  */
 
-export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotIntersectedRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
+export const createNotIntersectedFlexItemsReducer = () => new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
   (acc, entry, entries) => {
     const { width } = entry.boundingClientRect;
     const itemStyle = getComputedStyle(entry.target);
