@@ -31,7 +31,7 @@ export type ItemsHeightAccumulator = {
   height: number;
 };
 
-export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator, IntersectionObserverEntry>(
+export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator, IntersectionObserverEntry, [number | undefined, number | undefined] | []>(
   (acc, entry) => {
     const { top: entryTop, bottom: entryBottom } = entry.boundingClientRect;
     const { top, bottom } = acc;
@@ -47,9 +47,9 @@ export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator
     bottom: -Infinity,
     height: 0,
   },
-  (acc) => {
-    acc.top = Infinity;
-    acc.bottom = -Infinity;
+  (acc, top = Infinity, bottom = -Infinity) => {
+    acc.top = top;
+    acc.bottom = bottom;
     acc.height = 0;
     return acc;
   },
@@ -96,7 +96,11 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<FlexRowsAc
         acc.rowsTop = top;
         acc.rowsBottom = bottom
         acc.rowsHeight = height;
+        acc.itemsHeightReducer.init(top, bottom);
       } 
+      else {
+        acc.itemsHeightReducer.init();
+      }
 
       acc.currentRow = [];
       acc.isRowNotIntersected = true;
