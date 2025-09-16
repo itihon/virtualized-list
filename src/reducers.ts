@@ -1,12 +1,12 @@
-type ReducerFunction<A, I, K> = (acc: A, item: I, arr: K) => A;
+type ReducerFunction<A, I> = (acc: A, item: I, arr: Array<I>) => A;
 type InitCallback<A, V extends unknown[]> = (acc: A, ...value: V) => void;
 
 export default class Reducer<A, I, V extends unknown[] = undefined[]> {
   private _acc: A;
-  private _reducerFn: ReducerFunction<A, I, Array<I>>;
+  private _reducerFn: ReducerFunction<A, I>;
   private _initCb: InitCallback<A, V>;
 
-  constructor(fn: ReducerFunction<A, I, Array<I>>, acc: A, cb: InitCallback<A, V>) {
+  constructor(fn: ReducerFunction<A, I>, acc: A, cb: InitCallback<A, V>) {
     this._acc = acc;
     this._reducerFn = fn;
     this._initCb = cb;
