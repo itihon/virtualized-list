@@ -1,5 +1,5 @@
 type ReducerFunction<A, I> = (acc: A, item: I, arr: Array<I>) => A;
-type InitCallback<A, V extends unknown[]> = (acc: A, ...value: V) => void;
+type InitCallback<A, V extends unknown[]> = (acc: A, ...value: V) => A;
 
 export default class Reducer<A, I, V extends unknown[] = undefined[]> {
   private _acc: A;
@@ -17,7 +17,7 @@ export default class Reducer<A, I, V extends unknown[] = undefined[]> {
   }
 
   init(...value: V) {
-    this._initCb(this._acc, ...value);
+    this._acc = this._initCb(this._acc, ...value);
   }
 
   getAccumulator(): A {
@@ -51,6 +51,7 @@ export const createItemsHeightReducer = () => new Reducer<ItemsHeightAccumulator
     acc.top = Infinity;
     acc.bottom = -Infinity;
     acc.height = 0;
+    return acc;
   },
 )
 
@@ -145,5 +146,6 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     acc.flexboxWidth = contentBoxInlineSize;
     acc.currentRowWidth = 0;
     acc.flexboxColumnGap = columnGap;
+    return acc;
   },
 );
