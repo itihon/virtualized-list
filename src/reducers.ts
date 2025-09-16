@@ -90,15 +90,14 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
 
       if (acc.isRowNotIntersected) {
         acc.rows.push(acc.currentRow);
-        acc.rowsTop += top;
-        acc.rowsBottom += bottom
-        acc.rowsHeight += height;
+        acc.rowsTop = top;
+        acc.rowsBottom = bottom
+        acc.rowsHeight = height;
       } 
 
       acc.currentRow = [];
       acc.isRowNotIntersected = true;
       acc.currentRowWidth = 0;
-      acc.itemsHeightReducer.init();
     }
     
     acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
@@ -112,9 +111,9 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
 
       if (acc.isRowNotIntersected) {
         acc.rows.push(acc.currentRow);
-        acc.rowsTop += top;
-        acc.rowsBottom += bottom
-        acc.rowsHeight += height;
+        acc.rowsTop = top;
+        acc.rowsBottom = bottom
+        acc.rowsHeight = height;
       }
     }
 
