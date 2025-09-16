@@ -12,7 +12,7 @@ export default class Reducer<A, I, V extends unknown[] = undefined[]> {
     this._initCb = cb;
   }
 
-  run(item: I, items: Array<I>) {
+  exec(item: I, items: Array<I>) {
     this._acc = this._reducerFn(this._acc, item, items);
   }
 
@@ -103,7 +103,7 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<NotInterse
     acc.isRowNotIntersected = acc.isRowNotIntersected && !entry.isIntersecting;
 
     acc.currentRow.push(entry);
-    acc.itemsHeightReducer.run(entry, entries);
+    acc.itemsHeightReducer.exec(entry, entries);
     acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
 
     if (isLastItem) {

@@ -149,7 +149,7 @@
         requestAnimationFrame(removeHeightlightFlexRows);
 
         for (const entry of entries) {
-          notIntersectedFlexItemsReducer.run(entry, entries);
+          notIntersectedFlexItemsReducer.exec(entry, entries);
         }
 
         const acc = notIntersectedFlexItemsReducer.getAccumulator();
