@@ -63,11 +63,11 @@ export default class ScrollableContainer {
   };
 
   private _accumulateEntries: OnEachEntryMeasuredCallback = (observerEntry, entries) => {
-    this._itemsHeightAcc.run(observerEntry, entries);
-    this._notIntersectedEntriesAcc.run(observerEntry, entries);
+    this._itemsHeightAcc.exec(observerEntry, entries);
+    this._notIntersectedEntriesAcc.exec(observerEntry, entries);
 
     if (observerEntry.isIntersecting) {
-      this._remainedItemsHeightAcc.run(observerEntry, entries);
+      this._remainedItemsHeightAcc.exec(observerEntry, entries);
     }
   };
 
