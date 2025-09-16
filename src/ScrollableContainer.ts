@@ -1,6 +1,5 @@
 import ScrolledPane from './ScrolledPane';
 import Filler from './Filler';
-import ScrollHeight from './ScrollHeight';
 import ScrolledPaneBuffer from './ScrolledPaneBuffer';
 import './ScrollableContainer.css';
 import { createItemsHeightReducer, createNotIntersectedFlexItemsReducer } from './reducers';
@@ -16,7 +15,7 @@ export type OverscanHeight = `${string}px` | `${string}%`;
 
 export default class ScrollableContainer {
   private _scrollableParent: HTMLElement;
-  private _scrollHeightFiller: ScrollHeight;
+  private _scrollHeightFiller: Filler;
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
   private _scrolledPane: ScrolledPane;
@@ -151,7 +150,7 @@ export default class ScrollableContainer {
 
   constructor(scrollableParent: HTMLElement) {
     this._scrollableParent = scrollableParent;    
-    this._scrollHeightFiller = new ScrollHeight(scrollableParent);
+    this._scrollHeightFiller = new Filler(scrollableParent, ['Filler__ScrollHeight']);
     this._fillerTop = new Filler(scrollableParent);
     this._scrolledPaneTopBuffer = new ScrolledPaneBuffer(scrollableParent);
     this._scrolledPane = new ScrolledPane(scrollableParent);
@@ -265,7 +264,7 @@ export default class ScrollableContainer {
     const { scrollTop } = this._scrollableParent;
     const { offsetHeight: scrolledPaneHeight } = this._scrolledPane.DOMRoot;
 
-    this._scrollHeightFiller.setScrollHeight(scrollHeight);
+    this._scrollHeightFiller.offsetHeight = scrollHeight;
     this._fillerTop.offsetHeight = scrollTop;
     this._fillerBottom.offsetHeight = scrollHeight - scrollTop - scrolledPaneHeight;
     

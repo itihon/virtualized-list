@@ -4,8 +4,8 @@ export default class Filler extends DOMConstructor {
   private _fillerElement: HTMLElement;
   private _offsetHeight: number = 0;
 
-  constructor(scrollableParent: HTMLElement) {
-    super(scrollableParent, ['class__Filler']);
+  constructor(scrollableParent: HTMLElement, classList: string[] = []) {
+    super(scrollableParent, ['class__Filler', ...classList]);
     this._fillerElement = super.DOMRoot;
   }
 

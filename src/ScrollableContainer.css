@@ -7,17 +7,17 @@
   margin: 0;
 }
 
-.class__ScrollHeight {
+.class__Filler {
+  position: relative;
+  z-index: -1;
+}
+
+.Filler__ScrollHeight {
   position: relative;
   width: 0;
   min-height: 100%;
   z-index: -1;
   float: left;
-}
-
-.class__Filler {
-  position: relative;
-  z-index: -1;
 }
 
 .class__ScrollableContainer {
