@@ -75,12 +75,6 @@ const itemsHeightReducer: ItemsHeightReducer = (acc, entry) => {
   return acc;
 };
 
-const itemsHeightAcc: ItemsHeightAccumulator = {
-  top: Infinity,
-  bottom: -Infinity,
-  height: 0,
-};
-
 const initItemsHeightAcc: InitItemsHeightAcc = (acc, top = Infinity, bottom = -Infinity) => {
   acc.top = top;
   acc.bottom = bottom;
@@ -90,7 +84,13 @@ const initItemsHeightAcc: InitItemsHeightAcc = (acc, top = Infinity, bottom = -I
 
 export const createItemsHeightReducer = () => 
   new Reducer<ItemsHeightAccumulator, IntersectionObserverEntry, [number | undefined, number | undefined] | []>(
-    itemsHeightReducer, itemsHeightAcc, initItemsHeightAcc,
+    itemsHeightReducer, 
+    {
+      top: Infinity,
+      bottom: -Infinity,
+      height: 0,
+    },
+    initItemsHeightAcc,
   );
 
 /**
@@ -159,25 +159,6 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   return acc;
 };
 
-const flexRowsAcc: FlexRowsAccumulator = {
-  rows: [],
-  rowsTop: 0,
-  rowsBottom: 0,
-  rowsHeight: 0,
-  currentRow: [],
-  isRowNotIntersected: true,
-  itemsHeightReducer: createItemsHeightReducer(),
-  itemsHeightAcc: undefined,
-  flexboxWidth: 0,
-  currentRowWidth: 0,
-  flexboxColumnGap: 0,
-  ignoreLastRow: false,
-  ignoreRowIntersection: false,
-  intersection: false,
-  collectTop: true, 
-  collectBottom: true,  
-};
-
 const initFlexRowsAcc: InitFlexRowsAcc = (
   acc, 
   flexbox, 
@@ -214,5 +195,24 @@ const initFlexRowsAcc: InitFlexRowsAcc = (
 
 export const createFlexRowsReducer = () => 
   new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number, ...InitFlexRowsAccOptions]>(
-    flexRowsReducer, flexRowsAcc, initFlexRowsAcc,
+    flexRowsReducer, 
+    {
+      rows: [],
+      rowsTop: 0,
+      rowsBottom: 0,
+      rowsHeight: 0,
+      currentRow: [],
+      isRowNotIntersected: true,
+      itemsHeightReducer: createItemsHeightReducer(),
+      itemsHeightAcc: undefined,
+      flexboxWidth: 0,
+      currentRowWidth: 0,
+      flexboxColumnGap: 0,
+      ignoreLastRow: false,
+      ignoreRowIntersection: false,
+      intersection: false,
+      collectTop: true, 
+      collectBottom: true,  
+    }, 
+    initFlexRowsAcc,
   );
