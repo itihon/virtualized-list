@@ -2,7 +2,7 @@ import ScrolledPane, { type OverscanHeight, type OnNewItemsCallback, type OnEach
 import Filler from './Filler';
 import ScrolledPaneBuffer from './ScrolledPaneBuffer';
 import './ScrollableContainer.css';
-import { createItemsHeightReducer, createNotIntersectedFlexItemsReducer } from './reducers';
+import { createItemsHeightReducer, createFlexRowsReducer } from './reducers';
 
 export type OnOverscanCallback = () => void;
 export type OnEmptyBufferCallback = (buffer: ScrolledPaneBuffer) => void;
@@ -25,7 +25,7 @@ export default class ScrollableContainer {
   private _previousScrollTop: number = 0;
   private _itemsHeightAcc = createItemsHeightReducer();
   private _remainedItemsHeightAcc = createItemsHeightReducer();
-  private _notIntersectedEntriesAcc = createNotIntersectedFlexItemsReducer();
+  private _notIntersectedEntriesAcc = createFlexRowsReducer();
   private _itemsHeightAccResult = this._itemsHeightAcc.getAccumulator();
   private _remainedItemsHeightAccResult = this._remainedItemsHeightAcc.getAccumulator();
   private _notIntersectedEntriesAccResult = this._notIntersectedEntriesAcc.getAccumulator();
