@@ -46,12 +46,21 @@ export type FlexRowsAccumulator = {
   ignoreLastRow: boolean;
   ignoreRowIntersection: boolean;
   intersection: boolean;
+  collectTop: boolean;
+  collectBottom: boolean;
 }
 
 type ItemsHeightReducer = ReducerFunction<ItemsHeightAccumulator, IntersectionObserverEntry>;
 type InitItemsHeightAcc = InitCallback<ItemsHeightAccumulator, [number | undefined, number | undefined] | []>;
 
-type InitFlexRowsAccOptions = [boolean | undefined] | [boolean | undefined, boolean | undefined] | [boolean | undefined, boolean | undefined, boolean | undefined] | [];
+export type InitFlexRowsAccOptions = [{
+  ignoreLastRow?: boolean;
+  ignoreRowIntersection?: boolean;
+  intersection?: boolean;
+  collectTop?: boolean;
+  collectBottom?: boolean;
+}] | [];
+
 type FlexRowsReducer = ReducerFunction<FlexRowsAccumulator, IntersectionObserverEntry>;
 type InitFlexRowsAcc = InitCallback<FlexRowsAccumulator, [HTMLElement, number, ...InitFlexRowsAccOptions]>;
 
@@ -101,14 +110,22 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   const resultingRowWidth = acc.currentRowWidth + itemOccupiedSpace;
   const isLastItem = entry === entries[entries.length - 1];
 
+  const ignoreCollectRules = acc.intersection || acc.ignoreRowIntersection;
+  const collectTop = acc.collectTop || ignoreCollectRules;
+  const collectBottom = acc.collectBottom || ignoreCollectRules;
+  const isTop = acc.itemsHeightAcc!.bottom <= entry.rootBounds!.top || ignoreCollectRules;
+  const isBottom = acc.itemsHeightAcc!.top >= entry.rootBounds!.bottom || ignoreCollectRules;
+
   if (resultingRowWidth > acc.flexboxWidth) {
     const { top, bottom, height } = acc.itemsHeightAcc!;
 
     if (acc.isRowNotIntersected === !acc.intersection || acc.ignoreRowIntersection) {
-      acc.rows.push(acc.currentRow);
-      acc.rowsTop = top;
-      acc.rowsBottom = bottom
-      acc.rowsHeight = height;
+      if ((collectTop && isTop) || (collectBottom && isBottom)) {
+        acc.rows.push(acc.currentRow);
+        acc.rowsTop = top;
+        acc.rowsBottom = bottom
+        acc.rowsHeight = height;
+      }
       acc.itemsHeightReducer.init(top, bottom);
     } 
     else {
@@ -130,10 +147,12 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
     const { top, bottom, height } = acc.itemsHeightAcc!;
 
     if (acc.isRowNotIntersected === !acc.intersection || acc.ignoreRowIntersection) {
-      acc.rows.push(acc.currentRow);
-      acc.rowsTop = top;
-      acc.rowsBottom = bottom
-      acc.rowsHeight = height;
+      if ((collectTop && isTop) || (collectBottom && isBottom)) {
+        acc.rows.push(acc.currentRow);
+        acc.rowsTop = top;
+        acc.rowsBottom = bottom
+        acc.rowsHeight = height;
+      }
     }
   }
 
@@ -155,10 +174,21 @@ const flexRowsAcc: FlexRowsAccumulator = {
   ignoreLastRow: false,
   ignoreRowIntersection: false,
   intersection: false,
+  collectTop: true, 
+  collectBottom: true,  
 };
 
 const initFlexRowsAcc: InitFlexRowsAcc = (
-  acc, flexbox, contentBoxInlineSize, ignoreLastRow = false, ignoreRowIntersection = false, intersection = false,
+  acc, 
+  flexbox, 
+  contentBoxInlineSize, 
+  { 
+    ignoreLastRow = false, 
+    ignoreRowIntersection = false, 
+    intersection = false, 
+    collectTop = true, 
+    collectBottom = true,  
+  } = {},
 ) => {
   const flexboxStyle = getComputedStyle(flexbox);
   const columnGap = parseFloat(flexboxStyle.columnGap) || 0;
@@ -177,6 +207,8 @@ const initFlexRowsAcc: InitFlexRowsAcc = (
   acc.ignoreLastRow = ignoreLastRow;
   acc.ignoreRowIntersection = ignoreRowIntersection;
   acc.intersection = intersection;
+  acc.collectTop = collectTop;
+  acc.collectBottom = collectBottom;
   return acc;
 };
 
