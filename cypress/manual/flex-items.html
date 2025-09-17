@@ -145,14 +145,21 @@
 
       const observer = new IntersectionObserver(entries => {
         // console.log(getNotIntersectedFlexItems(entries));
-        notIntersectedFlexItemsReducer.init(box, flexBoxInineSize, false, false, true);
+        const acc = notIntersectedFlexItemsReducer.getAccumulator();
+
+        notIntersectedFlexItemsReducer.init(box, flexBoxInineSize, {
+          ignoreLastRow: false,
+          ignoreRowIntersection: false,
+          intersection: false,
+          collectTop: true, 
+          collectBottom: true,  
+        });
         requestAnimationFrame(removeHeightlightFlexRows);
 
         for (const entry of entries) {
           notIntersectedFlexItemsReducer.exec(entry, entries);
+          /// if (!acc.isRowNotIntersected) break;
         }
-
-        const acc = notIntersectedFlexItemsReducer.getAccumulator();
 
         for (const row of acc.rows) {
           hightlightFlexRow(row);
