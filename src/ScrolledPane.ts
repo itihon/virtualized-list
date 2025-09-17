@@ -20,41 +20,46 @@ export default class ScrolledPane extends DOMConstructor {
   private _onBeforeEntriesMeasuredCB: OnBeforeEntriesMeasuredCallback = () => {};
   private _onNewItemsCB: OnNewItemsCallback = () => {};
   private _newItems: Set<Element> = new Set();
+
+  private _runCallbacks: IntersectionObserverCallback = (entries, observer) => {
+    const onEachEntryMeasuredCB = this._onEachEntryMeasuredCB;
+    const newEntries: Array<IntersectionObserverEntry> = [];
+    const newItems = this._newItems;
+    const paneElement = this._paneElement;
+
+    this._onBeforeEntriesMeasuredCB(entries, observer);
+
+    for (const entry of entries) {
+      const { target } = entry;
+
+      if (newItems.has(target)) {
+        newEntries.push(entry);
+        newItems.delete(target);
+      }
+
+      if (target.parentElement !== paneElement) {
+        observer.unobserve(target);
+      }
+
+      onEachEntryMeasuredCB(entry, entries, observer);
+    }
+
+    if (newEntries.length) this._onNewItemsCB(newEntries, observer);
+
+    this._onAllEntriesMeasuredCB(entries, observer);
+  };
   
   private _createObserver(height: OverscanHeight): IntersectionObserver {
 
     const rootMargin = `${height} 0px ${height} 0px`;
 
-    return new IntersectionObserver((entries, observer) => {
-      const onEachEntryMeasuredCB = this._onEachEntryMeasuredCB;
-      const newEntries: Array<IntersectionObserverEntry> = [];
-      const newItems = this._newItems;
-      const paneElement = this._paneElement;
-
-      this._onBeforeEntriesMeasuredCB(entries, observer);
-
-      for (const entry of entries) {
-        const { target } = entry;
-
-        if (newItems.has(target)) {
-          newEntries.push(entry);
-          newItems.delete(target);
-        }
-
-        if (target.parentElement !== paneElement) {
-          observer.unobserve(target);
-        }
-
-        onEachEntryMeasuredCB(entry, entries, observer);
+    return new IntersectionObserver(
+      this._runCallbacks, 
+      {
+        root: this.parentContainer,
+        rootMargin: rootMargin,
       }
-
-      if (newEntries.length) this._onNewItemsCB(newEntries, observer);
-
-      this._onAllEntriesMeasuredCB(entries, observer);
-    }, {
-      root: this.parentContainer,
-      rootMargin: rootMargin,
-    });
+    );
   }
 
   constructor(scrollableParent: HTMLElement, classList: string[] = []) {
@@ -77,6 +82,14 @@ export default class ScrolledPane extends DOMConstructor {
     this._observer.disconnect();
     for (const item of this._paneElement.children) {
       this._observer.observe(item);
+    }
+  }
+
+  runScheduledCallbacks() {
+    const entries = this._observer.takeRecords();
+
+    if (entries.length) {
+      this._runCallbacks(entries, this._observer);
     }
   }
 

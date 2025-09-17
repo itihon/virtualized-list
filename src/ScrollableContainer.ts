@@ -88,6 +88,8 @@ export default class ScrollableContainer {
 
     if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
 
+      this._scrolledPaneTopBuffer.runScheduledCallbacks();
+
       if (notIntersectedEntriesAccResult.rows.length) {
         requestAnimationFrame(this._removeNotIntersectedItems);
       }
@@ -102,6 +104,8 @@ export default class ScrollableContainer {
     }
 
     if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
+
+      this._scrolledPaneBottomBuffer.runScheduledCallbacks();
 
       if (notIntersectedEntriesAccResult.rows.length) {
         requestAnimationFrame(this._removeNotIntersectedItems);
