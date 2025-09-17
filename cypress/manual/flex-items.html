@@ -145,7 +145,7 @@
 
       const observer = new IntersectionObserver(entries => {
         // console.log(getNotIntersectedFlexItems(entries));
-        notIntersectedFlexItemsReducer.init(box, flexBoxInineSize, false, true);
+        notIntersectedFlexItemsReducer.init(box, flexBoxInineSize, false, false, true);
         requestAnimationFrame(removeHeightlightFlexRows);
 
         for (const entry of entries) {
@@ -168,13 +168,20 @@
       });
 
       addEventListener('scroll', () => {
+        console.log('scroll')
         resizeObserver.disconnect();
         resizeObserver.observe(box, {box: 'content-box'});
         observer.disconnect();
         for (const item of box.children) {
           observer.observe(item);
         }
+        localStorage.setItem('scrollTop', document.documentElement.scrollTop);
       });
+
+      addEventListener('DOMContentLoaded', () => {
+        const scrollTop = parseInt(localStorage.getItem('scrollTop') || '0');
+        scroll(0, scrollTop);
+      })
     </script>
 
   </body>
