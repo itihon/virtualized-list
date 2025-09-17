@@ -69,7 +69,7 @@
     </div>
 
     <script type="module">
-      import { createNotIntersectedFlexRowsReducer, createSkippedLastFlexRowsReducer } from '../../src/reducers';
+      import { createNotIntersectedFlexRowsReducer, createSkippedLastFlexRowsReducer, createFlexRowsReducer } from '../../src/reducers';
 
       function hightlightAllFlexRows(top, bottom) {
         const highlightArea = document.createElement('div');
@@ -142,7 +142,8 @@
 
       const box = document.querySelector('.box');
       // const notIntersectedFlexItemsReducer = createNotIntersectedFlexRowsReducer();
-      const notIntersectedFlexItemsReducer = createSkippedLastFlexRowsReducer();
+      // const notIntersectedFlexItemsReducer = createSkippedLastFlexRowsReducer();
+      const notIntersectedFlexItemsReducer = createFlexRowsReducer();
 
       const observer = new IntersectionObserver(entries => {
         // console.log(getNotIntersectedFlexItems(entries));
