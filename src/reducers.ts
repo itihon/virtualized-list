@@ -45,12 +45,13 @@ export type FlexRowsAccumulator = {
   currentRowWidth: number;
   ignoreLastRow: boolean;
   ignoreRowIntersection: boolean;
+  intersection: boolean;
 }
 
 type ItemsHeightReducer = ReducerFunction<ItemsHeightAccumulator, IntersectionObserverEntry>;
 type InitItemsHeightAcc = InitCallback<ItemsHeightAccumulator, [number | undefined, number | undefined] | []>;
 
-type InitFlexRowsAccOptions = [boolean | undefined] | [boolean | undefined, boolean | undefined] | [];
+type InitFlexRowsAccOptions = [boolean | undefined] | [boolean | undefined, boolean | undefined] | [boolean | undefined, boolean | undefined, boolean | undefined] | [];
 type FlexRowsReducer = ReducerFunction<FlexRowsAccumulator, IntersectionObserverEntry>;
 type InitFlexRowsAcc = InitCallback<FlexRowsAccumulator, [HTMLElement, number, ...InitFlexRowsAccOptions]>;
 
@@ -103,7 +104,7 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   if (resultingRowWidth > acc.flexboxWidth) {
     const { top, bottom, height } = acc.itemsHeightAcc!;
 
-    if (acc.isRowNotIntersected || acc.ignoreRowIntersection) {
+    if (acc.isRowNotIntersected === !acc.intersection || acc.ignoreRowIntersection) {
       acc.rows.push(acc.currentRow);
       acc.rowsTop = top;
       acc.rowsBottom = bottom
@@ -128,7 +129,7 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   if (isLastItem && !acc.ignoreLastRow) {
     const { top, bottom, height } = acc.itemsHeightAcc!;
 
-    if (acc.isRowNotIntersected || acc.ignoreRowIntersection) {
+    if (acc.isRowNotIntersected === !acc.intersection || acc.ignoreRowIntersection) {
       acc.rows.push(acc.currentRow);
       acc.rowsTop = top;
       acc.rowsBottom = bottom
@@ -153,10 +154,11 @@ const flexRowsAcc: FlexRowsAccumulator = {
   flexboxColumnGap: 0,
   ignoreLastRow: false,
   ignoreRowIntersection: false,
+  intersection: false,
 };
 
 const initFlexRowsAcc: InitFlexRowsAcc = (
-  acc, flexbox, contentBoxInlineSize, ignoreLastRow = false, ignoreRowIntersection = false,
+  acc, flexbox, contentBoxInlineSize, ignoreLastRow = false, ignoreRowIntersection = false, intersection = false,
 ) => {
   const flexboxStyle = getComputedStyle(flexbox);
   const columnGap = parseFloat(flexboxStyle.columnGap) || 0;
@@ -174,6 +176,7 @@ const initFlexRowsAcc: InitFlexRowsAcc = (
   acc.flexboxColumnGap = columnGap;
   acc.ignoreLastRow = ignoreLastRow;
   acc.ignoreRowIntersection = ignoreRowIntersection;
+  acc.intersection = intersection;
   return acc;
 };
 
