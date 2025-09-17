@@ -43,15 +43,16 @@ export type FlexRowsAccumulator = {
   flexboxWidth: number;
   flexboxColumnGap: number;
   currentRowWidth: number;
-  readonly ignoreLastRow: boolean;
-  readonly ignoreRowIntersection: boolean;
+  ignoreLastRow: boolean;
+  ignoreRowIntersection: boolean;
 }
 
 type ItemsHeightReducer = ReducerFunction<ItemsHeightAccumulator, IntersectionObserverEntry>;
 type InitItemsHeightAcc = InitCallback<ItemsHeightAccumulator, [number | undefined, number | undefined] | []>;
 
+type InitFlexRowsAccOptions = [boolean | undefined] | [boolean | undefined, boolean | undefined] | [];
 type FlexRowsReducer = ReducerFunction<FlexRowsAccumulator, IntersectionObserverEntry>;
-type InitFlexRowsAcc = InitCallback<FlexRowsAccumulator, [HTMLElement, number]>;
+type InitFlexRowsAcc = InitCallback<FlexRowsAccumulator, [HTMLElement, number, ...InitFlexRowsAccOptions]>;
 
 const itemsHeightReducer: ItemsHeightReducer = (acc, entry) => {
   const { top: entryTop, bottom: entryBottom } = entry.boundingClientRect;
@@ -138,7 +139,7 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   return acc;
 };
 
-const notIntersectedflexRowsAcc: FlexRowsAccumulator = {
+const flexRowsAcc: FlexRowsAccumulator = {
   rows: [],
   rowsTop: 0,
   rowsBottom: 0,
@@ -154,39 +155,9 @@ const notIntersectedflexRowsAcc: FlexRowsAccumulator = {
   ignoreRowIntersection: false,
 };
 
-const skippedLastFlexRowsAcc: FlexRowsAccumulator = {
-  rows: [],
-  rowsTop: 0,
-  rowsBottom: 0,
-  rowsHeight: 0,
-  currentRow: [],
-  isRowNotIntersected: true,
-  itemsHeightReducer: createItemsHeightReducer(),
-  itemsHeightAcc: undefined,
-  flexboxWidth: 0,
-  currentRowWidth: 0,
-  flexboxColumnGap: 0,
-  ignoreLastRow: true,
-  ignoreRowIntersection: true,
-};
-
-const flexRowsAcc: FlexRowsAccumulator = {
-  rows: [],
-  rowsTop: 0,
-  rowsBottom: 0,
-  rowsHeight: 0,
-  currentRow: [],
-  isRowNotIntersected: true,
-  itemsHeightReducer: createItemsHeightReducer(),
-  itemsHeightAcc: undefined,
-  flexboxWidth: 0,
-  currentRowWidth: 0,
-  flexboxColumnGap: 0,
-  ignoreLastRow: false,
-  ignoreRowIntersection: true,
-};
-
-const initFlexRowsAcc: InitFlexRowsAcc = (acc, flexbox, contentBoxInlineSize) => {
+const initFlexRowsAcc: InitFlexRowsAcc = (
+  acc, flexbox, contentBoxInlineSize, ignoreLastRow = false, ignoreRowIntersection = false,
+) => {
   const flexboxStyle = getComputedStyle(flexbox);
   const columnGap = parseFloat(flexboxStyle.columnGap) || 0;
 
@@ -201,26 +172,12 @@ const initFlexRowsAcc: InitFlexRowsAcc = (acc, flexbox, contentBoxInlineSize) =>
   acc.flexboxWidth = contentBoxInlineSize;
   acc.currentRowWidth = 0;
   acc.flexboxColumnGap = columnGap;
+  acc.ignoreLastRow = ignoreLastRow;
+  acc.ignoreRowIntersection = ignoreRowIntersection;
   return acc;
 };
 
-/*
-  Maybe it's better to create one reducer and pass 
-  ignoreLastRow and ignoreRowIntersection options in the init() method
-  instead of creating dedicated reducers for each case ?
-*/
-
-export const createNotIntersectedFlexRowsReducer = () => 
-  new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
-    flexRowsReducer, notIntersectedflexRowsAcc, initFlexRowsAcc,
-  );
-
-export const createSkippedLastFlexRowsReducer = () => 
-  new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
-    flexRowsReducer, skippedLastFlexRowsAcc, initFlexRowsAcc,
-  );
-
 export const createFlexRowsReducer = () => 
-  new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
+  new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number, ...InitFlexRowsAccOptions]>(
     flexRowsReducer, flexRowsAcc, initFlexRowsAcc,
   );
