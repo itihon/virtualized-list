@@ -138,7 +138,7 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   return acc;
 };
 
-const flexRowsAcc: FlexRowsAccumulator = {
+const notIntersectedflexRowsAcc: FlexRowsAccumulator = {
   rows: [],
   rowsTop: 0,
   rowsBottom: 0,
@@ -152,6 +152,22 @@ const flexRowsAcc: FlexRowsAccumulator = {
   flexboxColumnGap: 0,
   ignoreLastRow: false,
   ignoreRowIntersection: false,
+};
+
+const skippedLastFlexRowsAcc: FlexRowsAccumulator = {
+  rows: [],
+  rowsTop: 0,
+  rowsBottom: 0,
+  rowsHeight: 0,
+  currentRow: [],
+  isRowNotIntersected: true,
+  itemsHeightReducer: createItemsHeightReducer(),
+  itemsHeightAcc: undefined,
+  flexboxWidth: 0,
+  currentRowWidth: 0,
+  flexboxColumnGap: 0,
+  ignoreLastRow: true,
+  ignoreRowIntersection: true,
 };
 
 const initFlexRowsAcc: InitFlexRowsAcc = (acc, flexbox, contentBoxInlineSize) => {
@@ -174,5 +190,10 @@ const initFlexRowsAcc: InitFlexRowsAcc = (acc, flexbox, contentBoxInlineSize) =>
 
 export const createNotIntersectedFlexRowsReducer = () => 
   new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
-    flexRowsReducer, flexRowsAcc, initFlexRowsAcc,
+    flexRowsReducer, notIntersectedflexRowsAcc, initFlexRowsAcc,
+  );
+
+export const createSkippedLastFlexRowsReducer = () => 
+  new Reducer<FlexRowsAccumulator, IntersectionObserverEntry, [HTMLElement, number]>(
+    flexRowsReducer, skippedLastFlexRowsAcc, initFlexRowsAcc,
   );
