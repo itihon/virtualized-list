@@ -63,6 +63,7 @@ export type FlexRowsAccumulator = {
   currentRow: Array<IntersectionObserverEntry>;
   isRowNotIntersected: boolean;
   itemsHeightReducer: ReturnType<typeof createItemsHeightReducer>;
+  itemsHeightAcc: ItemsHeightAccumulator | undefined;
   flexboxWidth: number;
   flexboxColumnGap: number;
   currentRowWidth: number;
@@ -89,7 +90,7 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<FlexRowsAc
     const isLastItem = entry === entries[entries.length - 1];
 
     if (resultingRowWidth > acc.flexboxWidth) {
-      const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
+      const { top, bottom, height } = acc.itemsHeightAcc!;
 
       if (acc.isRowNotIntersected || acc.ignoreRowIntersection) {
         acc.rows.push(acc.currentRow);
@@ -114,7 +115,7 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<FlexRowsAc
     acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
 
     if (isLastItem && !acc.ignoreLastRow) {
-      const { top, bottom, height } = acc.itemsHeightReducer.getAccumulator();
+      const { top, bottom, height } = acc.itemsHeightAcc!;
 
       if (acc.isRowNotIntersected || acc.ignoreRowIntersection) {
         acc.rows.push(acc.currentRow);
@@ -134,6 +135,7 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<FlexRowsAc
     currentRow: [],
     isRowNotIntersected: true,
     itemsHeightReducer: createItemsHeightReducer(),
+    itemsHeightAcc: undefined,
     flexboxWidth: 0,
     currentRowWidth: 0,
     flexboxColumnGap: 0,
@@ -151,6 +153,7 @@ export const createNotIntersectedFlexItemsReducer = () => new Reducer<FlexRowsAc
     acc.currentRow = [];
     acc.isRowNotIntersected = true;
     acc.itemsHeightReducer.init();
+    acc.itemsHeightAcc = acc.itemsHeightReducer.getAccumulator();
     acc.flexboxWidth = contentBoxInlineSize;
     acc.currentRowWidth = 0;
     acc.flexboxColumnGap = columnGap;
