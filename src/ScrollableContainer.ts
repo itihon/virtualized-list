@@ -26,9 +26,11 @@ export default class ScrollableContainer {
   private _itemsHeightAcc = createItemsHeightReducer();
   private _intersectedEntriesAcc = createFlexRowsReducer();
   private _notIntersectedEntriesAcc = createFlexRowsReducer();
+  private _bufferedEntriesAcc = createFlexRowsReducer();
   private _itemsHeightAccResult = this._itemsHeightAcc.getAccumulator();
   private _intersectedEntriesAccResult = this._intersectedEntriesAcc.getAccumulator();
   private _notIntersectedEntriesAccResult = this._notIntersectedEntriesAcc.getAccumulator();
+  private _bufferedEntriesAccResult = this._bufferedEntriesAcc.getAccumulator();
 
   private _checkBuffers = () => { 
     const isScrollingDown = this._previousScrollTop < this._scrollTop;
@@ -51,6 +53,26 @@ export default class ScrollableContainer {
     }
   };
 
+  private _insertBufferedItems = () => {
+    const scrolledPane = this._scrolledPane;
+    const isScrollingDown = this._previousScrollTop < this._scrollTop;
+    const isScrollingUp = this._previousScrollTop > this._scrollTop;
+
+    const scrolledPaneBuffer = isScrollingDown 
+      ? this._scrolledPaneBottomBuffer
+      : this._scrolledPaneTopBuffer;
+
+    const markerElement = scrolledPaneBuffer.getMarkerElement();
+
+    for (const row of this._bufferedEntriesAccResult.rows) {
+      for (const entry of row) {
+        if (entry.target === markerElement) continue;
+        if (isScrollingDown) scrolledPane.append(entry.target);
+        if (isScrollingUp) scrolledPane.prepend(entry.target);
+      }
+    }
+  };
+
   private _initAccumulators = () => {
     const scrolledPane = this._scrolledPane;
     const isScrollingDown = this._previousScrollTop < this._scrollTop;
@@ -60,7 +82,7 @@ export default class ScrollableContainer {
     this._intersectedEntriesAcc.init(
       scrolledPane.DOMRoot, 
       scrolledPane.getContentBoxWidth(),
-      { intersection: true },
+      { intersection: true }, // do not create a new object every time !
     );
     this._notIntersectedEntriesAcc.init(
       scrolledPane.DOMRoot, 
@@ -68,7 +90,26 @@ export default class ScrollableContainer {
       { 
         collectTop: isScrollingDown,
         collectBottom: isScrollingUp,
-      },
+      }, // do not create a new object every time !
+    );
+  };
+
+  private _initBufferAccumulators = () => {
+    const isScrollingDown = this._previousScrollTop < this._scrollTop;
+    const isScrollingUp = this._previousScrollTop > this._scrollTop;
+
+    const scrolledPaneBuffer = isScrollingDown 
+      ? this._scrolledPaneBottomBuffer
+      : this._scrolledPaneTopBuffer;
+
+    this._bufferedEntriesAcc.init(
+      scrolledPaneBuffer.DOMRoot,
+      scrolledPaneBuffer.getContentBoxWidth(),
+      {
+        ignoreLastRow: isScrollingUp,
+        ignoreRowIntersection: true,
+        minRowsNumber: 2,
+      }, // do not create a new object every time !
     );
   };
 
@@ -78,12 +119,17 @@ export default class ScrollableContainer {
     this._intersectedEntriesAcc.exec(observerEntry, entries);
   };
 
+  private _accumulateBufferEntries: OnEachEntryMeasuredCallback = (observerEntry, entries) => {
+    this._bufferedEntriesAcc.exec(observerEntry, entries);
+  };
+
   private _processEntries: OnAllEntriesMeasuredCallback = (entries) => {
     const scrolledPane = this._scrolledPane;
     const rootBounds = entries[0].rootBounds!;
     const itemsHeightAccResult = this._itemsHeightAccResult;
     const intersectedEntriesAccResult = this._intersectedEntriesAccResult;
     const notIntersectedEntriesAccResult = this._notIntersectedEntriesAccResult;
+    const bufferedEntriesAccResult = this._bufferedEntriesAccResult;
     const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
     const isScrollingDown = this._previousScrollTop < scrollTop;
     const isScrollingUp = this._previousScrollTop > scrollTop;
@@ -91,41 +137,66 @@ export default class ScrollableContainer {
       getComputedStyle(this._scrollableParent).paddingTop,
     );
 
-    const { offsetTop: scrolledPaneOffsetTop } = scrolledPane.DOMRoot;
+    const { offsetTop: scrolledPaneOffsetTop, scrollHeight: scrolledPaneScrollHeight } = scrolledPane.DOMRoot;
 
     if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
 
       this._scrolledPaneTopBuffer.runScheduledCallbacks();
 
-      if (notIntersectedEntriesAccResult.rows.length) {
+      const removedRowsNumber = notIntersectedEntriesAccResult.rows.length;
+      const insertedRowsNumber = bufferedEntriesAccResult.rows.length - 1; // exclude marker
+
+      if (removedRowsNumber) {
         requestAnimationFrame(this._removeNotIntersectedItems);
       }
+      
+      if (insertedRowsNumber) {
+        requestAnimationFrame(this._insertBufferedItems);
+      }
+      
+      // this._onScrollUpOverscanCB();
 
-      this._onScrollUpOverscanCB();
+      if (removedRowsNumber || insertedRowsNumber) {
+        const insertedHeight = bufferedEntriesAccResult.rowsHeight;
+        const removedHeight = removedRowsNumber ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
+        const heightDiff = insertedHeight - removedHeight;
+        const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
 
-      // requestAnimationFrame
-      requestAnimationFrame(() => {
-        scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
-      });
-      this.scroll(scrolledPaneOffsetTop - (notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom) - paddingTop);
+        requestAnimationFrame(() => {
+          scrolledPane.setScrollLimit(newScrolledPaneScrollHeight - rootHeight + paddingTop);
+          this.scroll(scrolledPaneOffsetTop - (insertedHeight) - paddingTop, newScrolledPaneScrollHeight);
+        });
+      }
     }
 
     if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
 
       this._scrolledPaneBottomBuffer.runScheduledCallbacks();
 
-      if (notIntersectedEntriesAccResult.rows.length) {
+      const removedRowsNumber = notIntersectedEntriesAccResult.rows.length;
+      const insertedRowsNumber = bufferedEntriesAccResult.rows.length - 1; // exclude marker
+
+      if (removedRowsNumber) {
         requestAnimationFrame(this._removeNotIntersectedItems);
       }
+      
+      if (insertedRowsNumber) {
+        requestAnimationFrame(this._insertBufferedItems);
+      }
 
-      this._onScrollDownOverscanCB();
+      // this._onScrollDownOverscanCB();
 
-      // requestAnimationFrame
-      // (previouslyMeasuredScrollHeight - removedItemsHeight + addedItemsHeight) - rootHeight + padding
-      requestAnimationFrame(() => {
-        scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
-      });
-      this.scroll(scrolledPaneOffsetTop + (intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop) - paddingTop);
+      if (removedRowsNumber || insertedRowsNumber) {
+        const insertedHeight = bufferedEntriesAccResult.rowsHeight;
+        const removedHeight = removedRowsNumber ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
+        const heightDiff = insertedHeight - removedHeight;
+        const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
+
+        requestAnimationFrame(() => {
+          scrolledPane.setScrollLimit(newScrolledPaneScrollHeight - rootHeight + paddingTop);
+          this.scroll(scrolledPaneOffsetTop + removedHeight - paddingTop, newScrolledPaneScrollHeight);
+        });
+      }
     }
 
     this._previousScrollTop = scrollTop;
@@ -149,15 +220,34 @@ export default class ScrollableContainer {
     this._resizeObserver.observe(this._scrollableParent);
 
     this._scrollableParent.addEventListener('scroll', () => {
-      requestAnimationFrame(this._checkBuffers);
+      this._scrollTop = this._scrollableParent.scrollTop;
+
+      const isScrollingDown = this._previousScrollTop < this._scrollTop;
+      const isScrollingUp = this._previousScrollTop > this._scrollTop;
+
       this._scrolledPane.scheduleSizeUpdate();
       this._scrolledPane.scheduleEntriesMeasuring();
-      this._scrollTop = this._scrollableParent.scrollTop;
+
+      if (isScrollingDown)  {
+        this._scrolledPaneBottomBuffer.scheduleSizeUpdate();
+        this._scrolledPaneBottomBuffer.scheduleEntriesMeasuring();
+      }
+
+      if (isScrollingUp) {
+        this._scrolledPaneTopBuffer.scheduleSizeUpdate();
+        this._scrolledPaneTopBuffer.scheduleEntriesMeasuring();
+      }
+
+      requestAnimationFrame(this._checkBuffers);
     });
 
     this._scrolledPane.onBeforeEntriesMeasured(this._initAccumulators);
     this._scrolledPane.onEachEntryMeasured(this._accumulateEntries);
     this._scrolledPane.onAllEntriesMeasured(this._processEntries);
+    this._scrolledPaneTopBuffer.onBeforeEntriesMeasured(this._initBufferAccumulators);
+    this._scrolledPaneTopBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
+    this._scrolledPaneBottomBuffer.onBeforeEntriesMeasured(this._initBufferAccumulators);
+    this._scrolledPaneBottomBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
   }
 
   onScrollDownOverscan(cb: OnOverscanCallback) {
@@ -231,8 +321,8 @@ export default class ScrollableContainer {
     return this._scrollHeight;
   }
 
-  scroll(position: number) {
-    const { offsetHeight: scrolledPaneHeight, scrollHeight: scrolledPaneScrollHeight } = this._scrolledPane.DOMRoot;
+  scroll(position: number, scrolledPaneScrollHeight: number) {
+    const scrolledPaneHeight = this._scrolledPane.getBorderBoxHeight();
     const scrollHeight = this._scrollHeight;
 
     if (position < 0) {
