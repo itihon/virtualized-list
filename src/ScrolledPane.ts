@@ -135,7 +135,7 @@ export default class ScrolledPane extends DOMConstructor {
     this._paneElement.style.setProperty('--scroll-limit', `${roundLimit}px`);
   }
 
-  append(...items: HTMLElement[]) {
+  append(...items: Element[]) {
     this._paneElement.append(...items);
     for (const item of items) {
       this._newItems.add(item)
@@ -143,7 +143,7 @@ export default class ScrolledPane extends DOMConstructor {
     }
   }
   
-  prepend(...items: HTMLElement[]) {
+  prepend(...items: Element[]) {
     this._paneElement.prepend(...items);
     for (const item of items) {
       this._newItems.add(item)
