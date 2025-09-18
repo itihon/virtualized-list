@@ -157,14 +157,14 @@ export default class ScrollableContainer {
       // this._onScrollUpOverscanCB();
 
       if (removedRowsNumber || insertedRowsNumber) {
-        const insertedHeight = bufferedEntriesAccResult.rowsHeight;
+        const insertedHeight = bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight;
         const removedHeight = removedRowsNumber ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
         const heightDiff = insertedHeight - removedHeight;
         const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
 
         requestAnimationFrame(() => {
           scrolledPane.setScrollLimit(newScrolledPaneScrollHeight - rootHeight + paddingTop);
-          this.scroll(scrolledPaneOffsetTop - (insertedHeight) - paddingTop, newScrolledPaneScrollHeight);
+          this.scroll(scrolledPaneOffsetTop - insertedHeight - paddingTop, newScrolledPaneScrollHeight);
         });
       }
     }
@@ -187,7 +187,7 @@ export default class ScrollableContainer {
       // this._onScrollDownOverscanCB();
 
       if (removedRowsNumber || insertedRowsNumber) {
-        const insertedHeight = bufferedEntriesAccResult.rowsHeight;
+        const insertedHeight = bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight;
         const removedHeight = removedRowsNumber ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
         const heightDiff = insertedHeight - removedHeight;
         const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
