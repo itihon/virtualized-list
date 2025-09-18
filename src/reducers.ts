@@ -121,7 +121,7 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
 
     if (acc.isRowNotIntersected === !acc.intersection || acc.ignoreRowIntersection) {
       if ((collectTop && isTop) || (collectBottom && isBottom)) {
-        acc.rows.push(acc.currentRow);
+        if (acc.currentRow.length) acc.rows.push(acc.currentRow);
         acc.rowsTop = top;
         acc.rowsBottom = bottom
         acc.rowsHeight = height;
@@ -148,7 +148,7 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
 
     if (acc.isRowNotIntersected === !acc.intersection || acc.ignoreRowIntersection) {
       if ((collectTop && isTop) || (collectBottom && isBottom)) {
-        acc.rows.push(acc.currentRow);
+        if (acc.currentRow.length) acc.rows.push(acc.currentRow);
         acc.rowsTop = top;
         acc.rowsBottom = bottom
         acc.rowsHeight = height;
