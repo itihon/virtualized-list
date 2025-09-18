@@ -24,10 +24,10 @@ export default class ScrollableContainer {
   private _scrollTop: number = 0;
   private _previousScrollTop: number = 0;
   private _itemsHeightAcc = createItemsHeightReducer();
-  private _remainedItemsHeightAcc = createItemsHeightReducer();
+  private _intersectedEntriesAcc = createFlexRowsReducer();
   private _notIntersectedEntriesAcc = createFlexRowsReducer();
   private _itemsHeightAccResult = this._itemsHeightAcc.getAccumulator();
-  private _remainedItemsHeightAccResult = this._remainedItemsHeightAcc.getAccumulator();
+  private _intersectedEntriesAccResult = this._intersectedEntriesAcc.getAccumulator();
   private _notIntersectedEntriesAccResult = this._notIntersectedEntriesAcc.getAccumulator();
 
   private _checkBuffers = () => { 
@@ -53,29 +53,36 @@ export default class ScrollableContainer {
 
   private _initAccumulators = () => {
     const scrolledPane = this._scrolledPane;
+    const isScrollingDown = this._previousScrollTop < this._scrollTop;
+    const isScrollingUp = this._previousScrollTop > this._scrollTop;
 
     this._itemsHeightAcc.init();
-    this._remainedItemsHeightAcc.init();
+    this._intersectedEntriesAcc.init(
+      scrolledPane.DOMRoot, 
+      scrolledPane.getContentBoxWidth(),
+      { intersection: true },
+    );
     this._notIntersectedEntriesAcc.init(
       scrolledPane.DOMRoot, 
       scrolledPane.getContentBoxWidth(),
+      { 
+        collectTop: isScrollingDown,
+        collectBottom: isScrollingUp,
+      },
     );
   };
 
   private _accumulateEntries: OnEachEntryMeasuredCallback = (observerEntry, entries) => {
     this._itemsHeightAcc.exec(observerEntry, entries);
     this._notIntersectedEntriesAcc.exec(observerEntry, entries);
-
-    if (observerEntry.isIntersecting) {
-      this._remainedItemsHeightAcc.exec(observerEntry, entries);
-    }
+    this._intersectedEntriesAcc.exec(observerEntry, entries);
   };
 
   private _processEntries: OnAllEntriesMeasuredCallback = (entries) => {
     const scrolledPane = this._scrolledPane;
     const rootBounds = entries[0].rootBounds!;
     const itemsHeightAccResult = this._itemsHeightAccResult;
-    const remainedItemsHeightAccResult = this._remainedItemsHeightAccResult;
+    const intersectedEntriesAccResult = this._intersectedEntriesAccResult;
     const notIntersectedEntriesAccResult = this._notIntersectedEntriesAccResult;
     const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
     const isScrollingDown = this._previousScrollTop < scrollTop;
@@ -100,7 +107,7 @@ export default class ScrollableContainer {
       requestAnimationFrame(() => {
         scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
       });
-      this.scroll(scrolledPaneOffsetTop - (itemsHeightAccResult.bottom - remainedItemsHeightAccResult.bottom) - paddingTop);
+      this.scroll(scrolledPaneOffsetTop - (notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom) - paddingTop);
     }
 
     if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
@@ -118,7 +125,7 @@ export default class ScrollableContainer {
       requestAnimationFrame(() => {
         scrolledPane.setScrollLimit(scrolledPane.DOMRoot.scrollHeight - rootHeight + paddingTop);
       });
-      this.scroll(scrolledPaneOffsetTop + remainedItemsHeightAccResult.top - itemsHeightAccResult.top - paddingTop);
+      this.scroll(scrolledPaneOffsetTop + (intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop) - paddingTop);
     }
 
     this._previousScrollTop = scrollTop;
