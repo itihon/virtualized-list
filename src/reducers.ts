@@ -48,6 +48,7 @@ export type FlexRowsAccumulator = {
   intersection: boolean;
   collectTop: boolean;
   collectBottom: boolean;
+  minRowsNumber: number;
 }
 
 type ItemsHeightReducer = ReducerFunction<ItemsHeightAccumulator, IntersectionObserverEntry>;
@@ -59,6 +60,7 @@ export type InitFlexRowsAccOptions = [{
   intersection?: boolean;
   collectTop?: boolean;
   collectBottom?: boolean;
+  minRowsNumber?: number;
 }] | [];
 
 type FlexRowsReducer = ReducerFunction<FlexRowsAccumulator, IntersectionObserverEntry>;
@@ -143,7 +145,7 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   acc.itemsHeightReducer.exec(entry, entries);
   acc.currentRowWidth += (itemOccupiedSpace + acc.flexboxColumnGap);
 
-  if (isLastItem && !acc.ignoreLastRow) {
+  if (isLastItem && !(acc.ignoreLastRow && acc.rows.length >= acc.minRowsNumber)) {
     const { top, bottom, height } = acc.itemsHeightAcc!;
 
     if (acc.isRowNotIntersected === !acc.intersection || acc.ignoreRowIntersection) {
@@ -169,6 +171,7 @@ const initFlexRowsAcc: InitFlexRowsAcc = (
     intersection = false, 
     collectTop = true, 
     collectBottom = true,  
+    minRowsNumber = 0,
   } = {},
 ) => {
   const flexboxStyle = getComputedStyle(flexbox);
@@ -190,6 +193,7 @@ const initFlexRowsAcc: InitFlexRowsAcc = (
   acc.intersection = intersection;
   acc.collectTop = collectTop;
   acc.collectBottom = collectBottom;
+  acc.minRowsNumber = minRowsNumber;
   return acc;
 };
 
@@ -213,6 +217,7 @@ export const createFlexRowsReducer = () =>
       intersection: false,
       collectTop: true, 
       collectBottom: true,  
+      minRowsNumber: 0,
     }, 
     initFlexRowsAcc,
   );

@@ -15,6 +15,10 @@
         margin: 0;
       }
 
+      .box > *:first-child {
+        width: 100%;
+      }
+
       .box {
         border: 2px dotted rgb(96 139 168);
         display: flex;
@@ -148,11 +152,12 @@
         const acc = notIntersectedFlexItemsReducer.getAccumulator();
 
         notIntersectedFlexItemsReducer.init(box, flexBoxInineSize, {
-          ignoreLastRow: false,
-          ignoreRowIntersection: false,
+          ignoreLastRow: true,
+          ignoreRowIntersection: true,
           intersection: false,
           collectTop: true, 
           collectBottom: true,  
+          minRowsNumber: 2,
         });
         requestAnimationFrame(removeHeightlightFlexRows);
 
