@@ -13,6 +13,7 @@ export type OnNewItemsCallback = IntersectionObserverCallback;
 export default class ScrolledPane extends DOMConstructor {
   private _paneElement: HTMLElement;
   private _contentBoxWidth: number = 0;
+  private _borderBoxHeight: number = 0;
   private _resizeObserver: ResizeObserver;
   private _observer: IntersectionObserver;
   private _onEachEntryMeasuredCB: OnEachEntryMeasuredCallback = () => {};
@@ -68,6 +69,7 @@ export default class ScrolledPane extends DOMConstructor {
 
     this._resizeObserver = new ResizeObserver((entries) => {
       this._contentBoxWidth = entries[0].contentBoxSize[0].inlineSize;
+      this._borderBoxHeight = entries[0].borderBoxSize[0].blockSize;
     });
 
     this._observer = this._createObserver('0px');
@@ -122,6 +124,10 @@ export default class ScrolledPane extends DOMConstructor {
 
   getContentBoxWidth(): number {
     return this._contentBoxWidth;
+  }
+
+  getBorderBoxHeight(): number {
+    return this._borderBoxHeight;
   }
 
   setScrollLimit(limit: number) {
