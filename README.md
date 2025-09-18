@@ -102,3 +102,7 @@ TODO
 - [ ] VirtualizedList().length does not update since the insertItem() method is acynchronous
 
 - [ ] Selection of invisible lines
+
+## Bugs
+
+- [ ] Buffers and ScrolledPane have different heights when the parent container has paddings
