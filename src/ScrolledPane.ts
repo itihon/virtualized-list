@@ -20,6 +20,7 @@ export default class ScrolledPane extends DOMConstructor {
   private _onAllEntriesMeasuredCB: OnAllEntriesMeasuredCallback = () => {};
   private _onBeforeEntriesMeasuredCB: OnBeforeEntriesMeasuredCallback = () => {};
   private _onNewItemsCB: OnNewItemsCallback = () => {};
+  private _onSizeUpdatedCB: ResizeObserverCallback = () => {};
   private _newItems: Set<Element> = new Set();
 
   private _runCallbacks: IntersectionObserverCallback = (entries, observer) => {
@@ -67,9 +68,10 @@ export default class ScrolledPane extends DOMConstructor {
     super(scrollableParent, ['class__ScrolledPane', ...classList]);
     this._paneElement = super.DOMRoot;
 
-    this._resizeObserver = new ResizeObserver((entries) => {
+    this._resizeObserver = new ResizeObserver((entries, observer) => {
       this._contentBoxWidth = entries[0].contentBoxSize[0].inlineSize;
       this._borderBoxHeight = entries[0].borderBoxSize[0].blockSize;
+      this._onSizeUpdatedCB(entries, observer);
     });
 
     this._observer = this._createObserver('0px');
@@ -109,6 +111,10 @@ export default class ScrolledPane extends DOMConstructor {
 
   onNewItems(cb: OnNewItemsCallback) {
     this._onNewItemsCB = cb;
+  }
+
+  onSizeUpdated(cb: ResizeObserverCallback) {
+    this._onSizeUpdatedCB = cb;
   }
 
   setOverscanHeight(height: OverscanHeight) {
