@@ -32,24 +32,6 @@ export default class ScrollableContainer {
   private _notIntersectedEntriesAccResult = this._notIntersectedEntriesAcc.getAccumulator();
   private _bufferedEntriesAccResult = this._bufferedEntriesAcc.getAccumulator();
 
-  private _scheduleItemsMeasuring = () => {
-    const isScrollingDown = this._previousScrollTop < this._scrollTop;
-    const isScrollingUp = this._previousScrollTop > this._scrollTop;
-
-    this._scrolledPane.scheduleSizeUpdate();
-    this._scrolledPane.scheduleEntriesMeasuring();
-
-    if (isScrollingDown)  {
-      this._scrolledPaneBottomBuffer.scheduleSizeUpdate();
-      this._scrolledPaneBottomBuffer.scheduleEntriesMeasuring();
-    }
-
-    if (isScrollingUp) {
-      this._scrolledPaneTopBuffer.scheduleSizeUpdate();
-      this._scrolledPaneTopBuffer.scheduleEntriesMeasuring();
-    }
-  };
-
   private _checkBuffers = () => { 
     const isScrollingDown = this._previousScrollTop < this._scrollTop;
     const isScrollingUp = this._previousScrollTop > this._scrollTop;
@@ -240,17 +222,32 @@ export default class ScrollableContainer {
     this._scrollableParent.addEventListener('scroll', () => {
       this._scrollTop = this._scrollableParent.scrollTop;
 
-      requestAnimationFrame(this._scheduleItemsMeasuring);
+      const isScrollingDown = this._previousScrollTop < this._scrollTop;
+      const isScrollingUp = this._previousScrollTop > this._scrollTop;
+
+      this._scrolledPane.scheduleSizeUpdate();
+
+      if (isScrollingDown)  {
+        this._scrolledPaneBottomBuffer.scheduleSizeUpdate();
+      }
+
+      if (isScrollingUp) {
+        this._scrolledPaneTopBuffer.scheduleSizeUpdate();
+      }
+
       requestAnimationFrame(this._checkBuffers);
     });
 
     this._scrolledPane.onBeforeEntriesMeasured(this._initAccumulators);
     this._scrolledPane.onEachEntryMeasured(this._accumulateEntries);
     this._scrolledPane.onAllEntriesMeasured(this._processEntries);
+    this._scrolledPane.onSizeUpdated(() => this._scrolledPane.scheduleEntriesMeasuring());
     this._scrolledPaneTopBuffer.onBeforeEntriesMeasured(this._initBufferAccumulators);
     this._scrolledPaneTopBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
+    this._scrolledPaneTopBuffer.onSizeUpdated(() => this._scrolledPaneTopBuffer.scheduleEntriesMeasuring());
     this._scrolledPaneBottomBuffer.onBeforeEntriesMeasured(this._initBufferAccumulators);
     this._scrolledPaneBottomBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
+    this._scrolledPaneBottomBuffer.onSizeUpdated(() => this._scrolledPaneBottomBuffer.scheduleEntriesMeasuring());
   }
 
   onScrollDownOverscan(cb: OnOverscanCallback) {
