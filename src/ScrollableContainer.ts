@@ -31,6 +31,9 @@ export default class ScrollableContainer {
   private _intersectedEntriesAccResult = this._intersectedEntriesAcc.getAccumulator();
   private _notIntersectedEntriesAccResult = this._notIntersectedEntriesAcc.getAccumulator();
   private _bufferedEntriesAccResult = this._bufferedEntriesAcc.getAccumulator();
+  private _scrolledPaneScrollHeight: number = 0;
+  private _scrolledPaneScrollLimit: number = 0;
+  private _scrolledPaneOffsetTop: number = 0;
 
   private _checkBuffers = () => { 
     const isScrollingDown = this._previousScrollTop < this._scrollTop;
@@ -43,6 +46,11 @@ export default class ScrollableContainer {
     if (isScrollingUp && !this._scrolledPaneTopBuffer.length) {
       this._onScrollUpEmptyBufferCB(this._scrolledPaneTopBuffer); 
     }
+  };
+
+  private _adjustScrolledPane = () => {
+    this._scrolledPane.setScrollLimit(this._scrolledPaneScrollLimit);
+    this.scroll(this._scrolledPaneOffsetTop, this._scrolledPaneScrollHeight);
   };
 
   private _removeNotIntersectedItems = () => {
@@ -178,10 +186,11 @@ export default class ScrollableContainer {
         const heightDiff = insertedHeight - removedHeight;
         const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
 
-        requestAnimationFrame(() => {
-          scrolledPane.setScrollLimit(newScrolledPaneScrollHeight - rootHeight + paddingTop);
-          this.scroll(scrolledPaneOffsetTop - insertedHeight - paddingTop, newScrolledPaneScrollHeight);
-        });
+        this._scrolledPaneScrollLimit = newScrolledPaneScrollHeight - rootHeight + paddingTop;
+        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop - insertedHeight - paddingTop;
+        this._scrolledPaneScrollHeight = newScrolledPaneScrollHeight;
+
+        requestAnimationFrame(this._adjustScrolledPane);
       }
     }
 
@@ -208,10 +217,11 @@ export default class ScrollableContainer {
         const heightDiff = insertedHeight - removedHeight;
         const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
 
-        requestAnimationFrame(() => {
-          scrolledPane.setScrollLimit(newScrolledPaneScrollHeight - rootHeight + paddingTop);
-          this.scroll(scrolledPaneOffsetTop + removedHeight - paddingTop, newScrolledPaneScrollHeight);
-        });
+        this._scrolledPaneScrollLimit = newScrolledPaneScrollHeight - rootHeight + paddingTop; 
+        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop + removedHeight - paddingTop;
+        this._scrolledPaneScrollHeight = newScrolledPaneScrollHeight;
+
+        requestAnimationFrame(this._adjustScrolledPane);
       }
     }
 
