@@ -74,7 +74,7 @@ export default class ScrollableContainer {
       const itemsCount = row.length;
 
       for (let itemNumber = 0; itemNumber < itemsCount; itemNumber++) {
-        scrolledPane.prepend(row[itemNumber].target);
+        scrolledPane.prependItem(row[itemNumber].target);
       }
     }
   };
@@ -89,7 +89,7 @@ export default class ScrollableContainer {
       const itemsCount = row.length;
 
       for (let itemNumber = 0; itemNumber < itemsCount; itemNumber++) {
-        scrolledPane.append(row[itemNumber].target);
+        scrolledPane.appendItem(row[itemNumber].target);
       }
     }
   };
