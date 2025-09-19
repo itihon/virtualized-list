@@ -35,17 +35,14 @@ export default class ScrollableContainer {
   private _scrolledPaneScrollLimit: number = 0;
   private _scrolledPaneOffsetTop: number = 0;
 
-  private _checkBuffers = () => { 
-    const isScrollingDown = this._previousScrollTop < this._scrollTop;
-    const isScrollingUp = this._previousScrollTop > this._scrollTop;
+  private _checkTopBuffer = () => { 
+    const buffer = this._scrolledPaneTopBuffer;
+    if (!buffer.length) this._onScrollUpEmptyBufferCB(buffer); 
+  };
 
-    if (isScrollingDown && !this._scrolledPaneBottomBuffer.length) {
-      this._onScrollDownEmptyBufferCB(this._scrolledPaneBottomBuffer); 
-    }
-    
-    if (isScrollingUp && !this._scrolledPaneTopBuffer.length) {
-      this._onScrollUpEmptyBufferCB(this._scrolledPaneTopBuffer); 
-    }
+  private _checkBottomBuffer = () => { 
+    const buffer = this._scrolledPaneBottomBuffer;
+    if (!buffer.length) this._onScrollDownEmptyBufferCB(buffer); 
   };
 
   private _adjustScrolledPane = () => {
@@ -255,13 +252,13 @@ export default class ScrollableContainer {
 
       if (isScrollingDown)  {
         this._scrolledPaneBottomBuffer.scheduleSizeUpdate();
+        requestAnimationFrame(this._checkBottomBuffer);
       }
 
       if (isScrollingUp) {
         this._scrolledPaneTopBuffer.scheduleSizeUpdate();
+        requestAnimationFrame(this._checkTopBuffer);
       }
-
-      requestAnimationFrame(this._checkBuffers);
     });
 
     this._scrolledPane.onBeforeEntriesMeasured(this._initAccumulators);
