@@ -162,61 +162,62 @@ export default class ScrollableContainer {
     const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
     const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
+    let isRemovalScheduled = false;
+    let isInsertionScheduled = false;
+
+    if (rowsNumberToRemove) {
+      requestAnimationFrame(this._removeNotIntersectedItems);
+      isRemovalScheduled = true;
+    }
+      
     if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
 
       this._scrolledPaneTopBuffer.runScheduledCallbacks();
 
-      if (rowsNumberToRemove) {
-        requestAnimationFrame(this._removeNotIntersectedItems);
-      }
-      
       if (rowsNumberToInsert) {
         requestAnimationFrame(this._insertItemsFromTopBuffer);
+        isInsertionScheduled = true;
       }
       
       // this._onScrollUpOverscanCB();
-
-      if (rowsNumberToRemove || rowsNumberToInsert) {
-        const insertedHeight = bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight;
-        const removedHeight = rowsNumberToRemove ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
-        const heightDiff = insertedHeight - removedHeight;
-        const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
-
-        this._scrolledPaneScrollLimit = newScrolledPaneScrollHeight - rootHeight + paddingTop;
-        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop - insertedHeight - paddingTop;
-        this._scrolledPaneScrollHeight = newScrolledPaneScrollHeight;
-
-        requestAnimationFrame(this._adjustScrolledPane);
-      }
     }
 
     if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
 
       this._scrolledPaneBottomBuffer.runScheduledCallbacks();
 
-      if (rowsNumberToRemove) {
-        requestAnimationFrame(this._removeNotIntersectedItems);
-      }
-      
       if (rowsNumberToInsert) {
         requestAnimationFrame(this._insertItemsFromBottomBuffer);
+        isInsertionScheduled = true;
       }
 
       // this._onScrollDownOverscanCB();
-
-      if (rowsNumberToRemove || rowsNumberToInsert) {
-        const insertedHeight = bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight;
-        const removedHeight = rowsNumberToRemove ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
-        const heightDiff = insertedHeight - removedHeight;
-        const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
-
-        this._scrolledPaneScrollLimit = newScrolledPaneScrollHeight - rootHeight + paddingTop; 
-        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop + removedHeight - paddingTop;
-        this._scrolledPaneScrollHeight = newScrolledPaneScrollHeight;
-
-        requestAnimationFrame(this._adjustScrolledPane);
-      }
     }
+
+    if (isRemovalScheduled || isInsertionScheduled) {
+      let insertedHeight = 0;
+      let removedHeight = 0;
+
+      if (isScrollingUp) {
+        insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight : 0;
+        removedHeight = isRemovalScheduled ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
+        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop - insertedHeight - paddingTop;
+      }
+
+      if (isScrollingDown) {
+        insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight : 0;
+        removedHeight = isRemovalScheduled ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
+        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop + removedHeight - paddingTop;
+      }
+
+      const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + (insertedHeight - removedHeight);
+
+      this._scrolledPaneScrollLimit = newScrolledPaneScrollHeight - rootHeight + paddingTop; 
+      this._scrolledPaneScrollHeight = newScrolledPaneScrollHeight;
+
+      requestAnimationFrame(this._adjustScrolledPane);
+    }
+
 
     this._previousScrollTop = scrollTop;
   }
