@@ -28,10 +28,12 @@ export default class ScrolledPane extends DOMConstructor {
     const newEntries: Array<IntersectionObserverEntry> = [];
     const newItems = this._newItems;
     const paneElement = this._paneElement;
+    const entriesCount = entries.length;
 
     this._onBeforeEntriesMeasuredCB(entries, observer);
 
-    for (const entry of entries) {
+    for (let entryNumber = 0; entryNumber < entriesCount; entryNumber++) {
+      const entry = entries[entryNumber];
       const { target } = entry;
 
       if (newItems.has(target)) {

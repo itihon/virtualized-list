@@ -46,33 +46,45 @@ export default class ScrollableContainer {
   };
 
   private _removeNotIntersectedItems = () => {
-    for (const row of this._notIntersectedEntriesAccResult.rows) {
-      for (const entry of row) {
-        entry.target.remove();
+    const rows = this._notIntersectedEntriesAccResult.rows;
+    const rowsCount = rows.length;
+
+    for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
+      const row = rows[rowNumber];
+      const itemsCount = row.length;
+
+      for (let itemNumber = 0; itemNumber < itemsCount; itemNumber++) {
+        row[itemNumber].target.remove();
       }
     }
   };
 
   private _insertItemsFromTopBuffer = () => {
     const scrolledPane = this._scrolledPane;
-    const markerElement = this._scrolledPaneTopBuffer.getMarkerElement();
+    const rows = this._bufferedEntriesAccResult.rows;
+    const rowsCount = rows.length;
 
-    for (const row of this._bufferedEntriesAccResult.rows) {
-      for (const entry of row) {
-        if (entry.target === markerElement) continue;
-        scrolledPane.prepend(entry.target);
+    for (let rowNumber = 1; rowNumber < rowsCount; rowNumber++) { // first row is marker
+      const row = rows[rowNumber];
+      const itemsCount = row.length;
+
+      for (let itemNumber = 0; itemNumber < itemsCount; itemNumber++) {
+        scrolledPane.prepend(row[itemNumber].target);
       }
     }
   };
 
   private _insertItemsFromBottomBuffer = () => {
     const scrolledPane = this._scrolledPane;
-    const markerElement = this._scrolledPaneBottomBuffer.getMarkerElement();
+    const rows = this._bufferedEntriesAccResult.rows;
+    const rowsCount = rows.length;
 
-    for (const row of this._bufferedEntriesAccResult.rows) {
-      for (const entry of row) {
-        if (entry.target === markerElement) continue;
-        scrolledPane.append(entry.target);
+    for (let rowNumber = 1; rowNumber < rowsCount; rowNumber++) { // first row is marker
+      const row = rows[rowNumber];
+      const itemsCount = row.length;
+
+      for (let itemNumber = 0; itemNumber < itemsCount; itemNumber++) {
+        scrolledPane.append(row[itemNumber].target);
       }
     }
   };

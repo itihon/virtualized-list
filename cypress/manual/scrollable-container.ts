@@ -133,9 +133,10 @@ else {
 
     const overscanRowCount = 10;
 
-    buffer.append(
-      ...Array.from({ length: overscanRowCount }, () => createItem(itemNum++)),
-    )
+    for (let i = 0; i < overscanRowCount; i++) {
+      const item = createItem(itemNum++);
+      buffer.append(item);
+    }
   });
   
   scrollableContainer.onScrollUpEmptyBuffer((buffer) => {
@@ -143,9 +144,10 @@ else {
 
     const overscanRowCount = 10;
 
-    buffer.append(
-      ...Array.from({ length: overscanRowCount }, () => createItem(itemNum++)),
-    )
+    for (let i = 0; i < overscanRowCount; i++) {
+      const item = createItem(itemNum++);
+      buffer.append(item);
+    }
   });
 }
 
