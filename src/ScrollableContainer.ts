@@ -53,22 +53,26 @@ export default class ScrollableContainer {
     }
   };
 
-  private _insertBufferedItems = () => {
+  private _insertItemsFromTopBuffer = () => {
     const scrolledPane = this._scrolledPane;
-    const isScrollingDown = this._previousScrollTop < this._scrollTop;
-    const isScrollingUp = this._previousScrollTop > this._scrollTop;
-
-    const scrolledPaneBuffer = isScrollingDown 
-      ? this._scrolledPaneBottomBuffer
-      : this._scrolledPaneTopBuffer;
-
-    const markerElement = scrolledPaneBuffer.getMarkerElement();
+    const markerElement = this._scrolledPaneTopBuffer.getMarkerElement();
 
     for (const row of this._bufferedEntriesAccResult.rows) {
       for (const entry of row) {
         if (entry.target === markerElement) continue;
-        if (isScrollingDown) scrolledPane.append(entry.target);
-        if (isScrollingUp) scrolledPane.prepend(entry.target);
+        scrolledPane.prepend(entry.target);
+      }
+    }
+  };
+
+  private _insertItemsFromBottomBuffer = () => {
+    const scrolledPane = this._scrolledPane;
+    const markerElement = this._scrolledPaneBottomBuffer.getMarkerElement();
+
+    for (const row of this._bufferedEntriesAccResult.rows) {
+      for (const entry of row) {
+        if (entry.target === markerElement) continue;
+        scrolledPane.append(entry.target);
       }
     }
   };
@@ -151,7 +155,7 @@ export default class ScrollableContainer {
       }
       
       if (insertedRowsNumber) {
-        requestAnimationFrame(this._insertBufferedItems);
+        requestAnimationFrame(this._insertItemsFromTopBuffer);
       }
       
       // this._onScrollUpOverscanCB();
@@ -181,7 +185,7 @@ export default class ScrollableContainer {
       }
       
       if (insertedRowsNumber) {
-        requestAnimationFrame(this._insertBufferedItems);
+        requestAnimationFrame(this._insertItemsFromBottomBuffer);
       }
 
       // this._onScrollDownOverscanCB();
