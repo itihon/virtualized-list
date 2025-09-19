@@ -9,6 +9,7 @@
 
 .class__Filler {
   position: relative;
+  visibility: hidden;
   z-index: -1;
 }
 
