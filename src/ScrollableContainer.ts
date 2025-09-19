@@ -159,27 +159,26 @@ export default class ScrollableContainer {
     );
 
     const { offsetTop: scrolledPaneOffsetTop, scrollHeight: scrolledPaneScrollHeight } = scrolledPane.DOMRoot;
+    const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
+    const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
     if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
 
       this._scrolledPaneTopBuffer.runScheduledCallbacks();
 
-      const removedRowsNumber = notIntersectedEntriesAccResult.rows.length;
-      const insertedRowsNumber = bufferedEntriesAccResult.rows.length - 1; // exclude marker
-
-      if (removedRowsNumber) {
+      if (rowsNumberToRemove) {
         requestAnimationFrame(this._removeNotIntersectedItems);
       }
       
-      if (insertedRowsNumber) {
+      if (rowsNumberToInsert) {
         requestAnimationFrame(this._insertItemsFromTopBuffer);
       }
       
       // this._onScrollUpOverscanCB();
 
-      if (removedRowsNumber || insertedRowsNumber) {
+      if (rowsNumberToRemove || rowsNumberToInsert) {
         const insertedHeight = bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight;
-        const removedHeight = removedRowsNumber ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
+        const removedHeight = rowsNumberToRemove ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
         const heightDiff = insertedHeight - removedHeight;
         const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
 
@@ -195,22 +194,19 @@ export default class ScrollableContainer {
 
       this._scrolledPaneBottomBuffer.runScheduledCallbacks();
 
-      const removedRowsNumber = notIntersectedEntriesAccResult.rows.length;
-      const insertedRowsNumber = bufferedEntriesAccResult.rows.length - 1; // exclude marker
-
-      if (removedRowsNumber) {
+      if (rowsNumberToRemove) {
         requestAnimationFrame(this._removeNotIntersectedItems);
       }
       
-      if (insertedRowsNumber) {
+      if (rowsNumberToInsert) {
         requestAnimationFrame(this._insertItemsFromBottomBuffer);
       }
 
       // this._onScrollDownOverscanCB();
 
-      if (removedRowsNumber || insertedRowsNumber) {
+      if (rowsNumberToRemove || rowsNumberToInsert) {
         const insertedHeight = bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight;
-        const removedHeight = removedRowsNumber ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
+        const removedHeight = rowsNumberToRemove ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
         const heightDiff = insertedHeight - removedHeight;
         const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + heightDiff;
 
