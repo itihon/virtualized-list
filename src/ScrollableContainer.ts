@@ -225,6 +225,41 @@ export default class ScrollableContainer {
     this._previousScrollTop = scrollTop;
   }
 
+  private _updateSizes = (entries: ResizeObserverEntry[]) => { 
+    const { blockSize, inlineSize } = entries[0].contentBoxSize[0];
+    const scrolledPaneTopBuffer = this._scrolledPaneTopBuffer;
+    const scrolledPane = this._scrolledPane;
+    const scrolledPaneBottomBuffer = this._scrolledPaneBottomBuffer;
+
+    scrolledPaneTopBuffer.offsetWidth = inlineSize;
+    scrolledPaneTopBuffer.offsetHeight = blockSize;
+    scrolledPane.offsetWidth = inlineSize;
+    scrolledPane.offsetHeight = blockSize;
+    scrolledPaneBottomBuffer.offsetWidth = inlineSize;
+    scrolledPaneBottomBuffer.offsetHeight = blockSize;
+
+    this.setScrollHeight(this._scrollHeight); 
+  };
+
+  private _scrollHandler = () => {
+    this._scrollTop = this._scrollableParent.scrollTop;
+
+    const isScrollingDown = this._previousScrollTop < this._scrollTop;
+    const isScrollingUp = this._previousScrollTop > this._scrollTop;
+
+    this._scrolledPane.scheduleSizeUpdate();
+
+    if (isScrollingDown)  {
+      this._scrolledPaneBottomBuffer.scheduleSizeUpdate();
+      requestAnimationFrame(this._checkBottomBuffer);
+    }
+
+    if (isScrollingUp) {
+      this._scrolledPaneTopBuffer.scheduleSizeUpdate();
+      requestAnimationFrame(this._checkTopBuffer);
+    }
+  };
+
   constructor(scrollableParent: HTMLElement) {
     this._scrollableParent = scrollableParent;    
     this._scrollHeightFiller = new Filler(scrollableParent, ['Filler__ScrollHeight']);
@@ -237,42 +272,11 @@ export default class ScrollableContainer {
 
     this._scrollableParent.classList.add('class__ScrollableContainer');
 
-    this._resizeObserver = new ResizeObserver((entries) => { 
-      const { blockSize, inlineSize } = entries[0].contentBoxSize[0];
-      const scrolledPaneTopBuffer = this._scrolledPaneTopBuffer;
-      const scrolledPane = this._scrolledPane;
-      const scrolledPaneBottomBuffer = this._scrolledPaneBottomBuffer;
-
-      scrolledPaneTopBuffer.offsetWidth = inlineSize;
-      scrolledPaneTopBuffer.offsetHeight = blockSize;
-      scrolledPane.offsetWidth = inlineSize;
-      scrolledPane.offsetHeight = blockSize;
-      scrolledPaneBottomBuffer.offsetWidth = inlineSize;
-      scrolledPaneBottomBuffer.offsetHeight = blockSize;
-
-      this.setScrollHeight(this._scrollHeight); 
-    });
+    this._resizeObserver = new ResizeObserver(this._updateSizes);
 
     this._resizeObserver.observe(this._scrollableParent);
 
-    this._scrollableParent.addEventListener('scroll', () => {
-      this._scrollTop = this._scrollableParent.scrollTop;
-
-      const isScrollingDown = this._previousScrollTop < this._scrollTop;
-      const isScrollingUp = this._previousScrollTop > this._scrollTop;
-
-      this._scrolledPane.scheduleSizeUpdate();
-
-      if (isScrollingDown)  {
-        this._scrolledPaneBottomBuffer.scheduleSizeUpdate();
-        requestAnimationFrame(this._checkBottomBuffer);
-      }
-
-      if (isScrollingUp) {
-        this._scrolledPaneTopBuffer.scheduleSizeUpdate();
-        requestAnimationFrame(this._checkTopBuffer);
-      }
-    });
+    this._scrollableParent.addEventListener('scroll', this._scrollHandler);
 
     this._scrolledPane.onBeforeEntriesMeasured(this._initAccumulators);
     this._scrolledPane.onEachEntryMeasured(this._accumulateEntries);
