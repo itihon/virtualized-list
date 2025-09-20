@@ -66,6 +66,7 @@ export default class ScrollableContainer {
     }
   };
 
+  // ! code duplication
   private _insertItemsFromTopBuffer = () => {
     const scrolledPane = this._scrolledPane;
     const rows = this._bufferedEntriesAccResult.rows;
@@ -81,6 +82,7 @@ export default class ScrollableContainer {
     }
   };
 
+  // ! code duplication
   private _insertItemsFromBottomBuffer = () => {
     const scrolledPane = this._scrolledPane;
     const rows = this._bufferedEntriesAccResult.rows;
