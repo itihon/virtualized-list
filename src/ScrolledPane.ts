@@ -82,6 +82,16 @@ export default class ScrolledPane extends DOMConstructor {
     this._observer = this._createObserver('0px');
   }
 
+  set offsetHeight(height: number) {
+    const roundHeight = Math.round(height)
+    this._paneElement.style.height = `${roundHeight}px`;
+  }
+
+  set offsetWidth(width: number) {
+    const roundWidth = Math.round(width)
+    this._paneElement.style.width = `${roundWidth}px`;
+  }
+
   scheduleSizeUpdate() {
     this._resizeObserver.disconnect();
     this._resizeObserver.observe(this._paneElement);
