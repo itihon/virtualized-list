@@ -235,7 +235,19 @@ export default class ScrollableContainer {
 
     this._scrollableParent.classList.add('class__ScrollableContainer');
 
-    this._resizeObserver = new ResizeObserver(() => { 
+    this._resizeObserver = new ResizeObserver((entries) => { 
+      const { blockSize, inlineSize } = entries[0].contentBoxSize[0];
+      const scrolledPaneTopBuffer = this._scrolledPaneTopBuffer;
+      const scrolledPane = this._scrolledPane;
+      const scrolledPaneBottomBuffer = this._scrolledPaneBottomBuffer;
+
+      scrolledPaneTopBuffer.offsetWidth = inlineSize;
+      scrolledPaneTopBuffer.offsetHeight = blockSize;
+      scrolledPane.offsetWidth = inlineSize;
+      scrolledPane.offsetHeight = blockSize;
+      scrolledPaneBottomBuffer.offsetWidth = inlineSize;
+      scrolledPaneBottomBuffer.offsetHeight = blockSize;
+
       this.setScrollHeight(this._scrollHeight); 
     });
 
