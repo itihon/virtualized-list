@@ -3,6 +3,7 @@ import Filler from './Filler';
 import ScrolledPaneBuffer from './ScrolledPaneBuffer';
 import './ScrollableContainer.css';
 import { createItemsHeightReducer, createFlexRowsReducer } from './reducers';
+import StickyContainer from './StickyContainer';
 
 export type OnOverscanCallback = () => void;
 export type OnEmptyBufferCallback = (buffer: ScrolledPaneBuffer) => void;
@@ -12,6 +13,7 @@ export default class ScrollableContainer {
   private _scrollHeightFiller: Filler;
   private _fillerTop: Filler;
   private _fillerBottom: Filler;
+  private _stickyContainer: StickyContainer;
   private _scrolledPane: ScrolledPane;
   private _scrolledPaneTopBuffer: ScrolledPaneBuffer;
   private _scrolledPaneBottomBuffer: ScrolledPaneBuffer;
@@ -226,7 +228,8 @@ export default class ScrollableContainer {
     this._scrollHeightFiller = new Filler(scrollableParent, ['Filler__ScrollHeight']);
     this._fillerTop = new Filler(scrollableParent);
     this._scrolledPaneTopBuffer = new ScrolledPaneBuffer(scrollableParent);
-    this._scrolledPane = new ScrolledPane(scrollableParent);
+    this._stickyContainer = new StickyContainer(scrollableParent);
+    this._scrolledPane = new ScrolledPane(this._stickyContainer.DOMRoot);
     this._scrolledPaneBottomBuffer = new ScrolledPaneBuffer(scrollableParent);
     this._fillerBottom = new Filler(scrollableParent);
 
