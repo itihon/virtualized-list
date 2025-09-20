@@ -22,6 +22,7 @@ export default class ScrolledPane extends DOMConstructor {
   private _onNewItemsCB: OnNewItemsCallback = () => {};
   private _onSizeUpdatedCB: ResizeObserverCallback = () => {};
   private _newItems: Set<Element> = new Set();
+  private _observerRoot: HTMLElement;
 
   private _runCallbacks: IntersectionObserverCallback = (entries, observer) => {
     const onEachEntryMeasuredCB = this._onEachEntryMeasuredCB;
@@ -60,14 +61,14 @@ export default class ScrolledPane extends DOMConstructor {
     return new IntersectionObserver(
       this._runCallbacks, 
       {
-        root: this.parentContainer,
+        root: this._observerRoot,
         rootMargin: rootMargin,
       }
     );
   }
 
-  constructor(scrollableParent: HTMLElement, classList: string[] = []) {
-    super(scrollableParent, ['class__ScrolledPane', ...classList]);
+  constructor(parentContainer: HTMLElement, classList: string[] = []) {
+    super(parentContainer, ['class__ScrolledPane', ...classList]);
     this._paneElement = super.DOMRoot;
 
     this._resizeObserver = new ResizeObserver((entries, observer) => {
@@ -76,6 +77,8 @@ export default class ScrolledPane extends DOMConstructor {
       this._onSizeUpdatedCB(entries, observer);
     });
 
+    // initial observer setup, will be changed when setOverscan() is called
+    this._observerRoot = parentContainer;
     this._observer = this._createObserver('0px');
   }
 
@@ -119,13 +122,14 @@ export default class ScrolledPane extends DOMConstructor {
     this._onSizeUpdatedCB = cb;
   }
 
-  setOverscanHeight(height: OverscanHeight) {
+  setOverscan(height: OverscanHeight, observerRoot: HTMLElement) {
     if (!height.endsWith('px') && !height.endsWith('%')) {
       throw new Error(
         'Overscan height must be specified in pixels or percents.'
       );
     }
 
+    this._observerRoot = observerRoot;
     this._observer.disconnect();
     this._observer = this._createObserver(height);
   }

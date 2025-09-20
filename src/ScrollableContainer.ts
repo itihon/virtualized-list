@@ -322,7 +322,7 @@ export default class ScrollableContainer {
   }
 
   setOverscanHeight(height: OverscanHeight) {
-    this._scrolledPane.setOverscanHeight(height);
+    this._scrolledPane.setOverscan(height, this._scrollableParent);
   }
 
   setScrollHeight(scrollHeight: number) {
