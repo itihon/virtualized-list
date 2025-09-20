@@ -193,8 +193,8 @@ export default class ScrollableContainer {
 
     if (isRemovalScheduled || isInsertionScheduled) {
       const paddingTop = parseInt(getComputedStyle(this._scrollableParent).paddingTop);
-      const { offsetTop, scrollHeight: scrolledPaneScrollHeight } = scrolledPane.DOMRoot;
-      const scrolledPaneOffsetTop = offsetTop - paddingTop;
+      const { scrollHeight: scrolledPaneScrollHeight, offsetHeight: scrolledPaneHeight } = scrolledPane.DOMRoot;
+      const stickyContainerOffsetTop = this._stickyContainer.DOMRoot.offsetTop - paddingTop;
 
       let insertedHeight = 0;
       let removedHeight = 0;
@@ -202,18 +202,18 @@ export default class ScrollableContainer {
       if (isScrollingUp) {
         insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight : 0;
         removedHeight = isRemovalScheduled ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
-        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop - insertedHeight;
+        this._scrolledPaneOffsetTop = stickyContainerOffsetTop - insertedHeight;
       }
 
       if (isScrollingDown) {
         insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight : 0;
         removedHeight = isRemovalScheduled ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
-        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop + removedHeight;
+        this._scrolledPaneOffsetTop = stickyContainerOffsetTop + removedHeight;
       }
 
       const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + (insertedHeight - removedHeight);
 
-      this._scrolledPaneScrollLimit = newScrolledPaneScrollHeight - rootHeight + paddingTop; 
+      this._scrolledPaneScrollLimit = newScrolledPaneScrollHeight - rootHeight - scrolledPaneHeight + paddingTop; 
       this._scrolledPaneScrollHeight = newScrolledPaneScrollHeight;
 
       requestAnimationFrame(this._adjustScrolledPane);
@@ -345,8 +345,8 @@ export default class ScrollableContainer {
     const { offsetHeight: scrolledPaneHeight } = this._scrolledPane.DOMRoot;
 
     this._scrollHeightFiller.offsetHeight = scrollHeight;
-    this._fillerTop.offsetHeight = scrollTop;
-    this._fillerBottom.offsetHeight = scrollHeight - scrollTop - scrolledPaneHeight;
+    this._fillerTop.offsetHeight = scrollTop + scrolledPaneHeight;
+    this._fillerBottom.offsetHeight = scrollHeight - (scrollTop + scrolledPaneHeight);
     
     this._scrollHeight = scrollHeight;
   }
@@ -359,13 +359,13 @@ export default class ScrollableContainer {
     const scrolledPaneHeight = this._scrolledPane.getBorderBoxHeight();
     const scrollHeight = this._scrollHeight;
 
-    if (position < 0) {
-      this._fillerTop.offsetHeight = 0;
+    if (position < scrolledPaneHeight) {
+      this._fillerTop.offsetHeight = scrolledPaneHeight;
       this._fillerBottom.offsetHeight = scrollHeight - scrolledPaneHeight;
     }
-    else if (position + scrolledPaneScrollHeight > scrollHeight) {
-      this._fillerTop.offsetHeight = scrollHeight - scrolledPaneScrollHeight;
-      this._fillerBottom.offsetHeight = scrollHeight - this._fillerTop.offsetHeight - scrolledPaneHeight;
+    else if (position + scrolledPaneScrollHeight - scrolledPaneHeight > scrollHeight) {
+      this._fillerTop.offsetHeight = scrollHeight - (scrolledPaneScrollHeight - scrolledPaneHeight);
+      this._fillerBottom.offsetHeight = scrollHeight - this._fillerTop.offsetHeight;
     }
     else {
       this._fillerTop.offsetHeight = position;
