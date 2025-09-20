@@ -3,7 +3,7 @@ import ScrollableContainer from "../../src/ScrollableContainer";
 const nonVirtual = new URLSearchParams(window.location.search).get('nonVirtual');
 
 
-const INITIAL_ITEMS_NUMBER = 23;
+const INITIAL_ITEMS_NUMBER = 22;
 const itemsHeight = 40;
 const container = document.createElement('div');
 

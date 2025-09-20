@@ -117,7 +117,7 @@ export default class ScrollableContainer {
 
   private _initBufferAccumulators = () => {
     const isScrollingDown = this._previousScrollTop < this._scrollTop;
-    const isScrollingUp = this._previousScrollTop > this._scrollTop;
+    // const isScrollingUp = this._previousScrollTop > this._scrollTop;
 
     const scrolledPaneBuffer = isScrollingDown 
       ? this._scrolledPaneBottomBuffer
@@ -127,7 +127,7 @@ export default class ScrollableContainer {
       scrolledPaneBuffer.DOMRoot,
       scrolledPaneBuffer.getContentBoxWidth(),
       {
-        ignoreLastRow: isScrollingUp,
+        ignoreLastRow: true,
         ignoreRowIntersection: true,
         minRowsNumber: 2,
       }, // do not create a new object every time !
