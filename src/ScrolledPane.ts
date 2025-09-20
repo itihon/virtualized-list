@@ -142,11 +142,6 @@ export default class ScrolledPane extends DOMConstructor {
     return this._borderBoxHeight;
   }
 
-  setScrollLimit(limit: number) {
-    const roundLimit = Math.round(limit);
-    this._paneElement.style.setProperty('--scroll-limit', `${roundLimit}px`);
-  }
-
   // this method is probably unnecessary
   append(...items: Element[]) {
     this._paneElement.append(...items);

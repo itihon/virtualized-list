@@ -48,7 +48,7 @@ export default class ScrollableContainer {
   };
 
   private _adjustScrolledPane = () => {
-    this._scrolledPane.setScrollLimit(this._scrolledPaneScrollLimit);
+    this._stickyContainer.setScrollLimit(this._scrolledPaneScrollLimit);
     this.scroll(this._scrolledPaneOffsetTop, this._scrolledPaneScrollHeight);
   };
 
