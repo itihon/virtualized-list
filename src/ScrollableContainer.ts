@@ -154,11 +154,6 @@ export default class ScrollableContainer {
     const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
     const isScrollingDown = this._previousScrollTop < scrollTop;
     const isScrollingUp = this._previousScrollTop > scrollTop;
-    const paddingTop = parseInt(
-      getComputedStyle(this._scrollableParent).paddingTop,
-    );
-
-    const { offsetTop: scrolledPaneOffsetTop, scrollHeight: scrolledPaneScrollHeight } = scrolledPane.DOMRoot;
     const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
     const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
@@ -195,19 +190,23 @@ export default class ScrollableContainer {
     }
 
     if (isRemovalScheduled || isInsertionScheduled) {
+      const paddingTop = parseInt(getComputedStyle(this._scrollableParent).paddingTop);
+      const { offsetTop, scrollHeight: scrolledPaneScrollHeight } = scrolledPane.DOMRoot;
+      const scrolledPaneOffsetTop = offsetTop - paddingTop;
+
       let insertedHeight = 0;
       let removedHeight = 0;
 
       if (isScrollingUp) {
         insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight : 0;
         removedHeight = isRemovalScheduled ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
-        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop - insertedHeight - paddingTop;
+        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop - insertedHeight;
       }
 
       if (isScrollingDown) {
         insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight : 0;
         removedHeight = isRemovalScheduled ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
-        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop + removedHeight - paddingTop;
+        this._scrolledPaneOffsetTop = scrolledPaneOffsetTop + removedHeight;
       }
 
       const newScrolledPaneScrollHeight = scrolledPaneScrollHeight + (insertedHeight - removedHeight);
