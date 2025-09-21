@@ -31,11 +31,18 @@ export default class ScrolledPane extends DOMConstructor {
     const paneElement = this._paneElement;
     const entriesCount = entries.length;
 
+    let timestamp = 0;
+
     this._onBeforeEntriesMeasuredCB(entries, observer);
 
     for (let entryNumber = 0; entryNumber < entriesCount; entryNumber++) {
       const entry = entries[entryNumber];
-      const { target } = entry;
+      const { target, time } = entry;
+
+      if (timestamp !== 0 && time !== timestamp) {
+        console.warn('Duplicate intersection observer entries were ignored.');
+        break;
+      }
 
       if (newItems.has(target)) {
         newEntries.push(entry);
@@ -45,6 +52,8 @@ export default class ScrolledPane extends DOMConstructor {
       if (target.parentElement !== paneElement) {
         observer.unobserve(target);
       }
+
+      timestamp = time;
 
       onEachEntryMeasuredCB(entry, entries, observer);
     }
