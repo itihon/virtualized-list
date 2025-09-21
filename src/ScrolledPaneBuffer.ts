@@ -1,9 +1,18 @@
-import DOMConstructor from "./DOMConstructor";
+import DOMConstructor, { DOMDivElement } from "./DOMConstructor";
 import ScrolledPane from "./ScrolledPane";
 
 export default class ScrolledPaneBuffer extends ScrolledPane {
   private _bufferElement: HTMLElement;
-  private _markerElement: HTMLElement;
+  private _markerElement: DOMDivElement;
+
+  private _preventMarkerUnmount = (markerElement: DOMDivElement) => {
+    const bufferElement = this._bufferElement;
+
+    if (markerElement.parentElement !== bufferElement) {
+      console.warn('An attempt to unmount marker element was prevented.');
+      bufferElement.prepend(markerElement); // ensure that marker is always at the top
+    }
+  };
 
   constructor(scrollableParent: HTMLElement) {
     super(scrollableParent, ['class__ScrolledPaneBuffer']);
@@ -13,6 +22,7 @@ export default class ScrolledPaneBuffer extends ScrolledPane {
     ).DOMRoot;
 
     this._bufferElement.append(this._markerElement);
+    this._markerElement.onMounted(this._preventMarkerUnmount);
   }
 
   getMarkerElement(): HTMLElement {
