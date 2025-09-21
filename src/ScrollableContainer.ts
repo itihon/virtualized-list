@@ -319,7 +319,7 @@ export default class ScrollableContainer {
   }
   
   removeItem(itemIndex: number): boolean {
-    return this._scrolledPane.removeItem(itemIndex);
+    return this._scrolledPane.removeItemByIndex(itemIndex);
   }
   
   get length(): number {
