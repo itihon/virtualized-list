@@ -191,6 +191,13 @@ export default class ScrolledPane extends DOMConstructor {
     this._observer.observe(item);
   }
 
+  removeItem(item: Element) {
+    if (item) {
+      item.remove();
+      this._observer.unobserve(item);
+    }
+  }
+
   removeItemByIndex(itemIndex: number): boolean {
     const item = this._paneElement.children.item(itemIndex);
 
