@@ -135,7 +135,7 @@ else {
 
     for (let i = 0; i < overscanRowCount; i++) {
       const item = createItem(itemNum++);
-      buffer.append(item);
+      buffer.appendItem(item);
     }
   });
   
@@ -146,7 +146,7 @@ else {
 
     for (let i = 0; i < overscanRowCount; i++) {
       const item = createItem(itemNum++);
-      buffer.append(item);
+      buffer.appendItem(item);
     }
   });
 }
