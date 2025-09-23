@@ -382,7 +382,7 @@ export default class ScrollableContainer {
     }
     else {
       this._fillerTop.offsetHeight = position;
-      this._fillerBottom.offsetHeight = scrollHeight - position - scrolledPaneHeight;
+      this._fillerBottom.offsetHeight = scrollHeight - position;
     }
   }
 }
