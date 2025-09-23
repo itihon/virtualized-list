@@ -119,17 +119,22 @@ export default class ScrollableContainer {
     );
   };
 
-  private _initBufferAccumulators = () => {
-    const isScrollingDown = this._previousScrollTop < this._scrollTop;
-    // const isScrollingUp = this._previousScrollTop > this._scrollTop;
-
-    const scrolledPaneBuffer = isScrollingDown 
-      ? this._scrolledPaneBottomBuffer
-      : this._scrolledPaneTopBuffer;
-
+  private _initTopBufferAccumulator = () => {
     this._bufferedEntriesAcc.init(
-      scrolledPaneBuffer.DOMRoot,
-      scrolledPaneBuffer.getContentBoxWidth(),
+      this._scrolledPaneTopBuffer.DOMRoot,
+      this._scrolledPaneTopBuffer.getContentBoxWidth(),
+      {
+        ignoreLastRow: true,
+        ignoreRowIntersection: true,
+        minRowsNumber: 2,
+      }, // do not create a new object every time !
+    );
+  };
+
+  private _initBottomBufferAccumulator = () => {
+    this._bufferedEntriesAcc.init(
+      this._scrolledPaneBottomBuffer.DOMRoot,
+      this._scrolledPaneBottomBuffer.getContentBoxWidth(),
       {
         ignoreLastRow: true,
         ignoreRowIntersection: true,
@@ -282,10 +287,12 @@ export default class ScrollableContainer {
     this._scrolledPane.onEachEntryMeasured(this._accumulateEntries);
     this._scrolledPane.onAllEntriesMeasured(this._processEntries);
     this._scrolledPane.onSizeUpdated(() => this._scrolledPane.scheduleEntriesMeasuring());
-    this._scrolledPaneTopBuffer.onBeforeEntriesMeasured(this._initBufferAccumulators);
+
+    this._scrolledPaneTopBuffer.onBeforeEntriesMeasured(this._initTopBufferAccumulator);
     this._scrolledPaneTopBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
     this._scrolledPaneTopBuffer.onSizeUpdated(() => this._scrolledPaneTopBuffer.scheduleEntriesMeasuring());
-    this._scrolledPaneBottomBuffer.onBeforeEntriesMeasured(this._initBufferAccumulators);
+
+    this._scrolledPaneBottomBuffer.onBeforeEntriesMeasured(this._initBottomBufferAccumulator);
     this._scrolledPaneBottomBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
     this._scrolledPaneBottomBuffer.onSizeUpdated(() => this._scrolledPaneBottomBuffer.scheduleEntriesMeasuring());
   }
