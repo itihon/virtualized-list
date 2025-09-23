@@ -23,26 +23,51 @@ export default class ScrolledPane extends DOMConstructor {
   private _onSizeUpdatedCB: ResizeObserverCallback = () => {};
   private _newItems: Set<Element> = new Set();
   private _observerRoot: HTMLElement;
+  private _filteredEntriesMap: Map<Element, IntersectionObserverEntry> = new Map();
+  private _entriesIndexMap: Map<Element, number> = new Map();
+
+  private _filterDuplicateEntries (entries: IntersectionObserverEntry[]): IntersectionObserverEntry[] {
+    const filteredEntriesMap = this._filteredEntriesMap;
+    const entriesIndexMap = this._entriesIndexMap;
+    const entriesCount = entries.length;
+    const result = [];
+
+    filteredEntriesMap.clear();
+    entriesIndexMap.clear();
+
+    for (let i = 0; i < entriesCount; i++)  {
+      const entry = entries[i];
+      const { time, target } = entry;
+      const filteredEntry = filteredEntriesMap.get(target);
+
+      if (!filteredEntry) {
+        filteredEntriesMap.set(target, entry);
+        entriesIndexMap.set(target, result.push(entry) - 1);
+      }
+      else {
+        if (filteredEntry.time < time) {
+          filteredEntriesMap.set(target, entry);
+          result[entriesIndexMap.get(target)!] = entry;
+        }
+      }
+    }
+
+    return result;
+  }
 
   private _runCallbacks: IntersectionObserverCallback = (entries, observer) => {
     const onEachEntryMeasuredCB = this._onEachEntryMeasuredCB;
     const newEntries: Array<IntersectionObserverEntry> = [];
     const newItems = this._newItems;
     const paneElement = this._paneElement;
-    const entriesCount = entries.length;
+    const filteredEntries = this._filterDuplicateEntries(entries);
+    const entriesCount = filteredEntries.length;
 
-    let timestamp = 0;
-
-    this._onBeforeEntriesMeasuredCB(entries, observer);
+    this._onBeforeEntriesMeasuredCB(filteredEntries, observer);
 
     for (let entryNumber = 0; entryNumber < entriesCount; entryNumber++) {
-      const entry = entries[entryNumber];
-      const { target, time } = entry;
-
-      if (timestamp !== 0 && time !== timestamp) {
-        console.warn('Duplicate intersection observer entries were ignored.');
-        break;
-      }
+      const entry = filteredEntries[entryNumber];
+      const { target } = entry;
 
       if (newItems.has(target)) {
         newEntries.push(entry);
@@ -53,14 +78,12 @@ export default class ScrolledPane extends DOMConstructor {
         observer.unobserve(target);
       }
 
-      timestamp = time;
-
-      onEachEntryMeasuredCB(entry, entries, observer);
+      onEachEntryMeasuredCB(entry, filteredEntries, observer);
     }
 
     if (newEntries.length) this._onNewItemsCB(newEntries, observer);
 
-    this._onAllEntriesMeasuredCB(entries, observer);
+    this._onAllEntriesMeasuredCB(filteredEntries, observer);
   };
   
   private _createObserver(height: OverscanHeight): IntersectionObserver {
