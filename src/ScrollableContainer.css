@@ -45,6 +45,7 @@
   width: 100%;
   top: 0;
   visibility: hidden;
+  overflow: hidden; /* must not contribute to the parent's scroll height */
   z-index: -1;
 }
 
