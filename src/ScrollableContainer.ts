@@ -260,10 +260,12 @@ export default class ScrollableContainer {
   };
 
   private _scrollHandler = () => {
-    this._scrollTop = this._scrollableParent.scrollTop;
+    const scrollTop = this._scrollableParent.scrollTop;
 
-    const isScrollingDown = this._previousScrollTop < this._scrollTop;
-    const isScrollingUp = this._previousScrollTop > this._scrollTop;
+    this._scrollTop = scrollTop;
+
+    const isScrollingDown = this._previousScrollTop < scrollTop;
+    const isScrollingUp = this._previousScrollTop > scrollTop;
 
     this._scrolledPane.scheduleSizeUpdate();
 
