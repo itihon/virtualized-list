@@ -240,6 +240,7 @@ export default class ScrollableContainer {
     scrolledPaneTopBuffer.offsetHeight = blockSize;
     scrolledPane.offsetWidth = inlineSize;
     scrolledPane.offsetHeight = blockSize;
+    // scrolledPane.offsetTop = -blockSize; // use either this or transform: translateY(-100%);
     scrolledPaneBottomBuffer.offsetWidth = inlineSize;
     scrolledPaneBottomBuffer.offsetHeight = blockSize;
 
