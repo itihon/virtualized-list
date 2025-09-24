@@ -149,6 +149,11 @@ export default class ScrolledPane extends DOMConstructor {
     }
   }
 
+  cancelScheduledCallbacks() {
+    this._observer.disconnect();
+    this._observer.takeRecords();
+  }
+
   onEachEntryMeasured(cb: OnEachEntryMeasuredCallback) {
     this._onEachEntryMeasuredCB = cb;
   }
