@@ -160,7 +160,8 @@ export default class ScrollableContainer {
     const intersectedEntriesAccResult = this._intersectedEntriesAccResult;
     const notIntersectedEntriesAccResult = this._notIntersectedEntriesAccResult;
     const bufferedEntriesAccResult = this._bufferedEntriesAccResult;
-    const { scrollTop, clientHeight: rootHeight } = this._scrollableParent;
+    const { clientHeight: rootHeight } = this._scrollableParent;
+    const scrollTop = this._scrollTop;
     const isScrollingDown = this._previousScrollTop < scrollTop;
     const isScrollingUp = this._previousScrollTop > scrollTop;
     const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
@@ -236,7 +237,7 @@ export default class ScrollableContainer {
       requestAnimationFrame(this._adjustScrolledPane);
     }
 
-
+    // this._previousScrollTop = (newScrollTop - scrollTop) ? newScrollTop - (scrollTop - this._previousScrollTop) : scrollTop; // scrollTop shift compensation
     this._previousScrollTop = scrollTop;
     observer.disconnect();
   }
