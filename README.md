@@ -104,5 +104,3 @@ TODO
 - [ ] Selection of invisible lines
 
 ## Bugs
-
-- [ ] Buffers and ScrolledPane have different heights when the parent container has paddings
