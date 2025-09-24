@@ -153,7 +153,7 @@ export default class ScrollableContainer {
     this._bufferedEntriesAcc.exec(observerEntry, entries);
   };
 
-  private _processEntries: OnAllEntriesMeasuredCallback = (entries) => {
+  private _processEntries: OnAllEntriesMeasuredCallback = (entries, observer) => {
     const scrolledPane = this._scrolledPane;
     const rootBounds = entries[0].rootBounds!;
     const itemsHeightAccResult = this._itemsHeightAccResult;
@@ -228,6 +228,7 @@ export default class ScrollableContainer {
 
 
     this._previousScrollTop = scrollTop;
+    observer.disconnect();
   }
 
   private _updateSizes = (entries: ResizeObserverEntry[]) => { 
@@ -291,10 +292,12 @@ export default class ScrollableContainer {
 
     this._scrolledPaneTopBuffer.onBeforeEntriesMeasured(this._initTopBufferAccumulator);
     this._scrolledPaneTopBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
+    this._scrolledPaneTopBuffer.onAllEntriesMeasured((_, observer) => observer.disconnect());
     this._scrolledPaneTopBuffer.onSizeUpdated(() => this._scrolledPaneTopBuffer.scheduleEntriesMeasuring());
 
     this._scrolledPaneBottomBuffer.onBeforeEntriesMeasured(this._initBottomBufferAccumulator);
     this._scrolledPaneBottomBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
+    this._scrolledPaneBottomBuffer.onAllEntriesMeasured((_, observer) => observer.disconnect());
     this._scrolledPaneBottomBuffer.onSizeUpdated(() => this._scrolledPaneBottomBuffer.scheduleEntriesMeasuring());
   }
 
