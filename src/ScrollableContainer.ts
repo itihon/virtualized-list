@@ -172,31 +172,40 @@ export default class ScrollableContainer {
       requestAnimationFrame(this._removeNotIntersectedItems);
       isRemovalScheduled = true;
     }
-      
-    if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
+     
+    if (isScrollingUp) {
+      if (itemsHeightAccResult.top > rootBounds.top) {
 
-      this._scrolledPaneTopBuffer.runScheduledCallbacks();
-      const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
+        this._scrolledPaneTopBuffer.runScheduledCallbacks();
+        const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
-      if (rowsNumberToInsert) {
-        requestAnimationFrame(this._insertItemsFromTopBuffer);
-        isInsertionScheduled = true;
+        if (rowsNumberToInsert) {
+          requestAnimationFrame(this._insertItemsFromTopBuffer);
+          isInsertionScheduled = true;
+        }
+        
+        // this._onScrollUpOverscanCB();
       }
-      
-      // this._onScrollUpOverscanCB();
+      else {
+        this._scrolledPaneTopBuffer.cancelScheduledCallbacks();
+      }
     }
+    else if (isScrollingDown) {
+      if (itemsHeightAccResult.bottom < rootBounds.bottom) {
 
-    if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
+        this._scrolledPaneBottomBuffer.runScheduledCallbacks();
+        const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
-      this._scrolledPaneBottomBuffer.runScheduledCallbacks();
-      const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
+        if (rowsNumberToInsert) {
+          requestAnimationFrame(this._insertItemsFromBottomBuffer);
+          isInsertionScheduled = true;
+        }
 
-      if (rowsNumberToInsert) {
-        requestAnimationFrame(this._insertItemsFromBottomBuffer);
-        isInsertionScheduled = true;
+        // this._onScrollDownOverscanCB();
       }
-
-      // this._onScrollDownOverscanCB();
+      else {
+        this._scrolledPaneBottomBuffer.cancelScheduledCallbacks();
+      }
     }
 
     if (isRemovalScheduled || isInsertionScheduled) {
