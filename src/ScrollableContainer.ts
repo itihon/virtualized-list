@@ -164,7 +164,6 @@ export default class ScrollableContainer {
     const isScrollingDown = this._previousScrollTop < scrollTop;
     const isScrollingUp = this._previousScrollTop > scrollTop;
     const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
-    const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
     let isRemovalScheduled = false;
     let isInsertionScheduled = false;
@@ -177,6 +176,7 @@ export default class ScrollableContainer {
     if (isScrollingUp && itemsHeightAccResult.top > rootBounds.top) {
 
       this._scrolledPaneTopBuffer.runScheduledCallbacks();
+      const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
       if (rowsNumberToInsert) {
         requestAnimationFrame(this._insertItemsFromTopBuffer);
@@ -189,6 +189,7 @@ export default class ScrollableContainer {
     if (isScrollingDown && itemsHeightAccResult.bottom < rootBounds.bottom) {
 
       this._scrolledPaneBottomBuffer.runScheduledCallbacks();
+      const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
       if (rowsNumberToInsert) {
         requestAnimationFrame(this._insertItemsFromBottomBuffer);
