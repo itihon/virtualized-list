@@ -194,7 +194,6 @@ export default class ScrolledPane extends DOMConstructor {
     this._paneElement.append(...items);
     for (const item of items) {
       this._newItems.add(item)
-      this._observer.observe(item);
     }
   }
  
@@ -203,20 +202,17 @@ export default class ScrolledPane extends DOMConstructor {
     this._paneElement.prepend(...items);
     for (const item of items) {
       this._newItems.add(item)
-      this._observer.observe(item);
     }
   }
 
   appendItem(item: Element) {
     this._paneElement.append(item);
     this._newItems.add(item)
-    this._observer.observe(item);
   }
   
   prependItem(item: Element) {
     this._paneElement.prepend(item);
     this._newItems.add(item)
-    this._observer.observe(item);
   }
 
   removeItem(item: Element) {
