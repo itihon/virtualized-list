@@ -162,3 +162,115 @@ function createItem(i: number) {
   return item;
 }
 
+
+// fillers' both height should be equal to scrollHeight
+
+const fillers = document.querySelectorAll('.class__Filler:not(.Filler__ScrollHeight)');
+const fillerTop = fillers[0] as HTMLElement;
+const fillerBottom = fillers[1] as HTMLElement;
+const scrollHeightFiller = document.querySelector('.Filler__ScrollHeight') as HTMLElement;
+
+let scrollTop = 0;
+let previousScrollTop = 0;
+let isScrollingDown = false;
+let isScrollingUp = false;
+
+const setScrollDirection = () => {
+  scrollTop = container.scrollTop;
+
+  if (scrollTop > previousScrollTop) {
+    isScrollingDown = true;
+    isScrollingUp = false;
+  }
+  else if (scrollTop < previousScrollTop) {
+    isScrollingDown = false;
+    isScrollingUp = true;
+  }
+  else {
+    isScrollingDown = false;
+    isScrollingUp = false;
+  }
+};
+
+const checkScrollDirection = () => {
+  const currentScrollTop = container.scrollTop;
+
+  console.assert(
+    (currentScrollTop > previousScrollTop) === isScrollingDown,
+    'scroll direction must not change on frame duration.',
+    'currentScrollTop:', currentScrollTop,
+    'previousScrollTop:', previousScrollTop,
+    'isScrollingDown:', isScrollingDown, 
+  );
+
+  console.assert(
+    (currentScrollTop < previousScrollTop) === isScrollingUp,
+    'scroll direction must not change on frame duration.',
+    'currentScrollTop:', currentScrollTop,
+    'previousScrollTop:', previousScrollTop,
+    'isScrollingUp:', isScrollingUp, 
+  );
+
+  console.assert(
+    scrollTop === currentScrollTop,
+    'scrollTop value must not change on frame duration.',
+    'scrollTop:', scrollTop,
+    'currentScrollTop:', currentScrollTop,
+  );
+
+  previousScrollTop = currentScrollTop;
+  isScrollingDown = false;
+  isScrollingUp = false;
+};
+
+const checkScrollHeight = () => {
+  const containerStyle = getComputedStyle(container);
+  const containerPaddingTop = parseFloat(containerStyle.paddingTop);
+  const containerPaddingBottom = parseFloat(containerStyle.paddingBottom);
+  const containerScrollHeight = container.scrollHeight;
+  const scrollHeight = scrollHeightFiller.offsetHeight + containerPaddingTop + containerPaddingBottom;
+
+  console.assert(
+    containerScrollHeight === scrollHeight,
+    'container scrollHeight should be equal to filler height plus paddings.',
+    'container scrollHeight:', containerScrollHeight,
+    'paddingTop:', containerPaddingTop,
+    'paddingBottom:', containerPaddingBottom,
+    'scrollHeight filler:', scrollHeightFiller.offsetHeight,
+    'scrollHeight:', scrollHeight,
+  );
+};
+
+const checkFillersHeight = () => {
+  const fillerTopHeight = fillerTop.offsetHeight;
+  const fillerBottomHeight = fillerBottom.offsetHeight;
+  const scrollHeight = scrollHeightFiller.offsetHeight;
+
+  const fillersHeight = fillerTopHeight + fillerBottomHeight;
+  const isFillersHeightEqScrollHeight = fillersHeight === scrollHeight;
+
+  console.assert(
+    isFillersHeightEqScrollHeight, 
+    'fillers height should be equal to scrollHeight.',
+    'top filler height:', fillerTopHeight,
+    'bottom filler height:', fillerBottomHeight,
+    'both fillers height:', fillersHeight,
+    'scroll height', scrollHeight,
+  );
+};
+
+const runPostPaintTests = (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
+  checkFillersHeight();
+  checkScrollHeight();
+  checkScrollDirection();
+
+  observer.disconnect();
+};
+
+const postPaintTestsObserver = new IntersectionObserver(runPostPaintTests);
+
+container.addEventListener('scroll', () => {
+  postPaintTestsObserver.disconnect();
+  postPaintTestsObserver.observe(container);
+  setScrollDirection();
+});
