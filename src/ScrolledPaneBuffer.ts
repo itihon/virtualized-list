@@ -34,6 +34,11 @@ export default class ScrolledPaneBuffer extends ScrolledPane {
     }
   }
 
+  // overrides ScrolledPane.prependItem() to ensure that nothing will be inserted before marker
+  prependItem(item: Element) { 
+    super.appendItem(item);
+  }
+
   getMarkerElement(): HTMLElement {
     return this._markerElement;
   }
