@@ -25,6 +25,15 @@ export default class ScrolledPaneBuffer extends ScrolledPane {
     this._markerElement.onMounted(this._preventMarkerUnmount);
   }
 
+  clear() {
+    const bufferElement = this._bufferElement;
+    const bufferContent = bufferElement.children;
+
+    while (bufferContent.length > 1) { // first child is marker
+      bufferElement.lastElementChild!.remove();
+    }
+  }
+
   getMarkerElement(): HTMLElement {
     return this._markerElement;
   }

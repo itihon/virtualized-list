@@ -49,6 +49,14 @@ export default class ScrollableContainer {
     if (!buffer.length) this._onScrollDownEmptyBufferCB(buffer); 
   };
 
+  private _clearTopBuffer = () => {
+    this._scrolledPaneTopBuffer.clear();
+  }
+
+  private _clearBottomBuffer = () => {
+    this._scrolledPaneBottomBuffer.clear();
+  }
+
   private _adjustScrolledPane = () => {
     this._stickyContainer.setScrollLimit(this._scrolledPaneScrollLimit);
     this.scroll(this._scrolledPaneOffsetTop, this._scrolledPaneScrollHeight);
@@ -278,11 +286,19 @@ export default class ScrollableContainer {
     if (isScrollingDown)  {
       this._scrolledPaneBottomBuffer.scheduleSizeUpdate();
       requestAnimationFrame(this._checkBottomBuffer);
+
+      if (this._scrolledPaneTopBuffer.length) {
+        requestAnimationFrame(this._clearTopBuffer);
+      }
     }
 
     if (isScrollingUp) {
       this._scrolledPaneTopBuffer.scheduleSizeUpdate();
       requestAnimationFrame(this._checkTopBuffer);
+
+      if (this._scrolledPaneBottomBuffer.length) {
+        requestAnimationFrame(this._clearBottomBuffer);
+      }
     }
   };
 
