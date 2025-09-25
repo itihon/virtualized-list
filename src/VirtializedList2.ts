@@ -78,7 +78,7 @@ export default class VirtualizedList {
         if (isScrollingDown) {
           if (followingData) {
             const followingItem = fromHTMLString(followingData.item);
-            scrollableContainer.append(followingItem);
+            scrollableContainer.appendItem(followingItem);
             itemDataRegistry.set(followingItem, followingData);
             followingData = followingData.next;
           }
@@ -87,7 +87,7 @@ export default class VirtualizedList {
         if (isScrollingUp) {
           if (followingData) {
             const followingItem = fromHTMLString(followingData.item);
-            scrollableContainer.prepend(followingItem);
+            scrollableContainer.prependItem(followingItem);
             itemDataRegistry.set(followingItem, followingData);
             followingData = followingData.previous;
           }
@@ -155,7 +155,7 @@ export default class VirtualizedList {
 
     this._itemDataRegistry.set(item, itemData);
 
-    scrollableContainer.append(item);
+    scrollableContainer.appendItem(item);
     scrollableContainer.setScrollHeight(scrollableContainer.getScrollHeight() + (height || 0));
 
     this._enableOnNewItemsCB = true;

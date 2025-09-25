@@ -23,7 +23,7 @@ else {
   
   for (let i = 0; i < INITIAL_ITEMS_NUMBER; i++) {
     const item = createItem(i);
-    scrollableContainer.append(item);
+    scrollableContainer.appendItem(item);
   }
 
   let itemNum = 0;

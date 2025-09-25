@@ -194,22 +194,6 @@ export default class ScrolledPane extends DOMConstructor {
     return this._borderBoxHeight;
   }
 
-  // this method is probably unnecessary
-  append(...items: Element[]) {
-    this._paneElement.append(...items);
-    for (const item of items) {
-      this._newItems.add(item)
-    }
-  }
- 
-  // this method is probably unnecessary 
-  prepend(...items: Element[]) {
-    this._paneElement.prepend(...items);
-    for (const item of items) {
-      this._newItems.add(item)
-    }
-  }
-
   appendItem(item: Element) {
     this._paneElement.append(item);
     this._newItems.add(item)
@@ -218,13 +202,6 @@ export default class ScrolledPane extends DOMConstructor {
   prependItem(item: Element) {
     this._paneElement.prepend(item);
     this._newItems.add(item)
-  }
-
-  removeItem(item: Element) {
-    if (item) {
-      item.remove();
-      this._observer.unobserve(item);
-    }
   }
 
   removeItemByIndex(itemIndex: number): boolean {

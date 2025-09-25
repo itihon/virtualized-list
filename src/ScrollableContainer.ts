@@ -364,12 +364,12 @@ export default class ScrollableContainer {
     this._scrolledPane.onNewItems(cb);
   }
 
-  append(...nodes: HTMLElement[]) {
-    this._scrolledPane.append(...nodes);
+  appendItem(item: HTMLElement) {
+    this._scrolledPane.appendItem(item);
   }
   
-  prepend(...nodes: HTMLElement[]) {
-    this._scrolledPane.prepend(...nodes);
+  prependItem(item: HTMLElement) {
+    this._scrolledPane.prependItem(item);
   }
   
   removeItem(itemIndex: number): boolean {
