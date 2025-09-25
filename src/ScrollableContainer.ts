@@ -6,7 +6,7 @@ import { createItemsHeightReducer, createFlexRowsReducer } from './reducers';
 import StickyContainer from './StickyContainer';
 
 export type OnOverscanCallback = () => void;
-export type OnEmptyBufferCallback = (buffer: ScrolledPaneBuffer) => void;
+export type OnReadBufferCallback = (buffer: ScrolledPaneBuffer) => void;
 
 export default class ScrollableContainer {
   private _scrollableParent: HTMLElement;
@@ -19,8 +19,10 @@ export default class ScrollableContainer {
   private _scrolledPaneBottomBuffer: ScrolledPaneBuffer;
   private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
   private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
-  private _onScrollDownEmptyBufferCB: OnEmptyBufferCallback = () => {};
-  private _onScrollUpEmptyBufferCB: OnEmptyBufferCallback = () => {};
+  private _onScrollDownEmptyBufferCB: OnReadBufferCallback = () => {};
+  private _onScrollUpEmptyBufferCB: OnReadBufferCallback = () => {};
+  private _onScrollDownReadBufferCB: OnReadBufferCallback = () => {};
+  private _onScrollUpReadBufferCB: OnReadBufferCallback = () => {};
   private _resizeObserver: ResizeObserver;
   private _scrollHeight: number = 0;
   private _scrollTop: number = 0;
@@ -80,6 +82,8 @@ export default class ScrollableContainer {
         scrolledPane.prependItem(row[itemNumber].target);
       }
     }
+
+    this._onScrollUpReadBufferCB(this._scrolledPaneTopBuffer);
   };
 
   // ! code duplication
@@ -96,6 +100,8 @@ export default class ScrollableContainer {
         scrolledPane.appendItem(row[itemNumber].target);
       }
     }
+
+    this._onScrollDownReadBufferCB(this._scrolledPaneBottomBuffer);
   };
 
   private _initAccumulators = () => {
@@ -322,12 +328,20 @@ export default class ScrollableContainer {
     this._onScrollUpOverscanCB = cb;
   }
   
-  onScrollDownEmptyBuffer(cb: OnEmptyBufferCallback) {
+  onScrollDownEmptyBuffer(cb: OnReadBufferCallback) {
     this._onScrollDownEmptyBufferCB = cb;
   }
   
-  onScrollUpEmptyBuffer(cb: OnEmptyBufferCallback) {
+  onScrollUpEmptyBuffer(cb: OnReadBufferCallback) {
     this._onScrollUpEmptyBufferCB = cb;
+  }
+
+  onScrollDownReadBuffer(cb: OnReadBufferCallback) {
+    this._onScrollDownReadBufferCB = cb;
+  }
+  
+  onScrollUpReadBuffer(cb: OnReadBufferCallback) {
+    this._onScrollUpReadBufferCB = cb;
   }
 
   onNewItems(cb: OnNewItemsCallback) {

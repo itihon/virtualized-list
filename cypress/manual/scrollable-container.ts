@@ -149,6 +149,28 @@ else {
       buffer.appendItem(item);
     }
   });
+
+  scrollableContainer.onScrollDownReadBuffer((buffer) => {
+    console.log('scroll down read buffer');
+
+    const overscanRowCount = 10;
+
+    for (let i = 0; i < overscanRowCount; i++) {
+      const item = createItem(itemNum++);
+      buffer.appendItem(item);
+    }
+  });
+  
+  scrollableContainer.onScrollUpReadBuffer((buffer) => {
+    console.log('scroll up read buffer');
+
+    const overscanRowCount = 10;
+
+    for (let i = 0; i < overscanRowCount; i++) {
+      const item = createItem(itemNum++);
+      buffer.appendItem(item);
+    }
+  });
 }
 
 
