@@ -216,6 +216,14 @@ export default class ScrolledPane extends DOMConstructor {
     return false;
   }
 
+  getFirstItem(): HTMLElement | null {
+    return this._paneElement.firstElementChild as HTMLElement;
+  }
+
+  getLastItem(): HTMLElement | null {
+    return this._paneElement.lastElementChild as HTMLElement;
+  }
+
   get length(): number {
     return this._paneElement.children.length;
   }

@@ -382,11 +382,11 @@ export default class ScrollableContainer {
   }
 
   getFirstItem(): HTMLElement | null {
-    return this._scrolledPane.DOMRoot.firstElementChild as HTMLElement;
+    return this._scrolledPane.getFirstItem();
   }
   
   getLastItem(): HTMLElement | null {
-    return this._scrolledPane.DOMRoot.lastElementChild as HTMLElement;
+    return this._scrolledPane.getLastItem();
   }
   
   prependHTML() {

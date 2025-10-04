@@ -42,6 +42,15 @@ export default class ScrolledPaneBuffer extends ScrolledPane {
   getMarkerElement(): HTMLElement {
     return this._markerElement;
   }
+
+  getFirstItem(): HTMLElement | null {
+    return this._bufferElement.firstElementChild!.nextElementSibling as HTMLElement; // first child is marker
+  }
+  
+  getLastItem(): HTMLElement | null {
+    const lastElementChild = this._bufferElement.lastElementChild as HTMLElement;
+    return lastElementChild !== this._markerElement ? lastElementChild : null;
+  }
   
   get length(): number {
     return this._bufferElement.children.length - 1;
