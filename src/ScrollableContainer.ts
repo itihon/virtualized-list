@@ -5,6 +5,7 @@ import './ScrollableContainer.css';
 import { createItemsHeightReducer, createFlexRowsReducer } from './reducers';
 import StickyContainer from './StickyContainer';
 
+export type OnResizeCallback = (inlineSize: number, blockSize: number) => void;
 export type OnOverscanCallback = (scrolledPane: ScrolledPane, scrollTop: number, previousScrollTop: number) => void;
 export type OnReadBufferCallback = (buffer: ScrolledPaneBuffer, scrollTop: number, previousScrollTop: number) => void;
 export { type OverscanHeight, type OnNewItemsCallback };
@@ -18,6 +19,7 @@ export default class ScrollableContainer {
   private _scrolledPane: ScrolledPane;
   private _scrolledPaneTopBuffer: ScrolledPaneBuffer;
   private _scrolledPaneBottomBuffer: ScrolledPaneBuffer;
+  private _onResizeCB: OnResizeCallback = () => {};
   private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
   private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
   private _onScrollDownEmptyBufferCB: OnReadBufferCallback = () => {};
@@ -280,6 +282,7 @@ export default class ScrollableContainer {
     scrolledPaneBottomBuffer.offsetHeight = blockSize;
 
     this.setScrollHeight(this._scrollHeight); 
+    this._onResizeCB(inlineSize, blockSize);
   };
 
   private _scrollHandler = () => {
@@ -343,6 +346,10 @@ export default class ScrollableContainer {
     this._scrolledPaneBottomBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
     this._scrolledPaneBottomBuffer.onAllEntriesMeasured((_, observer) => observer.disconnect());
     this._scrolledPaneBottomBuffer.onSizeUpdated(() => this._scrolledPaneBottomBuffer.scheduleEntriesMeasuring());
+  }
+
+  onResize(cb: OnResizeCallback) {
+    this._onResizeCB = cb;
   }
 
   onScrollDownOverscan(cb: OnOverscanCallback) {
