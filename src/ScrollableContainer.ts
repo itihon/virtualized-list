@@ -6,7 +6,8 @@ import { createItemsHeightReducer, createFlexRowsReducer } from './reducers';
 import StickyContainer from './StickyContainer';
 
 export type OnOverscanCallback = () => void;
-export type OnReadBufferCallback = (buffer: ScrolledPaneBuffer) => void;
+export type OnReadBufferCallback = (buffer: ScrolledPaneBuffer, scrollTop: number, previousScrollTop: number) => void;
+export { type OverscanHeight, type OnNewItemsCallback };
 
 export default class ScrollableContainer {
   private _scrollableParent: HTMLElement;
@@ -41,12 +42,12 @@ export default class ScrollableContainer {
 
   private _checkTopBuffer = () => { 
     const buffer = this._scrolledPaneTopBuffer;
-    if (!buffer.length) this._onScrollUpEmptyBufferCB(buffer); 
+    if (!buffer.length) this._onScrollUpEmptyBufferCB(buffer, this._scrollTop, this._previousScrollTop); 
   };
 
   private _checkBottomBuffer = () => { 
     const buffer = this._scrolledPaneBottomBuffer;
-    if (!buffer.length) this._onScrollDownEmptyBufferCB(buffer); 
+    if (!buffer.length) this._onScrollDownEmptyBufferCB(buffer, this._scrollTop, this._previousScrollTop); 
   };
 
   private _clearTopBuffer = () => {
@@ -91,7 +92,7 @@ export default class ScrollableContainer {
       }
     }
 
-    this._onScrollUpReadBufferCB(this._scrolledPaneTopBuffer);
+    this._onScrollUpReadBufferCB(this._scrolledPaneTopBuffer, this._scrollTop, this._previousScrollTop);
   };
 
   // ! code duplication
@@ -109,7 +110,7 @@ export default class ScrollableContainer {
       }
     }
 
-    this._onScrollDownReadBufferCB(this._scrolledPaneBottomBuffer);
+    this._onScrollDownReadBufferCB(this._scrolledPaneBottomBuffer, this._scrollTop, this._previousScrollTop);
   };
 
   private _initAccumulators = () => {
