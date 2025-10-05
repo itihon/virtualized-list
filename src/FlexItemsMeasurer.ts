@@ -81,8 +81,8 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
     observer.disconnect();
   };
 
-  constructor(parentContainer: HTMLElement, classList: string[] = []) {
-    super(parentContainer);
+  constructor(parentContainer: HTMLElement) {
+    super(parentContainer, ['class__FlexItemsMeasurer']);
     super.onSizeUpdated((_, observer) => { this.scheduleEntriesMeasuring(); observer.disconnect(); });
     super.onBeforeEntriesMeasured(this._initAccumulator);
     super.onEachEntryMeasured(this._accumulateEntries);

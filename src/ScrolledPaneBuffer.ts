@@ -14,8 +14,8 @@ export default class ScrolledPaneBuffer extends ScrolledPane {
     }
   };
 
-  constructor(scrollableParent: HTMLElement) {
-    super(scrollableParent, ['class__ScrolledPaneBuffer']);
+  constructor(scrollableParent: HTMLElement, classList: string[] = []) {
+    super(scrollableParent, ['class__ScrolledPaneBuffer', ...classList]);
     this._bufferElement = super.DOMRoot;
     this._markerElement = new DOMConstructor(
       this._bufferElement, ['ScrolledPaneBuffer__Marker'],
