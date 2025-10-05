@@ -56,6 +56,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
     if (!this.length) {
       this._items = [];
       this._promise = null;
+      this._currentItemIndex = 0;
       loop.stop();
       this._allItemsMeasured();
     }
@@ -65,6 +66,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   };
 
   private _initAccumulator = () => {
+    this._flexRowsReducerCfg.ignoreLastRow = this._currentItemIndex !== this._items.length;
     this._flexRowsReducer.init(
       this.DOMRoot,
       this.getContentBoxWidth(),
