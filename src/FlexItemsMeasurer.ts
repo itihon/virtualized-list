@@ -3,6 +3,8 @@ import { createFlexRowsReducer, type FlexRowsAccumulator } from "./reducers";
 import type { OnAllEntriesMeasuredCallback, OnBeforeEntriesMeasuredCallback, OnEachEntryMeasuredCallback, OnNewItemsCallback } from "./ScrolledPane";
 import ScrolledPaneBuffer from "./ScrolledPaneBuffer";
 
+const WARNING_MESSAGE = 'This method is not supposed to be invoked on FlexItemsMeasurer';
+
 export type OnFlexItemsPortionMeasuredCallback = (rows: FlexRowsAccumulator) => void;
 
 export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
@@ -119,26 +121,26 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   }
 
   prependItem(item: Element): void {
-    console.warn('This method is not supposed to be invoked on FlexItemsMeasurer', item);    
+    console.warn(WARNING_MESSAGE, item);    
   }
 
   onBeforeEntriesMeasured(cb: OnBeforeEntriesMeasuredCallback): void {
-    console.warn('This method is not supposed to be invoked on FlexItemsMeasurer', cb);    
+    console.warn(WARNING_MESSAGE, cb);    
   }
 
   onEachEntryMeasured(cb: OnEachEntryMeasuredCallback): void {
-    console.warn('This method is not supposed to be invoked on FlexItemsMeasurer', cb);    
+    console.warn(WARNING_MESSAGE, cb);    
   }
 
   onAllEntriesMeasured(cb: OnAllEntriesMeasuredCallback): void {
-    console.warn('This method is not supposed to be invoked on FlexItemsMeasurer', cb);    
+    console.warn(WARNING_MESSAGE, cb);    
   }
 
   onNewItems(cb: OnNewItemsCallback): void {
-    console.warn('This method is not supposed to be invoked on FlexItemsMeasurer', cb);    
+    console.warn(WARNING_MESSAGE, cb);    
   }
 
   onSizeUpdated(cb: ResizeObserverCallback): void {
-    console.warn('This method is not supposed to be invoked on FlexItemsMeasurer', cb);    
+    console.warn(WARNING_MESSAGE, cb);    
   }
 }
