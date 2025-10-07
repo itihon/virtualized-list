@@ -1,5 +1,6 @@
 import ScrollableContainer, { type OnNewItemsCallback, type OnOverscanCallback, type OverscanHeight } from "./ScrollableContainer";
 import RangeTree from "./RangeTree";
+import FlexItemsMeasurer from "./FlexItemsMeasurer";
 import RequestAnimationFrameLoop from "request-animation-frame-loop";
 import Queue from "./Queue";
 import type { ItemRangeData } from "./typings";
@@ -12,6 +13,7 @@ function fromHTMLString(html: string): HTMLElement {
 
 export default class VirtualizedList {
   private _container: HTMLElement;
+  private _flexItemsMeasurer: FlexItemsMeasurer;
   private _scrollableContainer: ScrollableContainer;
   private _tree: RangeTree;
   private _itemDataRegistry: Map<HTMLElement | null, ItemRangeData> = new Map();
@@ -140,15 +142,29 @@ export default class VirtualizedList {
   constructor(container: HTMLElement, overscanHeight: OverscanHeight = '100%') {
     this._container = container;
     this._scrollableContainer = new ScrollableContainer(container);
+    this._flexItemsMeasurer = new FlexItemsMeasurer(container);
     this._tree = new RangeTree();
 
     this._scrollableContainer.onScrollDownOverscan(this._onScrollOverscanCB);
     this._scrollableContainer.onScrollUpOverscan(this._onScrollOverscanCB);
     this._scrollableContainer.onNewItems(this._onNewItemsCB);
     this._scrollableContainer.setOverscanHeight(overscanHeight);
+
+    this._scrollableContainer.onResize((inlineSize, blockSize) => {
+      this._flexItemsMeasurer.offsetWidth = inlineSize;
+      this._flexItemsMeasurer.offsetHeight = blockSize;
+    });
+
+    this._flexItemsMeasurer.setPortionSize(1000);
+
+    this._flexItemsMeasurer.onPortionMeasured((rows) => {
+      // console.log(
+        rows.rows.map(row => row.map(entry => entry.target.textContent))
+      // );
+    });
   }
   
-  insertItem(item: HTMLElement, index: number = this._tree.size, height: number | undefined = undefined): Promise<number | null> {
+  insertItem(item: HTMLElement, index: number = this._tree.size, height: number | undefined = undefined): Promise<void> {
     const scrollableContainer = this._scrollableContainer;
 
     const itemData = this._tree.insert(index, { item: item.outerHTML, size: height || 0 })!.data!;
@@ -159,6 +175,8 @@ export default class VirtualizedList {
     scrollableContainer.setScrollHeight(scrollableContainer.getScrollHeight() + (height || 0));
 
     this._enableOnNewItemsCB = true;
-    return Promise.resolve(1);
+    this._flexItemsMeasurer.appendItem(item);
+
+    return this._flexItemsMeasurer.measure();
   }
 }
