@@ -86,7 +86,18 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   };
 
   constructor(parentContainer: HTMLElement) {
-    super(parentContainer, ['class__FlexItemsMeasurer']);
+    super(parentContainer);
+
+    const hiddenIframe = document.createElement('iframe');
+    hiddenIframe.classList.add('class__FlexItemsMeasurer');
+
+    hiddenIframe.onload = () => {
+      const iframeDoc = hiddenIframe.contentDocument!;
+      iframeDoc.body.appendChild(this.DOMRoot);
+    };
+
+    document.body.appendChild(hiddenIframe);
+
     super.onSizeUpdated((_, observer) => { this.scheduleEntriesMeasuring(); observer.disconnect(); });
     super.onBeforeEntriesMeasured(this._initAccumulator);
     super.onEachEntryMeasured(this._accumulateEntries);
