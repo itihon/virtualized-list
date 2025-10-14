@@ -2,6 +2,7 @@ import RequestAnimationFrameLoop, { type RequestAnimationFrameStateCallback } fr
 import { createFlexRowsReducer, type FlexRowsAccumulator } from "./reducers";
 import type { OnAllEntriesMeasuredCallback, OnBeforeEntriesMeasuredCallback, OnEachEntryMeasuredCallback, OnNewItemsCallback } from "./ScrolledPane";
 import ScrolledPaneBuffer from "./ScrolledPaneBuffer";
+import styleSheet from './ScrollableContainer.css?inline';
 
 const WARNING_MESSAGE = 'This method is not supposed to be invoked on FlexItemsMeasurer';
 
@@ -97,6 +98,11 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
 
     hiddenIframe.onload = () => {
       const iframeDoc = hiddenIframe.contentDocument!;
+      const style = iframeDoc.createElement('style');
+
+      style.textContent = styleSheet;
+
+      iframeDoc.head.appendChild(style);
       iframeDoc.body.appendChild(this.DOMRoot);
     };
 
