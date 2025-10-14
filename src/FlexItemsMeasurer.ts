@@ -27,9 +27,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
     const rows = this._flexRowsAcc.rows;
     const rowsCount = rows.length;
 
-    if (rowsCount < 2) return; // first row is marker
-
-    for (let rowNumber = 1; rowNumber < rowsCount; rowNumber++) { // first row is marker
+    for (let rowNumber = 0; rowNumber < rowsCount; rowNumber++) {
       const row = rows[rowNumber];
       const itemsCount = row.length;
 
@@ -105,6 +103,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
 
     this._rAFLoop.each(this._processPortion);
     this.setOverscan('0%', this.DOMRoot);
+    this.addIgnoredEntry(this.getMarkerElement());
   }
 
   measure(): Promise<undefined> {

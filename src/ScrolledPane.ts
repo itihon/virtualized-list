@@ -25,6 +25,7 @@ export default class ScrolledPane extends DOMConstructor {
   private _observerRoot: HTMLElement;
   private _filteredEntriesMap: Map<Element, IntersectionObserverEntry> = new Map();
   private _entriesIndexMap: Map<Element, number> = new Map();
+  private _ignoredEntries: Set<Element> = new Set();
 
   private _filterDuplicateEntries (entries: IntersectionObserverEntry[]): IntersectionObserverEntry[] {
     const filteredEntriesMap = this._filteredEntriesMap;
@@ -135,10 +136,16 @@ export default class ScrolledPane extends DOMConstructor {
   }
 
   scheduleEntriesMeasuring() {
+    const ignoredEntries = this._ignoredEntries;
+
     this._observer.disconnect();
     for (const item of this._paneElement.children) {
-      this._observer.observe(item);
+      if (!ignoredEntries.has(item)) this._observer.observe(item);
     }
+  }
+
+  addIgnoredEntry(element: Element) {
+    this._ignoredEntries.add(element);
   }
 
   runScheduledCallbacks() {
