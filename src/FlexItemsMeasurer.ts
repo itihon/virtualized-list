@@ -21,7 +21,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   private _flexRowsReducerCfg = {
     ignoreLastRow: true,
     ignoreRowIntersection: true,
-    minRowsNumber: 2,
+    minRowsNumber: 2, // !! this parameter should probably be set to 1 since addIgnoredEntry() was added in #6a059b8013
   };
   private _fromRowNumber: number = 0;
   private _toRowNumber: number = 0;
