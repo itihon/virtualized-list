@@ -31,7 +31,9 @@ export default class DOMConstructor {
     this._parentContainer = parentContainer;    
     this._DOMRoot = new DOMDivElement();
     this._DOMRoot.classList.add(...classList);
-    this._parentContainer.appendChild(this._DOMRoot);
+    requestAnimationFrame(() => {
+      this._parentContainer.appendChild(this._DOMRoot);
+    });
   }
 
   get DOMRoot(): DOMDivElement {
