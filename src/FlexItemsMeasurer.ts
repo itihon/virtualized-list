@@ -5,7 +5,7 @@ import ScrolledPaneBuffer from "./ScrolledPaneBuffer";
 
 const WARNING_MESSAGE = 'This method is not supposed to be invoked on FlexItemsMeasurer';
 
-export type OnFlexItemsPortionMeasuredCallback = (rows: FlexRowsAccumulator) => void;
+export type OnFlexItemsPortionMeasuredCallback = (rows: FlexRowsAccumulator, fromRowNumber: number, toRowNumber: number) => void;
 
 export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   private _portionSize: number = 500;
@@ -22,6 +22,8 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
     ignoreRowIntersection: true,
     minRowsNumber: 2,
   };
+  private _fromRowNumber: number = 0;
+  private _toRowNumber: number = 0;
 
   private _removeMeasuredRows = () => {
     const rows = this._flexRowsAcc.rows;
@@ -57,6 +59,8 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
       this._items = [];
       this._promise = null;
       this._currentItemIndex = 0;
+      this._fromRowNumber = 0;
+      this._toRowNumber = 0;
       loop.stop();
       this._allItemsMeasured();
     }
@@ -79,7 +83,9 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   };
 
   private _performPostMeasuringJob: OnAllEntriesMeasuredCallback = (_, observer) => {
-    this._onPortionMeasuredCB(this._flexRowsAcc);
+    this._fromRowNumber = this._toRowNumber;
+    this._toRowNumber = this._toRowNumber + this._flexRowsAcc.rows.length;
+    this._onPortionMeasuredCB(this._flexRowsAcc, this._fromRowNumber, this._toRowNumber);
     observer.disconnect();
   };
 
