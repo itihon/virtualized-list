@@ -25,6 +25,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   };
   private _fromRowNumber: number = 0;
   private _toRowNumber: number = 0;
+  private _isReady: boolean = false;
 
   private _removeMeasuredRows = () => {
     const rows = this._flexRowsAcc.rows;
@@ -102,8 +103,17 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
 
       style.textContent = styleSheet;
 
-      iframeDoc.head.appendChild(style);
-      iframeDoc.body.appendChild(this.DOMRoot);
+      requestAnimationFrame(() => {
+        iframeDoc.head.appendChild(style);
+        iframeDoc.body.appendChild(this.DOMRoot);
+      });
+
+      this.DOMRoot.onMounted((element) => {
+        if(element.parentElement === iframeDoc.body) {
+          this._isReady = true;
+          this._rAFLoop.start(); // start measuring in case the measure() method was called before the buffer element is mounted to hidden iframe
+        }
+      });
     };
 
     document.body.appendChild(hiddenIframe);
@@ -124,7 +134,10 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
         this._allItemsMeasured = res;
       });
 
-      this._rAFLoop.start();
+      // start only if the buffer element already moved over to hidden iframe
+      if (this._isReady) {
+        this._rAFLoop.start();
+      }
     }
 
     return this._promise;
