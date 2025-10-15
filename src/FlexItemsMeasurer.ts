@@ -6,7 +6,7 @@ import styleSheet from './ScrollableContainer.css?inline';
 
 const WARNING_MESSAGE = 'This method is not supposed to be invoked on FlexItemsMeasurer';
 
-export type OnFlexItemsPortionMeasuredCallback = (rows: FlexRowsAccumulator, fromRowNumber: number, toRowNumber: number) => void;
+export type OnFlexItemsPortionMeasuredCallback = (rows: FlexRowsAccumulator, fromRowNumber: number, toRowNumber: number, rowsOffset: number) => void;
 
 export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   private _portionSize: number = 500;
@@ -25,6 +25,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   };
   private _fromRowNumber: number = 0;
   private _toRowNumber: number = 0;
+  private _rowsOffset: number = 0;
   private _isReady: boolean = false;
 
   private _removeMeasuredRows = () => {
@@ -87,7 +88,15 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   private _performPostMeasuringJob: OnAllEntriesMeasuredCallback = (_, observer) => {
     this._fromRowNumber = this._toRowNumber;
     this._toRowNumber = this._toRowNumber + this._flexRowsAcc.rows.length;
-    this._onPortionMeasuredCB(this._flexRowsAcc, this._fromRowNumber, this._toRowNumber);
+
+    this._onPortionMeasuredCB(
+      this._flexRowsAcc, 
+      this._fromRowNumber, 
+      this._toRowNumber, 
+      this._rowsOffset,
+    );
+
+    this._rowsOffset = this._flexRowsAcc.rowsBottom;
     observer.disconnect();
   };
 
