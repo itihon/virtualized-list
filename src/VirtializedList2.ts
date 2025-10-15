@@ -4,6 +4,13 @@ import FlexItemsMeasurer from "./FlexItemsMeasurer";
 import RequestAnimationFrameLoop from "request-animation-frame-loop";
 import Queue from "./Queue";
 import type { ItemRangeData } from "./typings";
+import { createItemsHeightReducer } from "./reducers";
+
+export interface ListItem<DataType> {
+  data: DataType,
+  toHTMLElement: (data: DataType) => HTMLElement,
+  fromHTMLElement: (element: HTMLElement) => DataType,
+}
 
 function fromHTMLString(html: string): HTMLElement {
   const div = document.createElement('div');
@@ -19,6 +26,9 @@ export default class VirtualizedList {
   private _itemDataRegistry: Map<HTMLElement | null, ItemRangeData> = new Map();
   private _enableOnNewItemsCB: boolean = true;
   private _overscanRowCount: number = 10;
+  private _portionToBeMeasured: Map<HTMLElement, ListItem<unknown>> = new Map();
+  private _flexRowHeightReducer = createItemsHeightReducer();
+  private _flexRowHeightAcc = this._flexRowHeightReducer.getAccumulator();
 
   private _onScrollOverscanCB: OnOverscanCallback = (
     scrollTop, 
@@ -155,16 +165,45 @@ export default class VirtualizedList {
       this._flexItemsMeasurer.offsetHeight = blockSize;
     });
 
-    this._flexItemsMeasurer.setPortionSize(1000);
+    this._flexItemsMeasurer.setPortionSize(400);
 
-    this._flexItemsMeasurer.onPortionMeasured((rows) => {
-      // console.log(
-        rows.rows.map(row => row.map(entry => entry.target.textContent))
-      // );
+    this._flexItemsMeasurer.onPortionMeasured((flexRows, fromRowNumber, _, rowsOffset) => {
+      const flexRowHeightReducer = this._flexRowHeightReducer;
+      const flexRowHeightAcc = this._flexRowHeightAcc;
+      const rows = flexRows.rows;
+      const rowsTotal = rows.length;
+      const markerHeight = this._flexItemsMeasurer.getMarkerElement().offsetHeight;
+
+      for (let rowNumber = 0; rowNumber < rowsTotal; rowNumber++) {
+
+        const row = rows[rowNumber];
+        const itemsTotal = row.length;
+        const rowData = [];
+
+        flexRowHeightReducer.init();
+
+        for (let itemNumber = 0; itemNumber < itemsTotal; itemNumber++) {
+          const entry = row[itemNumber];
+          const htmlElement = entry.target as HTMLElement;
+          const listItem = this._portionToBeMeasured.get(htmlElement) as ListItem<unknown> | undefined;
+
+          flexRowHeightReducer.exec(entry, row);
+
+          if (listItem) {
+            rowData.push(listItem.data);
+          }
+        }
+
+        const rowIndex = fromRowNumber + rowNumber;
+        const offset = rowsOffset + rowIndex > 0 ? flexRowHeightAcc.top - markerHeight : 0;
+        const height = flexRowHeightAcc.height;
+        
+        this._tree.insert(rowIndex, { item: rowData, size: height, offset });
+      }
     });
   }
   
-  insertItem(item: HTMLElement, index: number = this._tree.size, height: number | undefined = undefined): Promise<void> {
+  insertItem<DataType>(item: ListItem<DataType>, index: number = this._tree.size, height: number | undefined = undefined): Promise<void> {
     const scrollableContainer = this._scrollableContainer;
 
     const itemData = this._tree.insert(index, { item: item.outerHTML, size: height || 0 })!.data!;
@@ -175,7 +214,11 @@ export default class VirtualizedList {
     scrollableContainer.setScrollHeight(scrollableContainer.getScrollHeight() + (height || 0));
 
     this._enableOnNewItemsCB = true;
-    this._flexItemsMeasurer.appendItem(item);
+
+    const htmlElement = item.toHTMLElement(item.data);
+
+    this._portionToBeMeasured.set(htmlElement, item as ListItem<unknown>);
+    this._flexItemsMeasurer.appendItem(htmlElement);
 
     return this._flexItemsMeasurer.measure();
   }
