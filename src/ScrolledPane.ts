@@ -26,6 +26,7 @@ export default class ScrolledPane extends DOMConstructor {
   private _filteredEntriesMap: Map<Element, IntersectionObserverEntry> = new Map();
   private _entriesIndexMap: Map<Element, number> = new Map();
   private _ignoredEntries: Set<Element> = new Set();
+  private _overscanHeight: OverscanHeight = '0px';
 
   private _filterDuplicateEntries (entries: IntersectionObserverEntry[]): IntersectionObserverEntry[] {
     const filteredEntriesMap = this._filteredEntriesMap;
@@ -188,9 +189,14 @@ export default class ScrolledPane extends DOMConstructor {
       );
     }
 
+    this._overscanHeight = height;
     this._observerRoot = observerRoot;
     this._observer.disconnect();
     this._observer = this._createObserver(height);
+  }
+
+  getOverscan(): OverscanHeight {
+    return this._overscanHeight;
   }
 
   getContentBoxWidth(): number {

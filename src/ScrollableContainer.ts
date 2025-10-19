@@ -403,17 +403,17 @@ export default class ScrollableContainer {
   getLastItem(): HTMLElement | null {
     return this._scrolledPane.getLastItem();
   }
-  
-  prependHTML() {
-
-  }
-
-  appendHTML() {
-
-  }
 
   setOverscanHeight(height: OverscanHeight) {
     this._scrolledPane.setOverscan(height, this._scrollableParent);
+  }
+
+  getOverscanHeight(): number {
+    const overscan = this._scrolledPane.getOverscan();
+
+    return overscan.endsWith('%') 
+      ? this._scrolledPane.getBorderBoxHeight() * parseFloat(overscan.slice(0, -1)) / 100
+      : parseFloat(overscan);
   }
 
   setScrollHeight(scrollHeight: number) {
