@@ -96,7 +96,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
       this._rowsOffset,
     );
 
-    this._rowsOffset = this._flexRowsAcc.rowsBottom;
+    this._rowsOffset = this._rowsOffset + this._flexRowsAcc.rowsBottom - this.getMarkerElement().offsetHeight;
     observer.disconnect();
   };
 
