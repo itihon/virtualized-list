@@ -187,6 +187,7 @@ function createItem(i: number) {
 
 // fillers' both height should be equal to scrollHeight
 
+setTimeout(() => {
 const fillers = document.querySelectorAll('.class__Filler:not(.Filler__ScrollHeight)');
 const fillerTop = fillers[0] as HTMLElement;
 const fillerBottom = fillers[1] as HTMLElement;
@@ -296,3 +297,4 @@ container.addEventListener('scroll', () => {
   postPaintTestsObserver.observe(container);
   setScrollDirection();
 });
+}, 1000);
