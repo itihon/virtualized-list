@@ -4,6 +4,7 @@ import ScrolledPaneBuffer from './ScrolledPaneBuffer';
 import './ScrollableContainer.css';
 import { createItemsHeightReducer, createFlexRowsReducer } from './reducers';
 import StickyContainer from './StickyContainer';
+import OneTimeValue from './OneTimeValue';
 
 export type OnResizeCallback = (inlineSize: number, blockSize: number) => void;
 export type OnOverscanCallback = (scrolledPane: ScrolledPane, scrollTop: number, previousScrollTop: number) => void;
@@ -41,6 +42,7 @@ export default class ScrollableContainer {
   private _scrolledPaneScrollHeight: number = 0;
   private _scrolledPaneScrollLimit: number = 0;
   private _scrolledPaneOffsetTop: number = 0;
+  private _insertionAdjustment = new OneTimeValue<number>(0);
 
   private _checkTopBuffer = () => { 
     const buffer = this._scrolledPaneTopBuffer;
@@ -234,7 +236,9 @@ export default class ScrollableContainer {
       }
     }
 
-    if (isRemovalScheduled || isInsertionScheduled) {
+    const insertionAjustment = this._insertionAdjustment.read();
+
+    if (isRemovalScheduled || isInsertionScheduled || insertionAjustment) {
       const paddingTop = parseInt(getComputedStyle(this._scrollableParent).paddingTop);
       const { scrollHeight: scrolledPaneScrollHeight, offsetHeight: scrolledPaneHeight } = scrolledPane.DOMRoot;
       const stickyContainerOffsetTop = this._stickyContainer.DOMRoot.offsetTop - paddingTop;
@@ -243,13 +247,13 @@ export default class ScrollableContainer {
       let removedHeight = 0;
 
       if (isScrollingUp) {
-        insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight : 0;
+        insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneTopBuffer.getMarkerElement().offsetHeight : insertionAjustment;
         removedHeight = isRemovalScheduled ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
         this._scrolledPaneOffsetTop = stickyContainerOffsetTop - insertedHeight;
       }
 
       if (isScrollingDown) {
-        insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight : 0;
+        insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight : insertionAjustment;
         removedHeight = isRemovalScheduled ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
         this._scrolledPaneOffsetTop = stickyContainerOffsetTop + removedHeight;
       }
@@ -437,6 +441,18 @@ export default class ScrollableContainer {
 
   getScrollHeight(): number {
     return this._scrollHeight;
+  }
+
+  setInsertionAdjustment(insertedHeight: number) {
+    this._insertionAdjustment.set(insertedHeight);
+  }
+
+  getScrolledPaneOffsetTop(): number {
+    return this._scrolledPaneOffsetTop;
+  }
+
+  getScrolledPaneScrollHeight(): number {
+    return this._scrolledPaneScrollHeight || this._scrolledPane.DOMRoot.scrollHeight;
   }
 
   scroll(position: number, scrolledPaneScrollHeight: number) {
