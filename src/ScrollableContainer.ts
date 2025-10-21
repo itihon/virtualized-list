@@ -205,9 +205,8 @@ export default class ScrollableContainer {
       if (itemsHeightAccResult.top > rootBounds.top) {
 
         this._scrolledPaneTopBuffer.runScheduledCallbacks();
-        const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
-        if (rowsNumberToInsert) {
+        if (this._scrolledPaneTopBuffer.length) {
           requestAnimationFrame(this._insertItemsFromTopBuffer);
           isInsertionScheduled = true;
         }
@@ -222,9 +221,8 @@ export default class ScrollableContainer {
       if (itemsHeightAccResult.bottom < rootBounds.bottom) {
 
         this._scrolledPaneBottomBuffer.runScheduledCallbacks();
-        const rowsNumberToInsert = bufferedEntriesAccResult.rows.length - 1; // exclude marker
 
-        if (rowsNumberToInsert) {
+        if (this._scrolledPaneBottomBuffer.length) {
           requestAnimationFrame(this._insertItemsFromBottomBuffer);
           isInsertionScheduled = true;
         }
