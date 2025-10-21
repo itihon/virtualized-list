@@ -41,6 +41,10 @@
   transform: translateY(-100%);
 }
 
+.class__ScrolledPane > * {
+  box-sizing: border-box;
+}
+
 .class__ScrolledPaneBuffer,
 .class__FlexItemsMeasurer {
   position: absolute;
