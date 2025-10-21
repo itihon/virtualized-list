@@ -387,6 +387,14 @@ export default class ScrollableContainer {
   prependItem(item: HTMLElement) {
     this._scrolledPane.prependItem(item);
   }
+
+  scheduleAppendItem(item: HTMLElement) {
+    this._scrolledPane.scheduleAppendItem(item);
+  }
+  
+  schedulePrependItem(item: HTMLElement) {
+    this._scrolledPane.schedulePrependItem(item);
+  }
   
   removeItem(itemIndex: number): boolean {
     return this._scrolledPane.removeItemByIndex(itemIndex);

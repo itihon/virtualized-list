@@ -12,6 +12,7 @@ export type OnNewItemsCallback = IntersectionObserverCallback;
 
 export default class ScrolledPane extends DOMConstructor {
   private _paneElement: HTMLElement;
+  private _tempContainer = document.createDocumentFragment();
   private _contentBoxWidth: number = 0;
   private _borderBoxHeight: number = 0;
   private _resizeObserver: ResizeObserver;
@@ -27,6 +28,17 @@ export default class ScrolledPane extends DOMConstructor {
   private _entriesIndexMap: Map<Element, number> = new Map();
   private _ignoredEntries: Set<Element> = new Set();
   private _overscanHeight: OverscanHeight = '0px';
+  private _rAFID: number | null = null;
+
+  private _applyAppend = () => {
+    this._paneElement.append(this._tempContainer);
+    this._rAFID = null;
+  };
+
+  private _applyPrepend = () => {
+    this._paneElement.prepend(this._tempContainer);
+    this._rAFID = null;
+  };
 
   private _filterDuplicateEntries (entries: IntersectionObserverEntry[]): IntersectionObserverEntry[] {
     const filteredEntriesMap = this._filteredEntriesMap;
@@ -215,6 +227,24 @@ export default class ScrolledPane extends DOMConstructor {
   prependItem(item: Element) {
     this._paneElement.prepend(item);
     this._newItems.add(item)
+  }
+
+  scheduleAppendItem(item: Element) {
+    this._tempContainer.append(item);
+    this._newItems.add(item)
+
+    if (this._rAFID === null) {
+      this._rAFID = requestAnimationFrame(this._applyAppend);
+    }
+  }
+  
+  schedulePrependItem(item: Element) {
+    this._tempContainer.prepend(item);
+    this._newItems.add(item)
+
+    if (this._rAFID === null) {
+      this._rAFID = requestAnimationFrame(this._applyPrepend);
+    }
   }
 
   removeItemByIndex(itemIndex: number): boolean {
