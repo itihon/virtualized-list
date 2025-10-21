@@ -117,14 +117,6 @@ export default class ScrollableContainer {
     this._onScrollDownReadBufferCB(this._scrolledPaneBottomBuffer, this._scrollTop, this._previousScrollTop);
   };
 
-  private _callScrollUpOverscanCallback = () => {
-    this._onScrollUpOverscanCB(this._scrolledPane, this._scrollTop, this._previousScrollTop);
-  };
-
-  private _callScrollDownOverscanCallback = () => {
-    this._onScrollDownOverscanCB(this._scrolledPane, this._scrollTop, this._previousScrollTop);
-  };
-
   private _initAccumulators = () => {
     const scrolledPane = this._scrolledPane;
     const isScrollingDown = this._previousScrollTop < this._scrollTop;
@@ -211,7 +203,7 @@ export default class ScrollableContainer {
           isInsertionScheduled = true;
         }
         
-        requestAnimationFrame(this._callScrollUpOverscanCallback);
+        this._onScrollUpOverscanCB(scrolledPane, scrollTop, this._previousScrollTop);
       }
       else {
         this._scrolledPaneTopBuffer.cancelScheduledCallbacks();
@@ -227,7 +219,7 @@ export default class ScrollableContainer {
           isInsertionScheduled = true;
         }
 
-        requestAnimationFrame(this._callScrollDownOverscanCallback);
+        this._onScrollDownOverscanCB(scrolledPane, scrollTop, this._previousScrollTop);
       }
       else {
         this._scrolledPaneBottomBuffer.cancelScheduledCallbacks();
