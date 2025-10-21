@@ -119,8 +119,8 @@ export default class ScrollableContainer {
 
   private _initAccumulators = () => {
     const scrolledPane = this._scrolledPane;
-    const isScrollingDown = this._previousScrollTop < this._scrollTop;
-    const isScrollingUp = this._previousScrollTop > this._scrollTop;
+    const isScrollingDown = this.isScrollingDown();
+    const isScrollingUp = this.isScrollingUp();
 
     this._itemsHeightAcc.init();
     this._intersectedEntriesAcc.init(
@@ -181,8 +181,8 @@ export default class ScrollableContainer {
     const bufferedEntriesAccResult = this._bufferedEntriesAccResult;
     const { clientHeight: rootHeight } = this._scrollableParent;
     const scrollTop = this._scrollTop;
-    const isScrollingDown = this._previousScrollTop < scrollTop;
-    const isScrollingUp = this._previousScrollTop > scrollTop;
+    const isScrollingDown = this.isScrollingDown();
+    const isScrollingUp = this.isScrollingUp();
     const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
 
     let isRemovalScheduled = false;
@@ -241,8 +241,7 @@ export default class ScrollableContainer {
         removedHeight = isRemovalScheduled ? notIntersectedEntriesAccResult.rowsBottom - intersectedEntriesAccResult.rowsBottom : 0;
         this._scrolledPaneOffsetTop = stickyContainerOffsetTop - insertedHeight;
       }
-
-      if (isScrollingDown) {
+      else if (isScrollingDown) {
         insertedHeight = isInsertionScheduled ? bufferedEntriesAccResult.rowsHeight - this._scrolledPaneBottomBuffer.getMarkerElement().offsetHeight : insertionAjustment;
         removedHeight = isRemovalScheduled ? intersectedEntriesAccResult.rowsTop - notIntersectedEntriesAccResult.rowsTop : 0;
         this._scrolledPaneOffsetTop = stickyContainerOffsetTop + removedHeight;
@@ -284,8 +283,8 @@ export default class ScrollableContainer {
 
     this._scrollTop = scrollTop;
 
-    const isScrollingDown = this._previousScrollTop < scrollTop;
-    const isScrollingUp = this._previousScrollTop > scrollTop;
+    const isScrollingDown = this.isScrollingDown();
+    const isScrollingUp = this.isScrollingUp();
 
     this._scrolledPane.scheduleSizeUpdate();
 
@@ -297,8 +296,7 @@ export default class ScrollableContainer {
         requestAnimationFrame(this._clearTopBuffer);
       }
     }
-
-    if (isScrollingUp) {
+    else if (isScrollingUp) {
       this._scrolledPaneTopBuffer.scheduleSizeUpdate();
       requestAnimationFrame(this._checkTopBuffer);
 
@@ -450,6 +448,14 @@ export default class ScrollableContainer {
 
   getScrolledPaneScrollHeight(): number {
     return this._scrolledPaneScrollHeight || this._scrolledPane.DOMRoot.scrollHeight;
+  }
+
+  isScrollingUp(): boolean {
+    return this._previousScrollTop > this._scrollTop;
+  }
+
+  isScrollingDown(): boolean {
+    return this._previousScrollTop < this._scrollTop;
   }
 
   scroll(position: number, scrolledPaneScrollHeight: number) {
