@@ -340,6 +340,7 @@ export default class ScrollableContainer {
     this._scrolledPane.onEachEntryMeasured(this._accumulateEntries);
     this._scrolledPane.onAllEntriesMeasured(this._processEntries);
     this._scrolledPane.onSizeUpdated(() => this._scrolledPane.scheduleEntriesMeasuring());
+    this._scrolledPane.scheduleSizeUpdate();
 
     this._scrolledPaneTopBuffer.onBeforeEntriesMeasured(this._initTopBufferAccumulator);
     this._scrolledPaneTopBuffer.onEachEntryMeasured(this._accumulateBufferEntries);
