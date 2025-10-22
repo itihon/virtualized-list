@@ -283,4 +283,8 @@ export default class VirtualizedList {
 
     return this._flexItemsMeasurer.measure();
   }
+
+  setOverscanHeight(overscanHeight: OverscanHeight) {
+    this._scrollableContainer.setOverscanHeight(overscanHeight);
+  }
 }
