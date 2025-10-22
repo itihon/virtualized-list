@@ -28,16 +28,17 @@ export default class ScrolledPane extends DOMConstructor {
   private _entriesIndexMap: Map<Element, number> = new Map();
   private _ignoredEntries: Set<Element> = new Set();
   private _overscanHeight: OverscanHeight = '0px';
-  private _rAFID: number | null = null;
+  private _appendRAFID: number | null = null;
+  private _prependRAFID: number | null = null;
 
   private _applyAppend = () => {
     this._paneElement.append(this._tempContainer);
-    this._rAFID = null;
+    this._appendRAFID = null;
   };
 
   private _applyPrepend = () => {
     this._paneElement.prepend(this._tempContainer);
-    this._rAFID = null;
+    this._prependRAFID = null;
   };
 
   private _filterDuplicateEntries (entries: IntersectionObserverEntry[]): IntersectionObserverEntry[] {
@@ -233,8 +234,8 @@ export default class ScrolledPane extends DOMConstructor {
     this._tempContainer.append(item);
     this._newItems.add(item)
 
-    if (this._rAFID === null) {
-      this._rAFID = requestAnimationFrame(this._applyAppend);
+    if (this._appendRAFID === null) {
+      this._appendRAFID = requestAnimationFrame(this._applyAppend);
     }
   }
   
@@ -242,8 +243,8 @@ export default class ScrolledPane extends DOMConstructor {
     this._tempContainer.prepend(item);
     this._newItems.add(item)
 
-    if (this._rAFID === null) {
-      this._rAFID = requestAnimationFrame(this._applyPrepend);
+    if (this._prependRAFID === null) {
+      this._prependRAFID = requestAnimationFrame(this._applyPrepend);
     }
   }
 
