@@ -381,6 +381,10 @@ export default class ScrollableContainer {
     this._scrolledPane.prependItem(item);
   }
 
+  clear() {
+    this._scrolledPane.clear();
+  }
+
   scheduleAppendItem(item: HTMLElement) {
     this._scrolledPane.scheduleAppendItem(item);
   }
@@ -388,15 +392,13 @@ export default class ScrollableContainer {
   schedulePrependItem(item: HTMLElement) {
     this._scrolledPane.schedulePrependItem(item);
   }
+
+  scheduleClear() {
+    this._scrolledPane.scheduleClear();
+  }
   
   removeItem(itemIndex: number): boolean {
     return this._scrolledPane.removeItemByIndex(itemIndex);
-  }
-
-  clear() {
-    while (this.length) {
-      this.removeItem(0);
-    }
   }
   
   get length(): number {
