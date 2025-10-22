@@ -104,3 +104,10 @@ TODO
 - [ ] Selection of invisible lines
 
 ## Bugs
+
+## Refactor
+
+ - [ ] There is no need in two buffers since only one of the two is always used
+  - Probably no buffers needed at all in ScrollableContainer component
+ - [ ] add ScrollableContainer.onItemRemoved(cb) to tie removing associated item data from itemDataRegistry.
+ - [ ] remove on new items callback from scrollable container and scrolled pane
