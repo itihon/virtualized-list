@@ -1,10 +1,8 @@
-import ScrollableContainer, { type OnNewItemsCallback, type OnOverscanCallback, type OverscanHeight } from "./ScrollableContainer";
-import RangeTree from "./RangeTree";
+import ScrollableContainer, { type OnOverscanCallback, type OverscanHeight } from "./ScrollableContainer";
+import OffsetTree, { type OffsetTreeNodeData } from "./OffsetTree";
 import FlexItemsMeasurer from "./FlexItemsMeasurer";
-import RequestAnimationFrameLoop from "request-animation-frame-loop";
-import Queue from "./Queue";
-import type { ItemRangeData } from "./typings";
 import { createItemsHeightReducer } from "./reducers";
+import type ScrolledPane from "./ScrolledPane";
 
 export interface ListItem<DataType> {
   data: DataType,
@@ -12,152 +10,199 @@ export interface ListItem<DataType> {
   fromHTMLElement: (element: HTMLElement) => DataType,
 }
 
-function fromHTMLString(html: string): HTMLElement {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-  return div.firstElementChild as HTMLElement;
+function isRangeIntersecting(top1: number, bottom1: number, top2: number, bottom2: number): boolean {
+  return (top1 < bottom1) && (top2 < bottom2) && !(bottom1 < top2 || bottom2 < top1);
 }
 
 export default class VirtualizedList {
-  private _container: HTMLElement;
   private _flexItemsMeasurer: FlexItemsMeasurer;
   private _scrollableContainer: ScrollableContainer;
-  private _tree: RangeTree;
-  private _itemDataRegistry: Map<HTMLElement | null, ItemRangeData> = new Map();
-  private _enableOnNewItemsCB: boolean = true;
+  private _tree: OffsetTree;
+  private _itemDataRegistry: Map<HTMLElement | null, OffsetTreeNodeData<ListItem<unknown>>> = new Map();
   private _overscanRowCount: number = 10;
   private _portionToBeMeasured: Map<HTMLElement, ListItem<unknown>> = new Map();
   private _flexRowHeightReducer = createItemsHeightReducer();
   private _flexRowHeightAcc = this._flexRowHeightReducer.getAccumulator();
 
   private _onScrollOverscanCB: OnOverscanCallback = (
+    scrolledPane,
     scrollTop, 
     previousScrollTop, 
-    scrollLimit,
-    offsetTop,
-    paddingTop, 
-    items, 
-    scrolledPaneEntry, 
-    notIntersectedEntries,
   ) => {
+    console.log('on overscan')
     const scrollDelta = Math.abs(scrollTop - previousScrollTop);
+    const itemDataRegistry = this._itemDataRegistry;
+    const scrollableContainer = this._scrollableContainer;
+    const scrolledPaneHeight = scrolledPane.getBorderBoxHeight();
 
-    if (scrollDelta > this._container.offsetHeight) {
+    if (scrollDelta > scrolledPaneHeight + this._scrollableContainer.getOverscanHeight()) {
       console.warn('will render by offset');
+
+      const firstItemInRange = this._tree.findByOffset<ListItem<unknown>>(scrollTop);
+      const minRowCount = 1;
+      const includeFirst = true;
+
+      if (firstItemInRange) {
+        this._scrollableContainer.scheduleClear();
+        this._itemDataRegistry.clear();
+
+        this._renderFromData(
+          this._scrollableContainer, 
+          firstItemInRange.data, 
+          'next', 
+          scrolledPaneHeight,
+          minRowCount,
+          includeFirst,
+        ); 
+
+        scrollableContainer.setInsertionAdjustment(1);
+      }
     }
     else {
       console.log('will render one by one');
 
-      let addedItemsSize = 0;
-      let removedItemsSize = 0;
-
-      const itemDataRegistry = this._itemDataRegistry;
-      const scrollableContainer = this._scrollableContainer;
-      const isScrollingDown = previousScrollTop < scrollTop;
-      const isScrollingUp = previousScrollTop > scrollTop;
+      const isScrollingDown = scrollableContainer.isScrollingDown();
+      const isScrollingUp = scrollableContainer.isScrollingUp();
+      const minOverscanRowCount = this._overscanRowCount;
+      const includeFirst = false;
 
       console.log(isScrollingDown ? 'scroll down' : isScrollingUp ? 'scroll up' : 'not scrolling')
 
       const edgeItem = isScrollingDown 
-        ? scrollableContainer.getLastItem()
+        ? scrolledPane.getLastItem() || scrollableContainer.getLastItem()
         : isScrollingUp
-          ? scrollableContainer.getFirstItem()
+          ? scrolledPane.getFirstItem() || scrollableContainer.getFirstItem()
           : null;
 
       const edgeItemData = itemDataRegistry.get(edgeItem);
+      const renderDirection = isScrollingDown ? 'next' : isScrollingUp ? 'previous' : '';
 
-      let followingData = isScrollingDown
-        ? edgeItemData?.next
-        : isScrollingUp
-          ? edgeItemData?.previous
-          : null;
+      if (!edgeItemData || !renderDirection) return;
 
-      // for (const entry of notIntersectedEntries) {
-      //   removedItemsSize += entry.boundingClientRect.height;
-      //   this._itemDataRegistry.delete(entry.target as HTMLElement);
-      //   entry.target.remove();
-      // }
-      
-      // const freeSpace = isScrollingDown 
-      //   ? scrolledPaneEntry.rootBounds!.bottom - scrolledPaneEntry.boundingClientRect.bottom
-      //   : isScrollingUp
-      //     ? scrolledPaneEntry.boundingClientRect.top - scrolledPaneEntry.rootBounds!.top
-      //     : 0;
+      const renderedHeight = this._renderFromData(
+        scrolledPane, 
+        edgeItemData,
+        renderDirection,
+        scrollableContainer.getOverscanHeight(),
+        minOverscanRowCount,
+        includeFirst,
+      );
 
-      // while (addedItemsSize < freeSpace && followingData) {
-      const overscanRowCount = this._overscanRowCount;
-      for (let i = 0; i < overscanRowCount; i++) {
-        if (isScrollingDown) {
-          if (followingData) {
-            const followingItem = fromHTMLString(followingData.item);
-            scrollableContainer.appendItem(followingItem);
-            itemDataRegistry.set(followingItem, followingData);
-            followingData = followingData.next;
-          }
-        }
-
-        if (isScrollingUp) {
-          if (followingData) {
-            const followingItem = fromHTMLString(followingData.item);
-            scrollableContainer.prependItem(followingItem);
-            itemDataRegistry.set(followingItem, followingData);
-            followingData = followingData.previous;
-          }
-        }
-
-        if (followingData) {
-          addedItemsSize += followingData?.size;
-        }
-      }
-
-      // scrollableContainer.scroll(
-      //   offsetTop + (isScrollingUp ? 0 - removedItemsSize : removedItemsSize) - paddingTop, 
-      //   addedItemsSize - removedItemsSize,
-      // );
-    }
-
-  };
-
-  private _onNewItemsCB: OnNewItemsCallback = (newEntries) => {
-    if (this._enableOnNewItemsCB) {
-      console.log('onNewItem')
-
-      const itemDataRegistry = this._itemDataRegistry;
-      const scrollableContainer = this._scrollableContainer;
-      let scrollHeight = scrollableContainer.getScrollHeight();
-
-      for (const entry of newEntries) {
-        const { height } = entry.boundingClientRect;
-        const item = entry.target as HTMLElement;
-        const itemData = itemDataRegistry.get(item);
-        console.log(item.textContent, height)
-
-        if (itemData) {
-          itemData.size = height;
-        }
-
-        scrollHeight += height;
-
-        if (!entry.isIntersecting) {
-          entry.target.remove();
-          itemDataRegistry.delete(entry.target as HTMLElement);
-        }
-      }
-
-      scrollableContainer.setScrollHeight(scrollHeight);
-      this._enableOnNewItemsCB = false;
+      scrollableContainer.setInsertionAdjustment(renderedHeight);
     }
   };
+
+  /**
+    Case 1:           Case 2:              Case 3: 
+    ───────           ───────              ───────
+    ↓ ┌──┐            ┬ ┌──┐               ┬ ┌──┐
+    ┬ └──┘            │ └──┘               │ └──┘
+    │ ┌──┐            │ ┌──┐               │ ┌──┐
+    │ └──┘            │ └──┘               │ └──┘
+    │ ┌──┐            │ ┌──┐               │ ┌──┐
+    │ └──┘            │ └──┘               │ └──┘
+    │ ┌──┐            │ ┌──┐               │ ┌──┐
+    │ └──┘            │ └──┘               │ └──┘
+    │ ┌──┐            ┴ ┌──┐               │ ┌──┐
+    ┴ └──┘            ↑ └──┘               ┴ └──┘
+
+    Rendered height calculation:
+      Case 1: next, exclude the first row
+      Case 2: previous, exclude the first row
+      Case 3: include the first row
+ */
+  private _renderFromData(
+    where: ScrolledPane | ScrollableContainer, 
+    fromData: OffsetTreeNodeData<ListItem<unknown>>, 
+    direction: 'next' | 'previous',
+    stretch: number, 
+    minItemsCount = this._overscanRowCount,
+    includeFirst = false,
+  ): number {
+    const itemDataRegistry = this._itemDataRegistry;
+    const isNext = direction === 'next';
+    const isPrevious = direction === 'previous';
+
+    let itemData = includeFirst ? fromData : fromData[direction]; 
+    let offsetStart = 0;
+
+    if (isNext) {
+      if (includeFirst) {
+        offsetStart = fromData.offset;
+      } else{
+        offsetStart = fromData.offset + fromData.height;
+      }
+    }
+    else if (isPrevious) {
+      if (includeFirst) {
+        offsetStart = fromData.offset + fromData.height;
+      } else{
+        offsetStart = fromData.offset;
+      }
+    }
+
+    let renderedHeight = 0;
+    let renderedItemsCount = 0;
+
+    while(itemData && (renderedHeight < stretch || renderedItemsCount < minItemsCount)) {
+      const { items } = itemData;
+      const { length } = items;
+
+      for (let i = 0; i < length; i++) {
+        const item = items[i];
+        const element = item.toHTMLElement(item.data);
+
+        if (isNext) {
+          where.scheduleAppendItem(element);
+        }
+        else if (isPrevious) {
+          where.schedulePrependItem(element);
+        }
+
+        itemDataRegistry.set(element, itemData)
+      }
+
+      renderedHeight = Math.abs(offsetStart - (itemData.offset + (isNext ? itemData.height : 0)));
+
+      itemData = itemData[direction];
+
+      renderedItemsCount++;
+    }
+
+    return renderedHeight;
+  }
+
+  private _renderRange(from: number, to: number) {
+    const firstItemInRange = this._tree.findByOffset<ListItem<unknown>>(from);
+    const minRowCount = this._overscanRowCount;
+    const includeFirst = true;
+
+    if (firstItemInRange) {
+      this._scrollableContainer.clear();
+      this._itemDataRegistry.clear();
+
+      this._renderFromData(
+        this._scrollableContainer, 
+        firstItemInRange.data, 
+        'next', 
+        to - from,
+        minRowCount,
+        includeFirst,
+      ); 
+    }
+  }
 
   constructor(container: HTMLElement, overscanHeight: OverscanHeight = '100%') {
-    this._container = container;
     this._scrollableContainer = new ScrollableContainer(container);
     this._flexItemsMeasurer = new FlexItemsMeasurer(container);
-    this._tree = new RangeTree();
+    this._tree = new OffsetTree();
 
+    // this._scrollableContainer.onScrollDownEmptyBuffer(this._onScrollOverscanCB);
+    // this._scrollableContainer.onScrollUpEmptyBuffer(this._onScrollOverscanCB);
+    // this._scrollableContainer.onScrollDownReadBuffer(this._onScrollOverscanCB);
+    // this._scrollableContainer.onScrollUpReadBuffer(this._onScrollOverscanCB);
     this._scrollableContainer.onScrollDownOverscan(this._onScrollOverscanCB);
     this._scrollableContainer.onScrollUpOverscan(this._onScrollOverscanCB);
-    this._scrollableContainer.onNewItems(this._onNewItemsCB);
     this._scrollableContainer.setOverscanHeight(overscanHeight);
 
     this._scrollableContainer.onResize((inlineSize, blockSize) => {
@@ -190,15 +235,33 @@ export default class VirtualizedList {
           flexRowHeightReducer.exec(entry, row);
 
           if (listItem) {
-            rowData.push(listItem.data);
+            rowData.push(listItem);
           }
         }
 
         const rowIndex = fromRowNumber + rowNumber;
-        const offset = rowsOffset + rowIndex > 0 ? flexRowHeightAcc.top - markerHeight : 0;
+        const offset = rowsOffset + rowIndex > 0 ? rowsOffset + flexRowHeightAcc.top - markerHeight : 0;
         const height = flexRowHeightAcc.height;
         
-        this._tree.insert(rowIndex, { item: rowData, size: height, offset });
+        this._tree.insert(rowIndex, { items: rowData, height, offset });
+      }
+
+      const scrollableContainer = this._scrollableContainer;
+      const scrollableContainerTop = scrollableContainer.getScrolledPaneOffsetTop();
+      const scrollableContainerBottom = scrollableContainerTop + scrollableContainer.getScrolledPaneScrollHeight();
+      const rowsTop = rowsOffset; 
+      const rowsBottom = rowsOffset + flexRows.rowsHeight;
+
+      const shouldBeRendered = isRangeIntersecting(
+        scrollableContainerTop, scrollableContainerBottom, rowsTop, rowsBottom,
+      );
+
+      requestAnimationFrame(() => {
+        this._scrollableContainer.setScrollHeight(rowsBottom);
+      });
+
+      if (shouldBeRendered) {
+        this._renderRange(scrollableContainerTop, scrollableContainerBottom + scrollableContainer.getOverscanHeight());
       }
     });
   }
@@ -206,14 +269,12 @@ export default class VirtualizedList {
   insertItem<DataType>(item: ListItem<DataType>, index: number = this._tree.size, height: number | undefined = undefined): Promise<void> {
     const scrollableContainer = this._scrollableContainer;
 
-    const itemData = this._tree.insert(index, { item: item.outerHTML, size: height || 0 })!.data!;
+    // const itemData = this._tree.insert(index, { item: item.textContent, size: height || 0 })!.data!;
 
-    this._itemDataRegistry.set(item, itemData);
+    // this._itemDataRegistry.set(item, itemData);
 
-    scrollableContainer.appendItem(item);
-    scrollableContainer.setScrollHeight(scrollableContainer.getScrollHeight() + (height || 0));
-
-    this._enableOnNewItemsCB = true;
+    // scrollableContainer.appendItem(item);
+    // scrollableContainer.setScrollHeight(scrollableContainer.getScrollHeight() + (height || 0));
 
     const htmlElement = item.toHTMLElement(item.data);
 
