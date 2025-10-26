@@ -8,6 +8,7 @@ import OneTimeValue from './OneTimeValue';
 
 export type OnResizeCallback = (inlineSize: number, blockSize: number) => void;
 export type OnOverscanCallback = (scrolledPane: ScrolledPane, scrollTop: number, previousScrollTop: number) => void;
+export type OnScrollLimitCallback = OnOverscanCallback;
 export type OnReadBufferCallback = (buffer: ScrolledPaneBuffer, scrollTop: number, previousScrollTop: number) => void;
 export { type OverscanHeight, type OnNewItemsCallback };
 
@@ -23,6 +24,8 @@ export default class ScrollableContainer {
   private _onResizeCB: OnResizeCallback = () => {};
   private _onScrollDownOverscanCB: OnOverscanCallback = () => {};
   private _onScrollUpOverscanCB: OnOverscanCallback = () => {};
+  private _onScrollDownScrollLimitCB: OnScrollLimitCallback = () => {};
+  private _onScrollUpScrollLimitCB: OnScrollLimitCallback = () => {};
   private _onScrollDownEmptyBufferCB: OnReadBufferCallback = () => {};
   private _onScrollUpEmptyBufferCB: OnReadBufferCallback = () => {};
   private _onScrollDownReadBufferCB: OnReadBufferCallback = () => {};
@@ -184,6 +187,7 @@ export default class ScrollableContainer {
     const isScrollingDown = this.isScrollingDown();
     const isScrollingUp = this.isScrollingUp();
     const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
+    const extraOffset = 2;
 
     let isRemovalScheduled = false;
     let isInsertionScheduled = false;
@@ -202,8 +206,13 @@ export default class ScrollableContainer {
           requestAnimationFrame(this._insertItemsFromTopBuffer);
           isInsertionScheduled = true;
         }
-        
-        this._onScrollUpOverscanCB(scrolledPane, scrollTop, this._previousScrollTop);
+       
+        if (itemsHeightAccResult.top + extraOffset >= rootBounds.top + this.getOverscanHeight()) {
+          this._onScrollUpScrollLimitCB(scrolledPane, scrollTop, this._previousScrollTop);
+        }
+        else {
+          this._onScrollUpOverscanCB(scrolledPane, scrollTop, this._previousScrollTop);
+        }
       }
       else {
         this._scrolledPaneTopBuffer.cancelScheduledCallbacks();
@@ -219,7 +228,12 @@ export default class ScrollableContainer {
           isInsertionScheduled = true;
         }
 
-        this._onScrollDownOverscanCB(scrolledPane, scrollTop, this._previousScrollTop);
+        if (itemsHeightAccResult.bottom - extraOffset <= rootBounds.bottom - this.getOverscanHeight()) {
+          this._onScrollDownScrollLimitCB(scrolledPane, scrollTop, this._previousScrollTop);
+        }
+        else {
+          this._onScrollDownOverscanCB(scrolledPane, scrollTop, this._previousScrollTop);
+        }
       }
       else {
         this._scrolledPaneBottomBuffer.cancelScheduledCallbacks();
@@ -351,6 +365,14 @@ export default class ScrollableContainer {
   
   onScrollUpOverscan(cb: OnOverscanCallback) {
     this._onScrollUpOverscanCB = cb;
+  }
+
+  onScrollDownScrollLimit(cb: OnScrollLimitCallback) {
+    this._onScrollDownScrollLimitCB = cb;
+  }
+  
+  onScrollUpScrollLimit(cb: OnScrollLimitCallback) {
+    this._onScrollUpScrollLimitCB = cb;
   }
   
   onScrollDownEmptyBuffer(cb: OnReadBufferCallback) {

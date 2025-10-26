@@ -1,4 +1,4 @@
-import ScrollableContainer, { type OnOverscanCallback, type OverscanHeight } from "./ScrollableContainer";
+import ScrollableContainer, { type OnOverscanCallback, type OnScrollLimitCallback, type OverscanHeight } from "./ScrollableContainer";
 import OffsetTree, { type OffsetTreeNodeData } from "./OffsetTree";
 import FlexItemsMeasurer from "./FlexItemsMeasurer";
 import { createItemsHeightReducer } from "./reducers";
@@ -24,72 +24,71 @@ export default class VirtualizedList {
   private _flexRowHeightReducer = createItemsHeightReducer();
   private _flexRowHeightAcc = this._flexRowHeightReducer.getAccumulator();
 
-  private _onScrollOverscanCB: OnOverscanCallback = (
+  private _onScrollLimitCB: OnScrollLimitCallback = (
     scrolledPane,
     scrollTop, 
-    previousScrollTop, 
   ) => {
-    console.log('on overscan')
-    const scrollDelta = Math.abs(scrollTop - previousScrollTop);
-    const itemDataRegistry = this._itemDataRegistry;
+    console.log('on scroll limit');
+    console.warn('will render by offset');
+
     const scrollableContainer = this._scrollableContainer;
     const scrolledPaneHeight = scrolledPane.getBorderBoxHeight();
+    const firstItemInRange = this._tree.findByOffset<ListItem<unknown>>(scrollTop);
+    const minRowCount = 1;
+    const includeFirst = true;
 
-    if (scrollDelta > scrolledPaneHeight + this._scrollableContainer.getOverscanHeight()) {
-      console.warn('will render by offset');
+    if (firstItemInRange) {
+      scrollableContainer.scheduleClear();
+      this._itemDataRegistry.clear();
 
-      const firstItemInRange = this._tree.findByOffset<ListItem<unknown>>(scrollTop);
-      const minRowCount = 1;
-      const includeFirst = true;
-
-      if (firstItemInRange) {
-        this._scrollableContainer.scheduleClear();
-        this._itemDataRegistry.clear();
-
-        this._renderFromData(
-          this._scrollableContainer, 
-          firstItemInRange.data, 
-          'next', 
-          scrolledPaneHeight,
-          minRowCount,
-          includeFirst,
-        ); 
-
-        scrollableContainer.setInsertionAdjustment(1);
-      }
-    }
-    else {
-      console.log('will render one by one');
-
-      const isScrollingDown = scrollableContainer.isScrollingDown();
-      const isScrollingUp = scrollableContainer.isScrollingUp();
-      const minOverscanRowCount = this._overscanRowCount;
-      const includeFirst = false;
-
-      console.log(isScrollingDown ? 'scroll down' : isScrollingUp ? 'scroll up' : 'not scrolling')
-
-      const edgeItem = isScrollingDown 
-        ? scrolledPane.getLastItem() || scrollableContainer.getLastItem()
-        : isScrollingUp
-          ? scrolledPane.getFirstItem() || scrollableContainer.getFirstItem()
-          : null;
-
-      const edgeItemData = itemDataRegistry.get(edgeItem);
-      const renderDirection = isScrollingDown ? 'next' : isScrollingUp ? 'previous' : '';
-
-      if (!edgeItemData || !renderDirection) return;
-
-      const renderedHeight = this._renderFromData(
-        scrolledPane, 
-        edgeItemData,
-        renderDirection,
-        scrollableContainer.getOverscanHeight(),
-        minOverscanRowCount,
+      this._renderFromData(
+        scrollableContainer, 
+        firstItemInRange.data, 
+        'next', 
+        scrolledPaneHeight,
+        minRowCount,
         includeFirst,
-      );
+      ); 
 
-      scrollableContainer.setInsertionAdjustment(renderedHeight);
+      scrollableContainer.setInsertionAdjustment(1);
     }
+
+  };
+
+  private _onScrollOverscanCB: OnOverscanCallback = (
+    scrolledPane,
+  ) => {
+    console.log('on overscan')
+    console.log('will render one by one');
+
+    const itemDataRegistry = this._itemDataRegistry;
+    const scrollableContainer = this._scrollableContainer;
+    const isScrollingDown = scrollableContainer.isScrollingDown();
+    const isScrollingUp = scrollableContainer.isScrollingUp();
+    const minOverscanRowCount = this._overscanRowCount;
+    const includeFirst = false;
+
+    const edgeItem = isScrollingDown 
+      ? scrolledPane.getLastItem() || scrollableContainer.getLastItem()
+      : isScrollingUp
+        ? scrolledPane.getFirstItem() || scrollableContainer.getFirstItem()
+        : null;
+
+    const edgeItemData = itemDataRegistry.get(edgeItem);
+    const renderDirection = isScrollingDown ? 'next' : isScrollingUp ? 'previous' : '';
+
+    if (!edgeItemData || !renderDirection) return;
+
+    const renderedHeight = this._renderFromData(
+      scrolledPane, 
+      edgeItemData,
+      renderDirection,
+      scrollableContainer.getOverscanHeight(),
+      minOverscanRowCount,
+      includeFirst,
+    );
+
+    scrollableContainer.setInsertionAdjustment(renderedHeight);
   };
 
   /**
@@ -201,6 +200,8 @@ export default class VirtualizedList {
     // this._scrollableContainer.onScrollUpEmptyBuffer(this._onScrollOverscanCB);
     // this._scrollableContainer.onScrollDownReadBuffer(this._onScrollOverscanCB);
     // this._scrollableContainer.onScrollUpReadBuffer(this._onScrollOverscanCB);
+    this._scrollableContainer.onScrollDownScrollLimit(this._onScrollLimitCB);
+    this._scrollableContainer.onScrollUpScrollLimit(this._onScrollLimitCB);
     this._scrollableContainer.onScrollDownOverscan(this._onScrollOverscanCB);
     this._scrollableContainer.onScrollUpOverscan(this._onScrollOverscanCB);
     this._scrollableContainer.setOverscanHeight(overscanHeight);

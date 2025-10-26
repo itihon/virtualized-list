@@ -64,6 +64,14 @@ else {
     // scrollableContainer.scroll(offsetTop + removedItemsSize - padding,  addedItemsSize - removedItemsSize);
   });
   // 
+  scrollableContainer.onScrollDownScrollLimit(() => {
+    console.warn('onScrollDownScrollLimit');
+  });
+
+  scrollableContainer.onScrollUpScrollLimit(() => {
+    console.warn('onScrollUpScrollLimit');
+  });
+
   scrollableContainer.onScrollUpOverscan(() => {
     console.log('onScrollUpOverscan');
 
