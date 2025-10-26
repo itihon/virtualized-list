@@ -39,6 +39,7 @@
   position: relative;
   overflow: visible;
   transform: translateY(-100%);
+  contain: layout; /* isolate layout recalculation */
 }
 
 .class__ScrolledPane > * {
