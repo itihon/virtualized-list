@@ -150,6 +150,11 @@ export default class ScrolledPane extends DOMConstructor {
     this._paneElement.style.width = `${roundWidth}px`;
   }
 
+  set translateY(shiftY: number) {
+    const roundShiftY = Math.round(shiftY - this._borderBoxHeight); // includes `transform: translateY(-100%);` declaration set at `.class__ScrolledPane {} CSS rule`
+    this._paneElement.style.transform = `translateY(${roundShiftY}px)`;
+  }
+
   scheduleSizeUpdate() {
     this._resizeObserver.disconnect();
     this._resizeObserver.observe(this._paneElement);
