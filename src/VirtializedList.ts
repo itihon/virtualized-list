@@ -15,6 +15,8 @@ type RAFLoopCtx = {
   stopDelay: number;
 }
 
+const intervals:Set<number> = new Set();
+
 export default class VirtualizedList extends HTMLElement {
   // dependencies
   static RangeTree = RangeTree;
