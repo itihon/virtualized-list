@@ -200,7 +200,9 @@ export default class ScrollableContainer {
     }
      
     if (isScrollingUp) {
-      if (itemsHeightAccResult.top > rootBounds.top) {
+      const hasSpaceAtTheTop = this._scrolledPaneOffsetTop > 0;
+
+      if (itemsHeightAccResult.top > rootBounds.top && hasSpaceAtTheTop) {
 
         this._scrolledPaneTopBuffer.runScheduledCallbacks();
 
@@ -221,7 +223,9 @@ export default class ScrollableContainer {
       }
     }
     else if (isScrollingDown) {
-      if (itemsHeightAccResult.bottom < rootBounds.bottom) {
+      const hasSpaceAtTheBottom = Math.round(this._scrolledPaneOffsetTop + this._scrolledPaneScrollHeight) < this._scrollHeight;
+
+      if (itemsHeightAccResult.bottom < rootBounds.bottom && hasSpaceAtTheBottom) {
 
         this._scrolledPaneBottomBuffer.runScheduledCallbacks();
 
