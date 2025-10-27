@@ -28,9 +28,11 @@ export default class ScrolledPane extends DOMConstructor {
   private _entriesIndexMap: Map<Element, number> = new Map();
   private _ignoredEntries: Set<Element> = new Set();
   private _overscanHeight: OverscanHeight = '0px';
+  private _shiftY: number = 0;
   private _appendRAFID: number | null = null;
   private _prependRAFID: number | null = null;
   private _clearRAFID: number | null = null;
+  private _shiftYRAFID: number | null = null;
 
   private _applyAppend = () => {
     this._paneElement.append(this._tempContainer);
@@ -45,6 +47,11 @@ export default class ScrolledPane extends DOMConstructor {
   private _applyClear = () => {
     this.clear();
     this._clearRAFID = null;
+  }
+
+  private _applyShiftY = () => {
+    this.translateY = this._shiftY;
+    this._shiftYRAFID = null;
   }
 
   private _filterDuplicateEntries (entries: IntersectionObserverEntry[]): IntersectionObserverEntry[] {
@@ -247,6 +254,18 @@ export default class ScrolledPane extends DOMConstructor {
 
     while ((lastElementChild = paneElement.lastElementChild)) {
       lastElementChild.remove();
+    }
+  }
+
+  getShiftY(): number {
+    return this._shiftY;
+  }
+
+  scheduleShiftY(shiftY: number) {
+    this._shiftY = shiftY;
+
+    if (this._shiftYRAFID === null) {
+      this._shiftYRAFID = requestAnimationFrame(this._applyShiftY);
     }
   }
 
