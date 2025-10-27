@@ -510,7 +510,7 @@ export default class ScrollableContainer {
       this._fillerBottom.offsetHeight = scrollHeight - scrolledPaneHeight;
       this._scrolledPaneOffsetTop = 0;
     }
-    else if (newPosition + scrolledPaneScrollHeight > scrollHeight) {
+    else if (position + scrolledPaneScrollHeight > scrollHeight) {
       this._fillerTop.offsetHeight = scrollHeight - (scrolledPaneScrollHeight - scrolledPaneHeight);
       this._fillerBottom.offsetHeight = scrollHeight - this._fillerTop.offsetHeight;
       this._scrolledPaneOffsetTop = this._fillerTop.offsetHeight - scrolledPaneHeight;
