@@ -1,11 +1,11 @@
-import DOMConstructor, { DOMDivElement } from "./DOMConstructor";
+import DOMConstructor, { VLDivElement } from "./DOMConstructor";
 import ScrolledPane from "./ScrolledPane";
 
 export default class ScrolledPaneBuffer extends ScrolledPane {
   private _bufferElement: HTMLElement;
-  private _markerElement: DOMDivElement;
+  private _markerElement: VLDivElement;
 
-  private _preventMarkerUnmount = (markerElement: DOMDivElement) => {
+  private _preventMarkerUnmount = (markerElement: VLDivElement) => {
     const bufferElement = this._bufferElement;
 
     if (markerElement.parentElement !== bufferElement) {

@@ -1,6 +1,6 @@
-type LifecycleCallback = (element: DOMDivElement) => void;
+type LifecycleCallback = (element: VLDivElement) => void;
 
-export class DOMDivElement extends HTMLDivElement {
+export class VLDivElement extends HTMLElement {
   private _onMountedCB: LifecycleCallback = () => {};
   private _onUnmountedCB: LifecycleCallback = () => {};
 
@@ -21,22 +21,23 @@ export class DOMDivElement extends HTMLDivElement {
   }
 }
 
-customElements.define('domconstructor-div', DOMDivElement, { extends: 'div' });
+customElements.define('vl-div', VLDivElement);
 
 export default class DOMConstructor {
   private _parentContainer: HTMLElement;
-  private _DOMRoot: DOMDivElement;
+  private _DOMRoot: VLDivElement;
 
   constructor(parentContainer: HTMLElement, classList: string[]) {
     this._parentContainer = parentContainer;    
-    this._DOMRoot = new DOMDivElement();
+    // this._DOMRoot = new DOMDivElement();
+    this._DOMRoot = document.createElement('vl-div') as VLDivElement;
     this._DOMRoot.classList.add(...classList);
     requestAnimationFrame(() => {
       this._parentContainer.appendChild(this._DOMRoot);
     });
   }
 
-  get DOMRoot(): DOMDivElement {
+  get DOMRoot(): VLDivElement {
     return this._DOMRoot;
   }
 
