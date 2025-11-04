@@ -20,6 +20,7 @@ export default class VirtualizedList {
   private _tree: OffsetTree;
   private _itemDataRegistry: Map<HTMLElement | null, OffsetTreeNodeData<ListItem<unknown>>> = new Map();
   private _overscanRowCount: number = 10;
+  private _fastScrollShift: number = 1;
   private _portionToBeMeasured: Map<HTMLElement, ListItem<unknown>> = new Map();
   private _flexRowHeightReducer = createItemsHeightReducer();
   private _flexRowHeightAcc = this._flexRowHeightReducer.getAccumulator();
@@ -32,6 +33,7 @@ export default class VirtualizedList {
     console.warn('will render by offset');
 
     const scrollableContainer = this._scrollableContainer;
+    const isScrollingDown = scrollableContainer.isScrollingDown();
     const scrolledPaneHeight = scrolledPane.getBorderBoxHeight();
     const firstItemInRange = this._tree.findByOffset<ListItem<unknown>>(scrollTop);
     const minRowCount = 1;
@@ -41,16 +43,30 @@ export default class VirtualizedList {
       scrollableContainer.scheduleClear();
       this._itemDataRegistry.clear();
 
-      this._renderFromData(
+      const overscanHeight = scrollableContainer.getOverscanHeight();
+
+      const renderedHeight = this._renderFromData(
         scrollableContainer, 
         firstItemInRange.data, 
         'next', 
-        scrolledPaneHeight,
+        scrolledPaneHeight + overscanHeight,
         minRowCount,
         includeFirst,
       ); 
 
-      scrollableContainer.setInsertionAdjustment(1);
+      const firstItemHeight = firstItemInRange.data.height;
+      const overscanOffset = isScrollingDown ? firstItemHeight : overscanHeight;
+
+      scrollableContainer.scheduleScrolledPaneAdjustment(
+        scrollTop - overscanOffset,
+        renderedHeight,
+        renderedHeight - scrolledPaneHeight * 2,
+      );
+
+      const sign = isScrollingDown ? -1 : 1;
+      const scrolledPaneShift = firstItemInRange.data.offset - scrollTop;
+
+      scrolledPane.scheduleShiftY(scrolledPaneShift * sign * this._fastScrollShift);
     }
 
   };
@@ -89,6 +105,7 @@ export default class VirtualizedList {
     );
 
     scrollableContainer.setInsertionAdjustment(renderedHeight);
+    scrolledPane.scheduleShiftY(0);
   };
 
   /**
@@ -287,5 +304,9 @@ export default class VirtualizedList {
 
   setOverscanHeight(overscanHeight: OverscanHeight) {
     this._scrollableContainer.setOverscanHeight(overscanHeight);
+  }
+
+  setFastScrollShift(shift: number) {
+    this._fastScrollShift = shift;
   }
 }
