@@ -203,16 +203,16 @@ export default class ScrollableContainer {
 
     let isRemovalScheduled = false;
     let isInsertionScheduled = false;
-
-    if (rowsNumberToRemove) {
-      requestAnimationFrame(this._removeNotIntersectedItems);
-      isRemovalScheduled = true;
-    }
      
     if (isScrollingUp) {
       if (itemsHeightAccResult.top > rootBounds.top / scaleFactor) {
 
         this._scrolledPaneTopBuffer.runScheduledCallbacks();
+
+        if (rowsNumberToRemove) {
+          requestAnimationFrame(this._removeNotIntersectedItems);
+          isRemovalScheduled = true;
+        }
 
         if (this._scrolledPaneTopBuffer.length) {
           requestAnimationFrame(this._insertItemsFromTopBuffer);
@@ -234,6 +234,11 @@ export default class ScrollableContainer {
       if (itemsHeightAccResult.bottom < rootBounds.bottom / scaleFactor) {
 
         this._scrolledPaneBottomBuffer.runScheduledCallbacks();
+
+        if (rowsNumberToRemove) {
+          requestAnimationFrame(this._removeNotIntersectedItems);
+          isRemovalScheduled = true;
+        }
 
         if (this._scrolledPaneBottomBuffer.length) {
           requestAnimationFrame(this._insertItemsFromBottomBuffer);
