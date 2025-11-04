@@ -13,6 +13,7 @@
   position: relative;
   visibility: hidden;
   z-index: -1;
+  will-change: height;
 }
 
 .Filler__ScrollHeight {
@@ -28,6 +29,8 @@
   display: block;
   position: relative;
   overflow: auto;
+  contain: layout paint;
+  will-change: scroll-position;
 }
 
 .class__StickyContainer {
@@ -37,6 +40,7 @@
   top: calc(var(--scroll-limit) * -1);
   bottom: 0px;
   height: 0px;
+  will-change: top;
 }
 
 .class__ScrolledPane {
@@ -45,6 +49,7 @@
   overflow: visible;
   transform: translateY(-100%);
   contain: layout; /* isolate layout recalculation */
+  will-change: contents;
 }
 
 .class__ScrolledPane > * {
