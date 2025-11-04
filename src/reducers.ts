@@ -49,6 +49,7 @@ export type FlexRowsAccumulator = {
   collectTop: boolean;
   collectBottom: boolean;
   minRowsNumber: number;
+  scaleFactor: number;
 }
 
 type ItemsHeightReducer = ReducerFunction<ItemsHeightAccumulator, IntersectionObserverEntry>;
@@ -61,6 +62,7 @@ export type InitFlexRowsAccOptions = [{
   collectTop?: boolean;
   collectBottom?: boolean;
   minRowsNumber?: number;
+  scaleFactor?: number;
 }] | [];
 
 type FlexRowsReducer = ReducerFunction<FlexRowsAccumulator, IntersectionObserverEntry>;
@@ -115,8 +117,9 @@ const flexRowsReducer: FlexRowsReducer = (acc, entry, entries) => {
   const ignoreCollectRules = acc.intersection || acc.ignoreRowIntersection;
   const collectTop = acc.collectTop || ignoreCollectRules;
   const collectBottom = acc.collectBottom || ignoreCollectRules;
-  const isTop = acc.itemsHeightAcc!.bottom <= entry.rootBounds!.top || ignoreCollectRules;
-  const isBottom = acc.itemsHeightAcc!.top >= entry.rootBounds!.bottom || ignoreCollectRules;
+  const scaleFactor = acc.scaleFactor;
+  const isTop = acc.itemsHeightAcc!.bottom <= entry.rootBounds!.top / scaleFactor || ignoreCollectRules;
+  const isBottom = acc.itemsHeightAcc!.top >= entry.rootBounds!.bottom / scaleFactor || ignoreCollectRules;
 
   if (resultingRowWidth > acc.flexboxWidth) {
     const { top, bottom, height } = acc.itemsHeightAcc!;
@@ -172,6 +175,7 @@ const initFlexRowsAcc: InitFlexRowsAcc = (
     collectTop = true, 
     collectBottom = true,  
     minRowsNumber = 0,
+    scaleFactor = 1,
   } = {},
 ) => {
   const flexboxStyle = getComputedStyle(flexbox);
@@ -194,6 +198,7 @@ const initFlexRowsAcc: InitFlexRowsAcc = (
   acc.collectTop = collectTop;
   acc.collectBottom = collectBottom;
   acc.minRowsNumber = minRowsNumber;
+  acc.scaleFactor = scaleFactor;
   return acc;
 };
 
@@ -218,6 +223,7 @@ export const createFlexRowsReducer = () =>
       collectTop: true, 
       collectBottom: true,  
       minRowsNumber: 0,
+      scaleFactor: 1,
     }, 
     initFlexRowsAcc,
   );

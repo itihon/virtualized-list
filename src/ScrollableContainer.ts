@@ -124,19 +124,25 @@ export default class ScrollableContainer {
 
   private _initAccumulators = () => {
     const scrolledPane = this._scrolledPane;
+    const contentBoxWidth = scrolledPane.getContentBoxWidth();
+    const scaleFactor = scrolledPane.getScaleFactor();
+    const paneElement = scrolledPane.DOMRoot;
     const isScrollingDown = this.isScrollingDown();
     const isScrollingUp = this.isScrollingUp();
 
     this._itemsHeightAcc.init();
+
     this._intersectedEntriesAcc.init(
-      scrolledPane.DOMRoot, 
-      scrolledPane.getContentBoxWidth(),
-      { intersection: true }, // do not create a new object every time !
+      paneElement, 
+      contentBoxWidth,
+      { scaleFactor, intersection: true }, // do not create a new object every time !
     );
+
     this._notIntersectedEntriesAcc.init(
-      scrolledPane.DOMRoot, 
-      scrolledPane.getContentBoxWidth(),
+      paneElement, 
+      contentBoxWidth,
       { 
+        scaleFactor,
         collectTop: isScrollingDown,
         collectBottom: isScrollingUp,
       }, // do not create a new object every time !
@@ -148,6 +154,7 @@ export default class ScrollableContainer {
       this._scrolledPaneTopBuffer.DOMRoot,
       this._scrolledPaneTopBuffer.getContentBoxWidth(),
       {
+        scaleFactor: this._scrolledPaneTopBuffer.getScaleFactor(),
         ignoreLastRow: true,
         ignoreRowIntersection: true,
         minRowsNumber: 2,
@@ -160,6 +167,7 @@ export default class ScrollableContainer {
       this._scrolledPaneBottomBuffer.DOMRoot,
       this._scrolledPaneBottomBuffer.getContentBoxWidth(),
       {
+        scaleFactor: this._scrolledPaneBottomBuffer.getScaleFactor(),
         ignoreLastRow: true,
         ignoreRowIntersection: true,
         minRowsNumber: 2,
@@ -189,7 +197,9 @@ export default class ScrollableContainer {
     const isScrollingDown = this.isScrollingDown();
     const isScrollingUp = this.isScrollingUp();
     const rowsNumberToRemove = notIntersectedEntriesAccResult.rows.length;
+    const scrolledPaneShiftY = scrolledPane.getShiftY();
     const extraOffset = 2;
+    const scaleFactor = scrolledPane.getScaleFactor(); // WebKit reports rootBounds unscaled coordinates.
 
     let isRemovalScheduled = false;
     let isInsertionScheduled = false;
@@ -200,7 +210,7 @@ export default class ScrollableContainer {
     }
      
     if (isScrollingUp) {
-      if (itemsHeightAccResult.top > rootBounds.top) {
+      if (itemsHeightAccResult.top > rootBounds.top / scaleFactor) {
 
         this._scrolledPaneTopBuffer.runScheduledCallbacks();
 
@@ -208,8 +218,8 @@ export default class ScrollableContainer {
           requestAnimationFrame(this._insertItemsFromTopBuffer);
           isInsertionScheduled = true;
         }
-       
-        if (itemsHeightAccResult.top + extraOffset >= rootBounds.top + this.getOverscanHeight()) {
+      
+        if (itemsHeightAccResult.top + extraOffset - scrolledPaneShiftY >= rootBounds.top / scaleFactor + this.getOverscanHeight()) {
           this._onScrollUpScrollLimitCB(scrolledPane, scrollTop, this._previousScrollTop);
         }
         else {
@@ -221,7 +231,7 @@ export default class ScrollableContainer {
       }
     }
     else if (isScrollingDown) {
-      if (itemsHeightAccResult.bottom < rootBounds.bottom) {
+      if (itemsHeightAccResult.bottom < rootBounds.bottom / scaleFactor) {
 
         this._scrolledPaneBottomBuffer.runScheduledCallbacks();
 
@@ -230,7 +240,7 @@ export default class ScrollableContainer {
           isInsertionScheduled = true;
         }
 
-        if (itemsHeightAccResult.bottom - extraOffset <= rootBounds.bottom - this.getOverscanHeight()) {
+        if (itemsHeightAccResult.bottom - extraOffset - scrolledPaneShiftY <= rootBounds.bottom / scaleFactor - this.getOverscanHeight()) {
           this._onScrollDownScrollLimitCB(scrolledPane, scrollTop, this._previousScrollTop);
         }
         else {
