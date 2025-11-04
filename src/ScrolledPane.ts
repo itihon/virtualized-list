@@ -15,6 +15,7 @@ export default class ScrolledPane extends DOMConstructor {
   private _tempContainer = document.createDocumentFragment();
   private _contentBoxWidth: number = 0;
   private _borderBoxHeight: number = 0;
+  private _scaleFactor: number = 1;
   private _resizeObserver: ResizeObserver;
   private _observer: IntersectionObserver;
   private _onEachEntryMeasuredCB: OnEachEntryMeasuredCallback = () => {};
@@ -90,6 +91,13 @@ export default class ScrolledPane extends DOMConstructor {
     const paneElement = this._paneElement;
     const filteredEntries = this._filterDuplicateEntries(entries);
     const entriesCount = filteredEntries.length;
+    const rootElement = this._observerRoot;
+
+    this._scaleFactor = entries[0].rootBounds!.left / (
+      rootElement.getBoundingClientRect().left + parseFloat(
+        getComputedStyle(rootElement).borderLeftWidth,
+      )
+    ); // WebKit reports rootBounds unscaled coordinates.
 
     this._onBeforeEntriesMeasuredCB(filteredEntries, observer);
 
@@ -236,6 +244,10 @@ export default class ScrolledPane extends DOMConstructor {
 
   getBorderBoxHeight(): number {
     return this._borderBoxHeight;
+  }
+
+  getScaleFactor(): number {
+    return this._scaleFactor;
   }
 
   appendItem(item: Element) {
