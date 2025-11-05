@@ -2,7 +2,16 @@ import RequestAnimationFrameLoop, { type RequestAnimationFrameStateCallback } fr
 import { createFlexRowsReducer, type FlexRowsAccumulator } from "./reducers";
 import type { OnAllEntriesMeasuredCallback, OnBeforeEntriesMeasuredCallback, OnEachEntryMeasuredCallback, OnNewItemsCallback } from "./ScrolledPane";
 import ScrolledPaneBuffer from "./ScrolledPaneBuffer";
-import styleSheet from './ScrollableContainer.css?inline';
+// import styleSheet from './ScrollableContainer.css?inline';
+
+// collect styles from the document in order to have the same in a hidden iframe
+let styleSheet = '';
+
+for (const style of document.styleSheets) {
+  for (const cssRule of style.cssRules) {
+    styleSheet += cssRule.cssText;
+  }
+}
 
 const WARNING_MESSAGE = 'This method is not supposed to be invoked on FlexItemsMeasurer';
 
