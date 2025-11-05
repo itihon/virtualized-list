@@ -308,6 +308,7 @@ export default class ScrollableContainer {
     scrolledPaneBottomBuffer.offsetWidth = inlineSize;
     scrolledPaneBottomBuffer.offsetHeight = blockSize;
 
+    this.setOverscanHeight(scrolledPane.getOverscan());
     this.setScrollHeight(this._scrollHeight); 
     this._onResizeCB(inlineSize, blockSize);
   };
