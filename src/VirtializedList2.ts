@@ -188,7 +188,7 @@ export default class VirtualizedList {
     return renderedHeight;
   }
 
-  private _renderRange(from: number, to: number) {
+  private _renderRange(from: number, to: number): number {
     const firstItemInRange = this._tree.findByOffset<ListItem<unknown>>(from);
     const minRowCount = this._overscanRowCount;
     const includeFirst = true;
@@ -197,7 +197,7 @@ export default class VirtualizedList {
       this._scrollableContainer.clear();
       this._itemDataRegistry.clear();
 
-      this._renderFromData(
+      return this._renderFromData(
         this._scrollableContainer, 
         firstItemInRange.data, 
         'next', 
@@ -206,6 +206,8 @@ export default class VirtualizedList {
         includeFirst,
       ); 
     }
+
+    return 0;
   }
 
   constructor(container: HTMLElement, overscanHeight: OverscanHeight = '100%') {
@@ -279,7 +281,12 @@ export default class VirtualizedList {
       });
 
       if (shouldBeRendered) {
-        this._renderRange(scrollableContainerTop, scrollableContainerBottom + scrollableContainer.getOverscanHeight());
+        const renderedHeight = this._renderRange(scrollableContainerTop, scrollableContainerBottom + scrollableContainer.getOverscanHeight());
+        scrollableContainer.scheduleScrolledPaneAdjustment(
+          scrollableContainerTop, 
+          renderedHeight, 
+          renderedHeight - (scrollableContainerBottom - scrollableContainerTop),
+        );
       }
     });
   }
