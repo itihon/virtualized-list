@@ -31,6 +31,7 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
     ignoreLastRow: true,
     ignoreRowIntersection: true,
     minRowsNumber: 2, // !! this parameter should probably be set to 1 since addIgnoredEntry() was added in #6a059b8013
+    scaleFactor: 1,
   };
   private _fromRowNumber: number = 0;
   private _toRowNumber: number = 0;
@@ -82,11 +83,15 @@ export default class FlexItemsMeasurer extends ScrolledPaneBuffer {
   };
 
   private _initAccumulator = () => {
-    this._flexRowsReducerCfg.ignoreLastRow = this._currentItemIndex !== this._items.length;
+    const options = this._flexRowsReducerCfg;
+
+    options.ignoreLastRow = this._currentItemIndex !== this._items.length;
+    options.scaleFactor = this.getScaleFactor();
+
     this._flexRowsReducer.init(
       this.DOMRoot,
       this.getContentBoxWidth(),
-      this._flexRowsReducerCfg,
+      options,
     );
   }
 
