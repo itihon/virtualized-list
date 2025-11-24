@@ -19,7 +19,7 @@ export default class VirtualizedList {
   private _scrollableContainer: ScrollableContainer;
   private _tree: OffsetTree;
   private _itemDataRegistry: Map<HTMLElement | null, OffsetTreeNodeData<ListItem<unknown>>> = new Map();
-  private _overscanRowCount: number = 10;
+  private _minOverscanRowCount: number = 10;
   private _fastScrollShift: number = 1;
   private _portionToBeMeasured: Map<HTMLElement, ListItem<unknown>> = new Map();
   private _flexRowHeightReducer = createItemsHeightReducer();
@@ -81,7 +81,7 @@ export default class VirtualizedList {
     const scrollableContainer = this._scrollableContainer;
     const isScrollingDown = scrollableContainer.isScrollingDown();
     const isScrollingUp = scrollableContainer.isScrollingUp();
-    const minOverscanRowCount = this._overscanRowCount;
+    const minOverscanRowCount = this._minOverscanRowCount;
     const includeFirst = false;
 
     const edgeItem = isScrollingDown 
@@ -132,7 +132,7 @@ export default class VirtualizedList {
     fromData: OffsetTreeNodeData<ListItem<unknown>>, 
     direction: 'next' | 'previous',
     stretch: number, 
-    minItemsCount = this._overscanRowCount,
+    minItemsCount = this._minOverscanRowCount,
     includeFirst = false,
   ): number {
     const itemDataRegistry = this._itemDataRegistry;
@@ -190,7 +190,7 @@ export default class VirtualizedList {
 
   private _renderRange(from: number, to: number): number {
     const firstItemInRange = this._tree.findByOffset<ListItem<unknown>>(from);
-    const minRowCount = this._overscanRowCount;
+    const minRowCount = this._minOverscanRowCount;
     const includeFirst = true;
 
     if (firstItemInRange) {
@@ -315,5 +315,9 @@ export default class VirtualizedList {
 
   setFastScrollShift(shift: number) {
     this._fastScrollShift = shift;
+  }
+
+  setMinOverscanRowCount(rowCount: number) {
+    this._minOverscanRowCount = rowCount;
   }
 }
