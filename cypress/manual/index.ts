@@ -1,4 +1,4 @@
-import VirtualizedList, { type ListItem } from "../../src/VirtializedList2";
+import VirtualizedList, { type ListItem } from "../../src/VirtualizedList2";
 import '../../src/style.css';
 
 // // --------- virtualized list test

@@ -1,2 +1,2 @@
-import VirtualizedList from './VirtializedList.js';
+import VirtualizedList from './VirtualizedList.js';
 export default VirtualizedList;
