@@ -92,7 +92,10 @@ export default class ScrolledPane extends DOMConstructor {
     const filteredEntries = this._filterDuplicateEntries(entries);
     const entriesCount = filteredEntries.length;
 
-    this._scaleFactor = entries[0].rootBounds!.width / this.getContentBoxWidth(); // WebKit reports rootBounds unscaled coordinates.
+    // this._scaleFactor = entries[0].rootBounds!.width / this.getContentBoxWidth(); // WebKit reports rootBounds unscaled coordinates.
+    this._scaleFactor = entries[0].rootBounds!.width / (
+      this._observerRoot.getBoundingClientRect().width - (parseFloat(getComputedStyle(this._observerRoot).borderLeftWidth) + parseFloat(getComputedStyle(this._observerRoot).borderRightWidth))
+    ); // WebKit reports rootBounds unscaled coordinates.
 
     this._onBeforeEntriesMeasuredCB(filteredEntries, observer);
 
