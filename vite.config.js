@@ -4,6 +4,11 @@ import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
   if (mode === 'development') {
     return {
+      css: {
+        modules: {
+          localsConvention: 'camelCase',
+        },
+      },
       server: {
         host: '0.0.0.0',
       },
