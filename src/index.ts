@@ -3,3 +3,5 @@
  * @license MIT
  * @author Alexandr Kalabin
  */
+
+console.log('')
