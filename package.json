@@ -40,6 +40,7 @@
     "build:demo": "vite build -c vite.demo.config.js -m DEMO_BUILD",
     "dev:demo": "vite -c vite.demo.config.js -m DEMO_DEV",
     "testserver": "vite -c vite.tests.config.js",
+    "test:playwright": "docker run --rm --ipc=host --network=host -v \"$(pwd):/work\" -w /work mcr.microsoft.com/playwright:v1.57.0-noble npx playwright test",
     "preview": "vite preview",
     "format:check": "prettier {src,test}/**/*.{js,ts,css} --check --no-error-on-unmatched-pattern",
     "format:write": "prettier {src,test}/**/*.{js,ts,css} --write --no-error-on-unmatched-pattern",
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@playwright/test": "^1.57.0",
     "@types/prismjs": "^1.26.5",
     "@types/wicg-file-system-access": "^2023.10.6",
     "cypress": "^14.5.0",
