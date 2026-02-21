@@ -10,15 +10,9 @@ const files = [
 ];
 
 export default defineConfig([
-  { files, plugins: { js, headers }, extends: ["js/recommended"] },
-  { files, languageOptions: { globals: globals.browser } },
-  tseslint.configs.recommended.map(cfg => ({ ...cfg, files })),
-  {
-    rules: {
-      "@typescript-eslint/no-this-alias": "off"
-    }
-  },
-  {
+  { 
+    files, 
+    plugins: { js, headers }, 
     rules: {
       "headers/header-format": [
         "error",
@@ -39,5 +33,15 @@ export default defineConfig([
         },
       ],
     },
+  extends: ["js/recommended"],  
+  },
+  { files, languageOptions: { globals: globals.browser } },
+  tseslint.configs.recommended.map(cfg => ({ ...cfg, files })),
+  {
+    rules: {
+      "@typescript-eslint/no-this-alias": "off"
+    }
+  },
+  {
   }
 ]);
