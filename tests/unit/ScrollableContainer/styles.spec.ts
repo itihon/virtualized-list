@@ -56,6 +56,7 @@ test.describe('Scrollable Container Styles', () => {
       return {
         display: cs.display,
         position: cs.position,
+        top: cs.top,
         width: cs.width,
         height: cs.height,
         overflow: cs.overflow,
@@ -64,6 +65,7 @@ test.describe('Scrollable Container Styles', () => {
 
     expect(styles.display).toBe('block');
     expect(styles.position).toBe('sticky');
+    expect(styles.top).toBe('0px');
     // width and height should be 100% of parent — check they are non-zero and equal parent dimensions
     const parentDimensions = await el.evaluate((node) => {
       const parent = node.parentElement;
