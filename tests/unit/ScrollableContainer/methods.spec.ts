@@ -21,8 +21,17 @@ test.describe('Scrollable Container Methods', () => {
   });
 
   test('setScrollHeight() method', async () => {
+    const scrollableContainer = page.locator('.scrollableContainer').first();
     const scrollHeightFiller = page.locator('.scrollHeightFiller').first();
     const scrolledPane = page.locator('.scrolledPane').first();
+
+    const scHeight = await scrollableContainer.evaluate(
+      (node) => getComputedStyle(node).height
+    );
+
+    const scScrollHeight = await scrollableContainer.evaluate(
+      (node) => node.scrollHeight
+    );
 
     const shfHeight = await scrollHeightFiller.evaluate(
       (node) => getComputedStyle(node).height
@@ -32,6 +41,7 @@ test.describe('Scrollable Container Methods', () => {
       (node) => getComputedStyle(node).height
     );
 
+    expect(scScrollHeight - parseInt(scHeight)).toBe(9951);
     expect(shfHeight).toBe(`${scrollHeight}px`);
     expect(spHeight).toBe(`${scrollHeight}px`);
   });
