@@ -11,13 +11,46 @@
       import ScrollableContainer from '../../src/ScrollableContainer/ScrollableContainer.ts';
 
       const container = document.createElement('div');
+      const nonVirtualizedContainer = document.createElement('div');
       const scrollableContainer = new ScrollableContainer(container);
+
+      function createItem(content = '') {
+        const item = document.createElement('div');
+
+        item.style.height = '20px';
+        item.style.outline = '1px solid royalblue';
+        item.textContent = content;
+
+        return item;
+      }
 
       container.style.width = '100px';
       container.style.height = '150px';
+      container.style.position = 'relative';
+
+      nonVirtualizedContainer.style.width = '100px';
+      nonVirtualizedContainer.style.height = '150px';
+      nonVirtualizedContainer.style.position = 'relative';
+      nonVirtualizedContainer.style.overflowY = 'auto';
+      nonVirtualizedContainer.style.marginTop = '16px';
+
+      scrollableContainer.setScrollHeight(200000);
+
+      for (let i = 0; i < 10000; i++) {
+        scrollableContainer.appendItem(createItem(`Item ${i}.`));
+        nonVirtualizedContainer.appendChild(createItem(`Item ${i}.`));
+      }
+
+      scrollableContainer.onScroll((e) => {
+        new IntersectionObserver((_, observer) => {
+          scrollableContainer.moveScrolledPane(-e.target.scrollTop);
+          observer.unobserve(container);
+        }).observe(container);
+      });
 
       window.scrollableContainer = scrollableContainer;
       document.body.appendChild(container);
+      document.body.appendChild(nonVirtualizedContainer);
     </script>
   </body>
 </html>
