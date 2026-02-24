@@ -9,7 +9,7 @@ test.describe('Scrollable Container Behavior', () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.viewportContainer > .scrolledPane');
+    await page.waitForSelector('.viewportContainer > .contentLayer');
 
     await page.evaluate((scrollHeight) => {
       ((window as any).scrollableContainer as ScrollableContainer).setScrollHeight(scrollHeight);

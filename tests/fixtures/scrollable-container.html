@@ -43,7 +43,7 @@
 
       scrollableContainer.onScroll((e) => {
         new IntersectionObserver((_, observer) => {
-          scrollableContainer.moveScrolledPane(-e.target.scrollTop);
+          scrollableContainer.updateContentPosition(-e.target.scrollTop);
           observer.unobserve(container);
         }).observe(container);
       });

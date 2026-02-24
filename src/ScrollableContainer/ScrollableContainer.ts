@@ -11,8 +11,8 @@ import extractTYValue from './extractTYValue';
 export default class ScrollableContainer {
   private _container: HTMLElement;
   private _scrollHeightFiller: DOMConstructor;
-  private _scrolledPane: DOMConstructor;
   private _viewportContainer: DOMConstructor;
+  private _contentLayer: DOMConstructor;
   private _scrollAnimation: Animation;
   private _previousPosition = 0;
 
@@ -20,21 +20,21 @@ export default class ScrollableContainer {
     this._container = container;
     this._scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
     this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
-    this._scrolledPane = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.scrolledPane]);
+    this._contentLayer = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.contentLayer]);
     this._container.classList.add(classes.scrollableContainer);
-    this._scrollAnimation = this._scrolledPane.DOMRoot.animate({ transform: `translateY(0)`}, { fill: 'forwards' });
+    this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`}, { fill: 'forwards' });
   }
 
   setScrollHeight(scrollHeight: number) {
     this._scrollHeightFiller.setHeight(scrollHeight);
-    this._scrolledPane.setHeight(scrollHeight);
+    this._contentLayer.setHeight(scrollHeight);
   }
 
   onScroll(cb: EventListener) {
     this._container.addEventListener('scroll', cb);
   }
 
-  moveScrolledPane(position: number) {
+  updateContentPosition(offset: number) {
 
     const duration = 4;
     const easing = 'cubic-bezier(0.33, 0.66, 0.66, 1)';
@@ -42,23 +42,23 @@ export default class ScrollableContainer {
     let currentPosition: number | null = null;
 
     if (this._scrollAnimation.playState !== 'finished') {
-      currentPosition = extractTYValue(getComputedStyle(this._scrolledPane.DOMRoot).transform);
+      currentPosition = extractTYValue(getComputedStyle(this._contentLayer.DOMRoot).transform);
       this._scrollAnimation.cancel();
     }
     
-    this._scrollAnimation = this._scrolledPane.DOMRoot.animate(
+    this._scrollAnimation = this._contentLayer.DOMRoot.animate(
       [
         { transform: `translateY(${currentPosition || this._previousPosition}px)`, composite: 'replace', offset: 0 }, 
-        { transform: `translateY(${position}px)`, composite: 'replace', offset: 1 }, 
+        { transform: `translateY(${offset}px)`, composite: 'replace', offset: 1 }, 
       ],
       { duration, fill: 'forwards', playbackRate: 1, easing },
     );
 
     this._scrollAnimation.currentTime = 1;
-    this._previousPosition = position;
+    this._previousPosition = offset;
   }
 
   appendItem(item: HTMLElement) {
-    this._scrolledPane.DOMRoot.appendChild(item);
+    this._contentLayer.DOMRoot.appendChild(item);
   }
 }

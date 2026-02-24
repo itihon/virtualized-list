@@ -9,7 +9,7 @@ test.describe('Scrollable Container Methods', () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.viewportContainer > .scrolledPane');
+    await page.waitForSelector('.viewportContainer > .contentLayer');
 
     await page.evaluate((scrollHeight) => {
       ((window as any).scrollableContainer as ScrollableContainer).setScrollHeight(scrollHeight);
@@ -23,7 +23,7 @@ test.describe('Scrollable Container Methods', () => {
   test('setScrollHeight() method', async () => {
     const scrollableContainer = page.locator('.scrollableContainer').first();
     const scrollHeightFiller = page.locator('.scrollHeightFiller').first();
-    const scrolledPane = page.locator('.scrolledPane').first();
+    const contentLayer = page.locator('.contentLayer').first();
 
     const scHeight = await scrollableContainer.evaluate(
       (node) => getComputedStyle(node).height
@@ -37,7 +37,7 @@ test.describe('Scrollable Container Methods', () => {
       (node) => getComputedStyle(node).height
     );
 
-    const spHeight = await scrolledPane.evaluate(
+    const spHeight = await contentLayer.evaluate(
       (node) => getComputedStyle(node).height
     );
 

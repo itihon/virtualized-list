@@ -7,7 +7,7 @@ test.describe('Scrollable Container Styles', () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForSelector('.viewportContainer > .scrolledPane');
+    await page.waitForSelector('.viewportContainer > .contentLayer');
   });
 
   test.afterAll(async () => {
@@ -82,8 +82,8 @@ test.describe('Scrollable Container Styles', () => {
     expect(styles.overflow).toBe('hidden');
   });
 
-  test('.scrolledPane has correct styles', async () => {
-    const el = page.locator('.scrolledPane').first();
+  test('.contentLayer has correct styles', async () => {
+    const el = page.locator('.contentLayer').first();
     await expect(el).toBeAttached();
 
     const styles = await el.evaluate((node) => {
