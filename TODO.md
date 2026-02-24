@@ -1,1 +1,1 @@
-- [ ] 
+- [ ] make separate fixtures for manual and auto tests 
