@@ -34,7 +34,7 @@ export default class ScrollableContainer {
     this._container.addEventListener('scroll', cb);
   }
 
-  updateContentPosition(offset: number) {
+  updateContentPosition(offset: number): Promise<Animation> {
 
     const duration = 4;
     const easing = 'cubic-bezier(0.33, 0.66, 0.66, 1)';
@@ -56,6 +56,8 @@ export default class ScrollableContainer {
 
     this._scrollAnimation.currentTime = 1;
     this._previousPosition = offset;
+
+    return this._scrollAnimation.finished;
   }
 
   appendItem(item: HTMLElement) {
