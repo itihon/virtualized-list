@@ -37,13 +37,13 @@ test.describe('Scrollable Container Methods', () => {
       (node) => getComputedStyle(node).height
     );
 
-    const spHeight = await contentLayer.evaluate(
+    const clHeight = await contentLayer.evaluate(
       (node) => getComputedStyle(node).height
     );
 
     expect(scScrollHeight - parseInt(scHeight)).toBe(9951);
     expect(shfHeight).toBe(`${scrollHeight}px`);
-    expect(spHeight).toBe(`${scrollHeight}px`);
+    expect(clHeight).toBe(`${scrollHeight}px`);
   });
 
   test('updateContentPosition() moves content layer correctly', async () => {
