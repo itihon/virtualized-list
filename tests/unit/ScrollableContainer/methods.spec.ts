@@ -52,34 +52,23 @@ test.describe('Scrollable Container Methods', () => {
     const scrollHeight = await container.evaluate(node => node.scrollHeight);
     const containerTop = await container.evaluate(node => node.getBoundingClientRect().top);
 
+    const updateContentPosition = async (offset: number) => {
+      await ((window as any).scrollableContainer as ScrollableContainer).updateContentPosition(offset);
+    };
+
     // scroll halfway
-    await page.evaluate(async (offset) => {
-      const scrollableContainer = ((window as any).scrollableContainer as ScrollableContainer);
-      await scrollableContainer.updateContentPosition(offset);
-    }, scrollHeight / 2);
-
+    await page.evaluate(updateContentPosition, scrollHeight / 2);
     const halfTop = await contentLayer.evaluate(node => node.getBoundingClientRect().top);
-
     expect(halfTop).toBe(-((scrollHeight / 2) - containerTop));
 
     // scroll to end
-    await page.evaluate(async (offset) => {
-      const scrollableContainer = ((window as any).scrollableContainer as ScrollableContainer);
-      await scrollableContainer.updateContentPosition(offset);
-    }, scrollHeight);
-
+    await page.evaluate(updateContentPosition, scrollHeight);
     const endTop = await contentLayer.evaluate(node => node.getBoundingClientRect().top);
-
     expect(endTop).toBe(-(scrollHeight - containerTop));
 
     // scroll back to start
-    await page.evaluate(async (offset) => {
-      const scrollableContainer = ((window as any).scrollableContainer as ScrollableContainer);
-      await scrollableContainer.updateContentPosition(offset);
-    }, 0);
-
+    await page.evaluate(updateContentPosition, 0);
     const startTop = await contentLayer.evaluate(node => node.getBoundingClientRect().top);
-
     expect(startTop).toBe(containerTop);
   });
 });
