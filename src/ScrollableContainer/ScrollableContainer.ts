@@ -48,8 +48,8 @@ export default class ScrollableContainer {
     
     this._scrollAnimation = this._contentLayer.DOMRoot.animate(
       [
-        { transform: `translateY(${currentPosition || this._previousPosition}px)`, composite: 'replace', offset: 0 }, 
-        { transform: `translateY(${offset}px)`, composite: 'replace', offset: 1 }, 
+        { transform: `translateY(${-(currentPosition || this._previousPosition)}px)`, composite: 'replace', offset: 0 }, 
+        { transform: `translateY(${-offset}px)`, composite: 'replace', offset: 1 }, 
       ],
       { duration, fill: 'forwards', playbackRate: 1, easing },
     );
