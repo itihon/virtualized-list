@@ -15,7 +15,7 @@ export default class ScrollableContainer {
   private _contentLayer: DOMConstructor;
   private _scrollAnimation: Animation;
   private _previousPosition = 0;
-  private _animationOptions: KeyframeAnimationOptions = { duration: 4, fill: 'forwards', playbackRate: 1, easing: 'cubic-bezier(0.33, 0.66, 0.66, 1)' };
+  private _animationOptions: KeyframeAnimationOptions = { duration: 4, fill: 'forwards', playbackRate: 1, easing: 'cubic-bezier(0, 0.49, 0.03, 0.42)' };
   private _previousKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 0 };
   private _nextKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 1 }; 
 
