@@ -15,6 +15,9 @@ export default class ScrollableContainer {
   private _contentLayer: DOMConstructor;
   private _scrollAnimation: Animation;
   private _previousPosition = 0;
+  private _animationOptions: KeyframeAnimationOptions = { duration: 4, fill: 'forwards', playbackRate: 1, easing: 'cubic-bezier(0.33, 0.66, 0.66, 1)' };
+  private _previousKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 0 };
+  private _nextKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 1 }; 
 
   constructor(container: HTMLElement) {
     this._container = container;
@@ -36,8 +39,6 @@ export default class ScrollableContainer {
 
   updateContentPosition(offset: number): Promise<Animation> {
 
-    const duration = 4;
-    const easing = 'cubic-bezier(0.33, 0.66, 0.66, 1)';
     const position = -offset;
   
     let currentPosition: number | null = null;
@@ -46,13 +47,13 @@ export default class ScrollableContainer {
       currentPosition = extractTYValue(getComputedStyle(this._contentLayer.DOMRoot).transform);
       this._scrollAnimation.cancel();
     }
+
+    this._previousKeyframe.transform = `translateY(${currentPosition || this._previousPosition}px)`;
+    this._nextKeyframe.transform = `translateY(${position}px)`;
     
     this._scrollAnimation = this._contentLayer.DOMRoot.animate(
-      [
-        { transform: `translateY(${currentPosition || this._previousPosition}px)`, composite: 'replace', offset: 0 }, 
-        { transform: `translateY(${position}px)`, composite: 'replace', offset: 1 }, 
-      ],
-      { duration, fill: 'forwards', playbackRate: 1, easing },
+      [ this._previousKeyframe, this._nextKeyframe ],
+      this._animationOptions,
     );
 
     this._scrollAnimation.currentTime = 1;
