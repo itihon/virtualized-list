@@ -22,7 +22,7 @@ export default class ScrollableContainer {
     this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
     this._contentLayer = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.contentLayer]);
     this._container.classList.add(classes.scrollableContainer);
-    this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`}, { fill: 'forwards' });
+    this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`});
   }
 
   setScrollHeight(scrollHeight: number) {
@@ -38,6 +38,7 @@ export default class ScrollableContainer {
 
     const duration = 4;
     const easing = 'cubic-bezier(0.33, 0.66, 0.66, 1)';
+    const position = -offset;
   
     let currentPosition: number | null = null;
 
@@ -48,14 +49,14 @@ export default class ScrollableContainer {
     
     this._scrollAnimation = this._contentLayer.DOMRoot.animate(
       [
-        { transform: `translateY(${-(currentPosition || this._previousPosition)}px)`, composite: 'replace', offset: 0 }, 
-        { transform: `translateY(${-offset}px)`, composite: 'replace', offset: 1 }, 
+        { transform: `translateY(${currentPosition || this._previousPosition}px)`, composite: 'replace', offset: 0 }, 
+        { transform: `translateY(${position}px)`, composite: 'replace', offset: 1 }, 
       ],
       { duration, fill: 'forwards', playbackRate: 1, easing },
     );
 
     this._scrollAnimation.currentTime = 1;
-    this._previousPosition = offset;
+    this._previousPosition = position;
 
     return this._scrollAnimation.finished;
   }
