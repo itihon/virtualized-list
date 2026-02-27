@@ -22,5 +22,7 @@ export interface IItemStore {
   deleteAt: (index: number) => void;
   getByIndex: (index: number) => IItem | undefined;
   getByOffset: (offset: number) => IItem;
+  getNext: (item: IItem) => IItem | undefined;
+  getPrevious: (item: IItem) => IItem | undefined;
   readonly size: number;
 }
