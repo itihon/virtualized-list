@@ -8,7 +8,6 @@ export interface IItem<T = unknown> {
   data: T;
   render: (data: T) => HTMLElement;
   recycle?: (data: T, element: HTMLElement) => void;
-  width?: number;
   height?: number;
   marginTop?: number;
   marginBottom?: number;
@@ -26,3 +25,27 @@ export interface IItemStore {
   getPrevious: (item: IItem) => IItem | undefined;
   readonly size: number;
 }
+
+export interface IVirtualizedListHooks {
+  onInsert(index: number, items: IItem[]): void;
+  onDelete(index: number, count: number): void;
+  onResize(width: number, height: number): void;
+  onScroll(position: number, direction: 'up' | 'down'): void;
+}
+
+export interface IMeasurerEvents {
+  onMeasureStart(cb: () => void): void;
+  onPortionMeasured(cb: (portion: IItem[]) => void): void;
+  onMeasureEnd(cb: () => void): void;
+}
+
+export interface IRenderer {
+  getRenderedElements(position: number, count: number, range: number): HTMLElement[];
+}
+
+export interface ILayout {
+  attach(hooks: IVirtualizedListHooks, store: IItemStore): IRenderer;
+  detach(): void;
+}
+
+export interface IAsyncLayout extends ILayout, IMeasurerEvents {}
