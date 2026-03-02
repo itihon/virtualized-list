@@ -27,25 +27,36 @@ export interface IItemStore {
 }
 
 export interface IVirtualizedListHooks {
-  onInsert(index: number, items: IItem[]): void;
-  onDelete(index: number, count: number): void;
-  onResize(width: number, height: number): void;
-  onScroll(position: number, direction: 'up' | 'down'): void;
+  onInsert: (index: number, item: IItem) => void;
+  onDelete: (index: number, count: number) => void;
+  onResize: (width: number, height: number) => void;
+  onScroll: (position: number, direction: 'up' | 'down') => void;
+}
+
+export interface IVirtualizeListEventEmitter<T extends { [K in keyof T]: (...args: any[]) => void }> {
+  on<K extends keyof T>(event: K, cb: T[K]): void;
+  off<K extends keyof T>(event: K, cb: T[K]): void;
+  emit<K extends keyof T>(event: K, ...args: Parameters<T[K]>): void;
 }
 
 export interface IMeasurerEvents {
-  onMeasureStart(cb: () => void): void;
-  onPortionMeasured(cb: (portion: IItem[]) => void): void;
-  onMeasureEnd(cb: () => void): void;
+  onMeasureStart: (cb: () => void) => void;
+  onPortionMeasured: (cb: (portion: IItem[]) => void) => void;
+  onMeasureEnd: (cb: () => void) => void;
 }
 
 export interface IRenderer {
-  getRenderedElements(position: number, count: number, range: number): HTMLElement[];
+  getRenderedElements: (position: number, count: number, range: number) => HTMLElement[];
 }
 
 export interface ILayout {
-  attach(hooks: IVirtualizedListHooks, store: IItemStore): IRenderer;
-  detach(): void;
+  attach: (hooks: IVirtualizeListEventEmitter<IVirtualizedListHooks>, store: IItemStore) => IRenderer;
+  detach: () => void;
 }
 
 export interface IAsyncLayout extends ILayout, IMeasurerEvents {}
+
+export interface IVirtualizedListOptions {
+  layout: IAsyncLayout;
+  store: IItemStore;
+}
