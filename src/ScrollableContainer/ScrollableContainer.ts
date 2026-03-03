@@ -65,4 +65,12 @@ export default class ScrollableContainer {
   appendItem(item: HTMLElement) {
     this._contentLayer.DOMRoot.appendChild(item);
   }
+
+  clear() {
+    const contentLayer = this._contentLayer.DOMRoot;
+
+    while(contentLayer.firstChild) {
+      contentLayer.firstChild.remove();
+    }
+  }
 }

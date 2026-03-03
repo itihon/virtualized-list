@@ -71,4 +71,19 @@ test.describe('Scrollable Container Methods', () => {
     const startTop = await contentLayer.evaluate(node => node.getBoundingClientRect().top);
     expect(startTop).toBe(containerTop);
   });
+
+  test('clear() method deletes all elements from content layer', async () => {
+    const contentLayer = page.locator('.contentLayer').first();
+
+    const childCountBefore = await contentLayer.evaluate((node) => node.children.length);
+
+    await page.evaluate(() => {
+      ((window as any).scrollableContainer as ScrollableContainer).clear();
+    });
+
+    const childCountAfter = await contentLayer.evaluate((node) => node.children.length);
+
+    expect(childCountBefore).toBeGreaterThan(0);
+    expect(childCountAfter).toBe(0);
+  });
 });
