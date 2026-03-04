@@ -1,0 +1,310 @@
+import { describe, test, expect, beforeEach } from 'vitest';
+import FixedListLayout from '../../../src/Layout/FixedListLayout';
+import ArrayItemStore from '../../../src/ItemStore/ArrayItemStore';
+import EventBus from '../../../src/VirtualizedList/EventBus';
+import { IItem, IRenderer, IVirtualizedListHooks } from '../../../src/types/types';
+
+// mock render function
+const render = () => ({} as HTMLElement);
+
+const wait = (ms = 0) => new Promise(res => setTimeout(res, ms));
+
+let itemsWithMargins: IItem[] = [];
+let itemsWithoutMargins: IItem[] = [];
+let layout: FixedListLayout;
+let store: ArrayItemStore;
+let hooks: EventBus<IVirtualizedListHooks>;
+let renderer: IRenderer;
+
+const height = 40;
+const marginTop = 10;
+const marginBottom = 20;
+
+describe('FixedListLayout', () => {
+  beforeEach(() => {
+    itemsWithMargins = [
+      { offset: 0, height, marginTop, marginBottom, data: 0, render },
+      { offset: 0, height, marginTop, marginBottom, data: 1, render },
+      { offset: 0, height, marginTop, marginBottom, data: 2, render },
+      { offset: 0, height, marginTop, marginBottom, data: 3, render },
+      { offset: 0, height, marginTop, marginBottom, data: 4, render },
+      { offset: 0, height, marginTop, marginBottom, data: 5, render },
+      { offset: 0, height, marginTop, marginBottom, data: 6, render },
+      { offset: 0, height, marginTop, marginBottom, data: 7, render },
+      { offset: 0, height, marginTop, marginBottom, data: 8, render },
+      { offset: 0, height, marginTop, marginBottom, data: 9, render },
+    ];
+
+    itemsWithoutMargins = [
+      { offset: 0, height, data: 0, render },
+      { offset: 0, height, data: 1, render },
+      { offset: 0, height, data: 2, render },
+      { offset: 0, height, data: 3, render },
+      { offset: 0, height, data: 4, render },
+      { offset: 0, height, data: 5, render },
+      { offset: 0, height, data: 6, render },
+      { offset: 0, height, data: 7, render },
+      { offset: 0, height, data: 8, render },
+      { offset: 0, height, data: 9, render },
+    ];
+
+    layout = new FixedListLayout();
+    store = new ArrayItemStore();
+    hooks = new EventBus<IVirtualizedListHooks>();
+
+    renderer = layout.attach(hooks, store);
+  });
+
+  test('calculates offset on sequential insertion in the beginning', async () => {
+
+    // with margins
+    itemsWithMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    await wait(16);
+
+    const offsetsWithMargins = [
+      { calculatedOffset: 10 },
+      { calculatedOffset: 80 },
+      { calculatedOffset: 150 },
+      { calculatedOffset: 220 },
+      { calculatedOffset: 290 },
+      { calculatedOffset: 360 },
+      { calculatedOffset: 430 },
+      { calculatedOffset: 500 },
+      { calculatedOffset: 570 },
+      { calculatedOffset: 640 },
+    ];
+
+    itemsWithMargins.forEach((item, idx) => {
+      expect(item.offset).toBe(offsetsWithMargins[idx].calculatedOffset);
+    });
+
+    // without margins
+    itemsWithoutMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    await wait(16);
+
+    const offsetsWithoutMargins = [
+      { calculatedOffset: 0 },
+      { calculatedOffset: 40 },
+      { calculatedOffset: 80 },
+      { calculatedOffset: 120 },
+      { calculatedOffset: 160 },
+      { calculatedOffset: 200 },
+      { calculatedOffset: 240 },
+      { calculatedOffset: 280 },
+      { calculatedOffset: 320 },
+      { calculatedOffset: 360 },
+    ];
+
+    itemsWithoutMargins.forEach((item, idx) => {
+      expect(item.offset).toBe(offsetsWithoutMargins[idx].calculatedOffset);
+    });
+
+    const combinedOffsets = [
+      // 10 without margins
+      { calculatedOffset: 0 },
+      { calculatedOffset: 40 },
+      { calculatedOffset: 80 },
+      { calculatedOffset: 120 },
+      { calculatedOffset: 160 },
+      { calculatedOffset: 200 },
+      { calculatedOffset: 240 },
+      { calculatedOffset: 280 },
+      { calculatedOffset: 320 },
+      { calculatedOffset: 360 },
+
+      // 10 with margins
+      { calculatedOffset: 410 },
+      { calculatedOffset: 480 },
+      { calculatedOffset: 550 },
+      { calculatedOffset: 620 },
+      { calculatedOffset: 690 },
+      { calculatedOffset: 760 },
+      { calculatedOffset: 830 },
+      { calculatedOffset: 900 },
+      { calculatedOffset: 970 },
+      { calculatedOffset: 1040 },
+    ];
+
+    itemsWithoutMargins.concat(itemsWithMargins).forEach((item, idx) => {
+      expect(item.offset).toBe(combinedOffsets[idx].calculatedOffset);
+    });
+
+  });
+
+  test('calculates offset on sequential deletion from the beginning', async () => {
+
+    itemsWithMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    itemsWithoutMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    store.deleteAt(0);
+    hooks.emit('onDelete', 0, 1);
+
+    await wait(16);
+
+    const combinedOffsets = [
+      // 9 items without margins
+      { calculatedOffset: 0 },
+      { calculatedOffset: 40 },
+      { calculatedOffset: 80 },
+      { calculatedOffset: 120 },
+      { calculatedOffset: 160 },
+      { calculatedOffset: 200 },
+      { calculatedOffset: 240 },
+      { calculatedOffset: 280 },
+      { calculatedOffset: 320 },
+
+      // 10 items with margins
+      { calculatedOffset: 370 },
+      { calculatedOffset: 440 },
+      { calculatedOffset: 510 },
+      { calculatedOffset: 580 },
+      { calculatedOffset: 650 },
+      { calculatedOffset: 720 },
+      { calculatedOffset: 790 },
+      { calculatedOffset: 860 },
+      { calculatedOffset: 930 },
+      { calculatedOffset: 1000 },
+    ];
+
+    itemsWithoutMargins.concat(itemsWithMargins).slice(1).forEach((item, idx) => {
+      expect(item.offset).toBe(combinedOffsets[idx].calculatedOffset);
+    });
+
+    for (let i = 0; i < 9; i++) {
+      store.deleteAt(0);
+      hooks.emit('onDelete', 0, 1);
+    }
+
+    await wait(16);
+
+    const offsetsWithMargins = [
+      { calculatedOffset: 10 },
+      { calculatedOffset: 80 },
+      { calculatedOffset: 150 },
+      { calculatedOffset: 220 },
+      { calculatedOffset: 290 },
+      { calculatedOffset: 360 },
+      { calculatedOffset: 430 },
+      { calculatedOffset: 500 },
+      { calculatedOffset: 570 },
+      { calculatedOffset: 640 },
+    ];
+
+    itemsWithMargins.forEach((item, idx) => {
+      expect(item.offset).toBe(offsetsWithMargins[idx].calculatedOffset);
+    });
+  });
+
+  test('insert/delete in the middle', async () => {
+    itemsWithMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    itemsWithoutMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    const newItemWithMargins = { data: .4, height, marginTop, marginBottom, render };
+    const newItemWithoutMargins = { data: .14, height, render };
+
+    store.insertAt(4, newItemWithMargins);
+    hooks.emit('onInsert', 4, newItemWithMargins);
+
+    store.insertAt(14, newItemWithoutMargins);
+    hooks.emit('onInsert', 14, newItemWithoutMargins);
+
+    store.deleteAt(6);
+    hooks.emit('onDelete', 6, 1);
+
+    store.deleteAt(16);
+    hooks.emit('onDelete', 16, 1);
+
+    await wait(16);
+
+    const combinedOffsets = [
+      { calculatedOffset: 0 },
+      { calculatedOffset: 40 },
+      { calculatedOffset: 80 },
+      { calculatedOffset: 120 },
+      { calculatedOffset: 170 },
+      { calculatedOffset: 230 },
+      { calculatedOffset: 270 },
+      { calculatedOffset: 310 },
+      { calculatedOffset: 350 },
+      { calculatedOffset: 390 },
+      { calculatedOffset: 440 },
+      { calculatedOffset: 510 },
+      { calculatedOffset: 580 },
+      { calculatedOffset: 640 },
+      { calculatedOffset: 690 },
+      { calculatedOffset: 760 },
+      { calculatedOffset: 830 },
+      { calculatedOffset: 900 },
+      { calculatedOffset: 970 },
+      { calculatedOffset: 1040 },
+    ];
+
+    const combinedItems = itemsWithoutMargins.concat(itemsWithMargins);
+
+    combinedItems.splice(4, 0, newItemWithMargins);
+    combinedItems.splice(14, 0, newItemWithoutMargins);
+    combinedItems.splice(6, 1);
+    combinedItems.splice(16, 1);
+
+    combinedItems.forEach((item, idx) => {
+      expect(item.offset).toBe(combinedOffsets[idx].calculatedOffset);
+    });
+  });
+
+  test('insert/delete in the end', async () => {
+    itemsWithMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    store.deleteAt(9);
+    hooks.emit('onDelete', 9, 1);
+
+    const newItem = { data: .99, height, render };
+    store.insertAt(9, newItem);
+    hooks.emit('onInsert', 9, newItem);
+
+    await wait(16);
+
+    const offsetsWithMargins = [
+      { calculatedOffset: 10 },
+      { calculatedOffset: 80 },
+      { calculatedOffset: 150 },
+      { calculatedOffset: 220 },
+      { calculatedOffset: 290 },
+      { calculatedOffset: 360 },
+      { calculatedOffset: 430 },
+      { calculatedOffset: 500 },
+      { calculatedOffset: 570 },
+      // { calculatedOffset: 640 },
+      { calculatedOffset: 630 },
+    ];
+
+    itemsWithMargins.slice(0, -1).concat(newItem).forEach((item, idx) => {
+      expect(item.offset).toBe(offsetsWithMargins[idx].calculatedOffset);
+    });
+  });
+
+});

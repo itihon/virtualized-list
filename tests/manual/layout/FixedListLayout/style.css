@@ -1,0 +1,26 @@
+#container {
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  overflow-y: auto;
+  width: 100vw;
+  height: 100vh;
+  background-color: slategray;
+}
+
+.with-margin {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  background-color: lightgoldenrodyellow;
+  outline: 1px solid orange;
+}
+
+.without-margin {
+  background-color: lightskyblue;
+  outline: 1px solid royalblue;
+}
+
+.with-margin, .without-margin {
+  height: 40px;
+  width: 100%;
+}
