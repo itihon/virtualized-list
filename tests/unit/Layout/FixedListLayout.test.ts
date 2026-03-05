@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import FixedListLayout from '../../../src/Layout/FixedListLayout';
 import ArrayItemStore from '../../../src/ItemStore/ArrayItemStore';
 import EventBus from '../../../src/VirtualizedList/EventBus';
@@ -8,6 +8,27 @@ import { IItem, IRenderer, IVirtualizedListHooks } from '../../../src/types/type
 const render = () => ({} as HTMLElement);
 
 const wait = (ms = 0) => new Promise(res => setTimeout(res, ms));
+
+const expectOffsetToBeCalculatedUpToIndex = (index: number) => {
+  if (index < store.size) {
+    for(let i = 0; i < store.size; i++) {
+      if (i <= index) {
+        if (i === 0) {
+          expect(store.getByIndex(i)?.offset).toBeGreaterThanOrEqual(0);
+        }
+        else {
+          expect(store.getByIndex(i)?.offset).toBeGreaterThan(0);
+        }
+      }
+      else {
+        expect(store.getByIndex(i)?.offset).toBe(0);
+      }
+    }
+  }
+  else {
+    throw new Error('Index must be less than store size.');
+  }
+};
 
 let itemsWithMargins: IItem[] = [];
 let itemsWithoutMargins: IItem[] = [];
@@ -305,6 +326,181 @@ describe('FixedListLayout', () => {
     itemsWithMargins.slice(0, -1).concat(newItem).forEach((item, idx) => {
       expect(item.offset).toBe(offsetsWithMargins[idx].calculatedOffset);
     });
+  });
+
+  test('maxMeasuredPortionSize option (spread evenly) and measurer hooks', async () => {
+    const onMeasureStartCB = vi.fn();
+    const onPortionMeasuredCB = vi.fn();
+    const onMeasureEndCB = vi.fn();
+
+    layout.detach(hooks);
+    layout = new FixedListLayout({ maxMeasuredPortionSize: 5 });
+    renderer = layout.attach(hooks, store);
+
+    layout.onMeasureStart(onMeasureStartCB);
+    layout.onPortionMeasured(onPortionMeasuredCB);
+    layout.onMeasureEnd(onMeasureEndCB);
+
+    itemsWithMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    itemsWithoutMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    expect(onMeasureStartCB).not.toHaveBeenCalled();
+    expect(onPortionMeasuredCB).not.toHaveBeenCalled();
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(1);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 4, 20);
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    expectOffsetToBeCalculatedUpToIndex(4);
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(2);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(5, 9, 20);
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    expectOffsetToBeCalculatedUpToIndex(9);
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(3);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(10, 14, 20);
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    expectOffsetToBeCalculatedUpToIndex(14);
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(4);
+    expect(onMeasureEndCB).toHaveBeenCalledTimes(1);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(15, 19, 20);
+    expect(onMeasureEndCB).toHaveBeenLastCalledWith(19);
+
+    expectOffsetToBeCalculatedUpToIndex(19);
+  });
+
+  test('maxMeasuredPortionSize option (spread unevenly) and measurer hooks', async () => {
+    const onMeasureStartCB = vi.fn();
+    const onPortionMeasuredCB = vi.fn();
+    const onMeasureEndCB = vi.fn();
+
+    layout.detach(hooks);
+    layout = new FixedListLayout({ maxMeasuredPortionSize: 9 });
+    renderer = layout.attach(hooks, store);
+
+    layout.onMeasureStart(onMeasureStartCB);
+    layout.onPortionMeasured(onPortionMeasuredCB);
+    layout.onMeasureEnd(onMeasureEndCB);
+
+    itemsWithMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    itemsWithoutMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    expect(onMeasureStartCB).not.toHaveBeenCalled();
+    expect(onPortionMeasuredCB).not.toHaveBeenCalled();
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(1);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 8, 20);
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    expectOffsetToBeCalculatedUpToIndex(8);
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(2);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(9, 17, 20);
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    expectOffsetToBeCalculatedUpToIndex(17);
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(3);
+    expect(onMeasureEndCB).toHaveBeenCalledTimes(1);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(18, 19, 20);
+    expect(onMeasureEndCB).toHaveBeenLastCalledWith(19);
+
+    expectOffsetToBeCalculatedUpToIndex(19);
+  });
+
+  test('maxMeasuredPortionSize option (equal to store size) and measurer hooks', async () => {
+    const onMeasureStartCB = vi.fn();
+    const onPortionMeasuredCB = vi.fn();
+    const onMeasureEndCB = vi.fn();
+
+    layout.detach(hooks);
+    layout = new FixedListLayout({ maxMeasuredPortionSize: 20 });
+    renderer = layout.attach(hooks, store);
+
+    layout.onMeasureStart(onMeasureStartCB);
+    layout.onPortionMeasured(onPortionMeasuredCB);
+    layout.onMeasureEnd(onMeasureEndCB);
+
+    itemsWithMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    itemsWithoutMargins.forEach((item, idx) => {
+      store.insertAt(idx, item);
+      hooks.emit('onInsert', idx, item);
+    });
+
+    expect(onMeasureStartCB).not.toHaveBeenCalled();
+    expect(onPortionMeasuredCB).not.toHaveBeenCalled();
+    expect(onMeasureEndCB).not.toHaveBeenCalled();
+
+    await wait();
+
+    expect(onMeasureStartCB).toHaveBeenCalledTimes(1);
+    expect(onPortionMeasuredCB).toHaveBeenCalledTimes(1);
+    expect(onMeasureEndCB).toHaveBeenCalledTimes(1);
+
+    expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 19, 20);
+    expect(onMeasureEndCB).toHaveBeenLastCalledWith(19);
+
+    expectOffsetToBeCalculatedUpToIndex(19);
   });
 
 });

@@ -4,13 +4,22 @@
  * @author Alexandr Kalabin
  */
 
-import type { IAsyncLayout, IItemStore, ILifecycleHooks, IRenderer } from "../types/types";
+import type { 
+  IAsyncLayout, 
+  IItemStore, 
+  ILifecycleHooks, 
+  IMeasurerHooks, 
+  IRenderer 
+} from "../types/types";
+import EventBus from "../VirtualizedList/EventBus";
 
 export default class FixedListLayout implements IAsyncLayout {
   private _maxMeasuredPortionSize: number;
   private _lastProcessedItemIndex: number = 0;
   private _runningOffsetCalculation: boolean = false;
   private _scheduledOffsetCalculation: number | undefined;
+  private _hooks = new EventBus<IMeasurerHooks>();
+  private _attachedHook: ((index: number) => void) | null = null;
 
   private _renderer: IRenderer = {
     getRenderedElements() {
@@ -42,30 +51,42 @@ export default class FixedListLayout implements IAsyncLayout {
    */
   private async _calculateItemOffsets(index: number, store: IItemStore) {
     let currentItem = store.getByIndex(index);
-    let nextItem;
+    let currentIndex = index;
     let processedItems = 0;
+    let startIndex = index;
+    let endIndex = currentIndex;
+
+    this._hooks.emit('onMeasureStart', startIndex);
 
     if (currentItem) {
-      const previousItem = store.getPrevious(currentItem);
-      const { offset = 0, height = 0, marginBottom = 0 } = previousItem || {};
+      do {
+        const previousItem = store.getPrevious(currentItem);
+        const { offset = 0, height = 0, marginBottom = 0 } = previousItem || {};
+        const portionProcessed = ++processedItems === this._maxMeasuredPortionSize;
+        const endReached = currentIndex === store.size - 1;
 
-      currentItem.offset = offset + height + marginBottom + (currentItem.marginTop || 0);
+        currentItem.offset = offset + height + marginBottom + (currentItem.marginTop || 0);
 
-      while ((nextItem = store.getNext(currentItem)) && this._runningOffsetCalculation) {
-        const { offset = 0, height = 0, marginBottom = 0 } = currentItem || {};
-        nextItem.offset = offset + height + marginBottom + (nextItem.marginTop || 0);
+        if (portionProcessed || endReached) {
+          endIndex = currentIndex;
 
-        currentItem = nextItem;
+          this._hooks.emit('onPortionMeasured', startIndex, endIndex, store.size);
+          this._lastProcessedItemIndex = endIndex;
 
-        if (++processedItems > this._maxMeasuredPortionSize) {
-          this._lastProcessedItemIndex = index + processedItems;
+          startIndex = endIndex + 1;
           processedItems = 0;
-          await new Promise(res => setTimeout(res));
+
+          if (!endReached) {
+            await new Promise(res => setTimeout(res));
+          }
         }
+        currentIndex++;
       } 
+      while ((currentItem = store.getNext(currentItem)) && this._runningOffsetCalculation)
     }
 
     this._stopOffsetCalculation();
+    this._hooks.emit('onMeasureEnd', endIndex);
   }
 
   constructor({ maxMeasuredPortionSize = 100_000 } = {}) {
@@ -73,25 +94,30 @@ export default class FixedListLayout implements IAsyncLayout {
   }
 
   attach(hooks: ILifecycleHooks, store: IItemStore) {
-    hooks.on('onInsert', (index) => this._scheduleOffsetCalculation(index, store));
-    hooks.on('onDelete', (index) => this._scheduleOffsetCalculation(index, store));
+    this._attachedHook = (index: number) => this._scheduleOffsetCalculation(index, store);
+
+    hooks.on('onInsert', this._attachedHook);
+    hooks.on('onDelete', this._attachedHook);
    
     return this._renderer;
   } 
 
-  detach() {
-
+  detach(hooks: ILifecycleHooks) {
+    if (this._attachedHook) {
+      hooks.off('onInsert', this._attachedHook);
+      hooks.off('onDelete', this._attachedHook);
+    }
   }
 
-  onMeasureStart() {
-
+  onMeasureStart(cb: IMeasurerHooks['onMeasureStart']) {
+    this._hooks.on('onMeasureStart', cb);
   }
 
-  onMeasureEnd() {
-
+  onMeasureEnd(cb: IMeasurerHooks['onMeasureEnd']) {
+    this._hooks.on('onMeasureEnd', cb);
   }
 
-  onPortionMeasured() {
-
+  onPortionMeasured(cb: IMeasurerHooks['onPortionMeasured']) {
+    this._hooks.on('onPortionMeasured', cb);
   }
 }
