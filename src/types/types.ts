@@ -33,30 +33,37 @@ export interface IVirtualizedListHooks {
   onScroll: (position: number, direction: 'up' | 'down') => void;
 }
 
+export interface IMeasurerHooks {
+  onMeasureStart: (startIndex: number) => void;
+  onPortionMeasured: (startIndex: number, endIndex: number, total: number) => void;
+  onMeasureEnd: (endIndex: number) => void;
+}
+
 export interface IVirtualizeListEventEmitter<T extends { [K in keyof T]: (...args: any[]) => void }> {
   on<K extends keyof T>(event: K, cb: T[K]): void;
   off<K extends keyof T>(event: K, cb: T[K]): void;
   emit<K extends keyof T>(event: K, ...args: Parameters<T[K]>): void;
 }
 
-export interface IMeasurerEvents {
-  onMeasureStart: (cb: () => void) => void;
-  onPortionMeasured: (cb: (portion: IItem[]) => void) => void;
-  onMeasureEnd: (cb: () => void) => void;
+export type LayoutHooks = {
+  [K in keyof IMeasurerHooks]: (cb: IMeasurerHooks[K]) => void;
 }
 
 export interface IRenderer {
   getRenderedElements: (position: number, count: number, range: number) => HTMLElement[];
 }
 
+export type ILifecycleHooks = IVirtualizeListEventEmitter<IVirtualizedListHooks>;
+
 export interface ILayout {
-  attach: (hooks: IVirtualizeListEventEmitter<IVirtualizedListHooks>, store: IItemStore) => IRenderer;
-  detach: () => void;
+  attach: (hooks: ILifecycleHooks, store: IItemStore) => IRenderer;
+  detach: (hooks: ILifecycleHooks) => void;
 }
 
-export interface IAsyncLayout extends ILayout, IMeasurerEvents {}
+export interface IAsyncLayout extends ILayout, LayoutHooks {}
 
 export interface IVirtualizedListOptions {
   layout: IAsyncLayout;
   store: IItemStore;
+  container: HTMLElement;
 }
