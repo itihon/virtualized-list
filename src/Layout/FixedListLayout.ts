@@ -5,15 +5,15 @@
  */
 
 import type { 
-  IAsyncLayout, 
+  IFixedListLayout, 
+  IFixedItem, 
   IItemStore, 
   ILifecycleHooks, 
   IMeasurerHooks, 
-  IRenderer 
 } from "../types/types";
 import EventBus from "../VirtualizedList/EventBus";
 
-export default class FixedListLayout implements IAsyncLayout {
+export default class FixedListLayout implements IFixedListLayout {
   private _maxMeasuredPortionSize: number;
   private _lastProcessedItemIndex: number = 0;
   private _runningOffsetCalculation: boolean = false;
@@ -33,7 +33,7 @@ export default class FixedListLayout implements IAsyncLayout {
     this._scheduledOffsetCalculation = undefined;
   }
 
-  private _scheduleOffsetCalculation(index: number, store: IItemStore) {
+  private _scheduleOffsetCalculation(index: number, store: IItemStore<IFixedItem>) {
     if (this._runningOffsetCalculation && index <= this._lastProcessedItemIndex) {
       this._stopOffsetCalculation();
     }
@@ -49,7 +49,7 @@ export default class FixedListLayout implements IAsyncLayout {
   /**
    * NOTE: this function calculates offsets with non-collapsing margins.
    */
-  private async _calculateItemOffsets(index: number, store: IItemStore) {
+  private async _calculateItemOffsets(index: number, store: IItemStore<IFixedItem>) {
     let currentItem = store.getByIndex(index);
     let currentIndex = index;
     let processedItems = 0;
@@ -61,11 +61,11 @@ export default class FixedListLayout implements IAsyncLayout {
     if (currentItem) {
       do {
         const previousItem = store.getPrevious(currentItem);
-        const { offset = 0, height = 0, marginBottom = 0 } = previousItem || {};
+        const { offsetTop = 0, height = 0, marginBottom = 0 } = previousItem || {};
         const portionProcessed = ++processedItems === this._maxMeasuredPortionSize;
         const endReached = currentIndex === store.size - 1;
 
-        currentItem.offset = offset + height + marginBottom + (currentItem.marginTop || 0);
+        currentItem.offsetTop = offsetTop + height + marginBottom + (currentItem.marginTop || 0);
 
         if (portionProcessed || endReached) {
           endIndex = currentIndex;
@@ -93,7 +93,7 @@ export default class FixedListLayout implements IAsyncLayout {
     this._maxMeasuredPortionSize = maxMeasuredPortionSize;
   }
 
-  attach(hooks: ILifecycleHooks, store: IItemStore) {
+  attach(hooks: ILifecycleHooks, store: IItemStore<IFixedItem>) {
     this._attachedHook = (index: number) => this._scheduleOffsetCalculation(index, store);
 
     hooks.on('onInsert', this._attachedHook);
