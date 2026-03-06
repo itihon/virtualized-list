@@ -4,25 +4,51 @@
  * @author Alexandr Kalabin
  */
 
+/**
+ * A list item with unknown height.
+ */
 export interface IItem<T = unknown> {
   data: T;
   render: (data: T) => HTMLElement;
-  recycle?: (data: T, element: HTMLElement) => void;
-  height?: number;
-  marginTop?: number;
-  marginBottom?: number;
-  offset?: number;
-  next?: IItem<T>;
-  previous?: IItem<T>;
 }
 
-export interface IItemStore {
-  insertAt: (index: number, item: IItem) => void; 
+/**
+ * A list item with specified height and vertical spacing.
+ */
+export interface IFixedItem<T = unknown> extends IItem<T> {
+  height: number;
+  marginTop?: number;
+  marginBottom?: number;
+}
+
+/**
+ * A list item with the recycling capability is to be used in responsive list.
+ * NOT IMPLEMENTED
+ */
+// export interface IRecyclableItem<T> extends IItem<T> {
+//   recycle?: (data: T, element: HTMLElement) => void;
+// }
+
+type StoredItem = IItem | IFixedItem | unknown;
+
+/**
+ * This type is used in layout and item store methods.
+ */
+export type MeasuredItem<BaseItem extends StoredItem> = BaseItem & {
+  index: number;
+  offsetTop?: number;
+  offsetLeft?: number;
+  width?: number;
+  height?: number;
+}
+
+export interface IItemStore<ItemType extends StoredItem = unknown> {
+  insertAt: (index: number, item: ItemType) => void; 
   deleteAt: (index: number) => void;
-  getByIndex: (index: number) => IItem | undefined;
-  getByOffset: (offset: number) => IItem;
-  getNext: (item: IItem) => IItem | undefined;
-  getPrevious: (item: IItem) => IItem | undefined;
+  getByIndex: (index: number) => MeasuredItem<ItemType> | undefined;
+  getByOffset: (offset: number) => MeasuredItem<ItemType> | undefined;
+  getNext: (item: MeasuredItem<ItemType>) => MeasuredItem<ItemType> | undefined;
+  getPrevious: (item: MeasuredItem<ItemType>) => MeasuredItem<ItemType> | undefined;
   readonly size: number;
 }
 
@@ -30,7 +56,7 @@ export interface IVirtualizedListHooks {
   onInsert: (index: number, item: IItem) => void;
   onDelete: (index: number, count: number) => void;
   onResize: (width: number, height: number) => void;
-  onScroll: (position: number, direction: 'up' | 'down') => void;
+  onScroll: (position: number, direction: 'up' | 'down', speed: 'slow' | 'fast') => void;
 }
 
 export interface IMeasurerHooks {
@@ -50,20 +76,23 @@ export type LayoutHooks = {
 }
 
 export interface IRenderer {
-  getRenderedElements: (position: number, count: number, range: number) => HTMLElement[];
+  getRenderedElements: () => HTMLElement[];
+  getContentPosition: () => { offset: number, from?: number };
 }
 
 export type ILifecycleHooks = IVirtualizeListEventEmitter<IVirtualizedListHooks>;
 
-export interface ILayout {
-  attach: (hooks: ILifecycleHooks, store: IItemStore) => IRenderer;
+export interface ILayout<ItemType> {
+  attach: (hooks: ILifecycleHooks, store: IItemStore<ItemType>) => IRenderer;
   detach: (hooks: ILifecycleHooks) => void;
 }
 
-export interface IAsyncLayout extends ILayout, LayoutHooks {}
+export interface IFixedListLayout extends ILayout<IFixedItem>, LayoutHooks {}
+
+export interface IDynamicListLayout extends ILayout<IItem>, LayoutHooks {}
 
 export interface IVirtualizedListOptions {
-  layout: IAsyncLayout;
+  layout: IFixedListLayout | IDynamicListLayout;
   store: IItemStore;
   container: HTMLElement;
 }
