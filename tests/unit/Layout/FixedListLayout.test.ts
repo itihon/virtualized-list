@@ -339,9 +339,9 @@ describe('FixedListLayout', () => {
     layout = new FixedListLayout({ maxMeasuredPortionSize: 5 });
     renderer = layout.attach(hooks, store);
 
-    layout.onMeasureStart(onMeasureStartCB);
-    layout.onPortionMeasured(onPortionMeasuredCB);
-    layout.onMeasureEnd(onMeasureEndCB);
+    layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
+    layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
+    layout.onMeasureEnd(range => onMeasureEndCB(range.endIndex));
 
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
@@ -363,7 +363,7 @@ describe('FixedListLayout', () => {
     expect(onPortionMeasuredCB).toHaveBeenCalledTimes(1);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 4, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 4, 20, 0, 160);
     expect(onMeasureEndCB).not.toHaveBeenCalled();
 
     expectOffsetToBeCalculatedUpToIndex(4);
@@ -374,7 +374,7 @@ describe('FixedListLayout', () => {
     expect(onPortionMeasuredCB).toHaveBeenCalledTimes(2);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(5, 9, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(5, 9, 20, 160, 360);
     expect(onMeasureEndCB).not.toHaveBeenCalled();
 
     expectOffsetToBeCalculatedUpToIndex(9);
@@ -385,7 +385,7 @@ describe('FixedListLayout', () => {
     expect(onPortionMeasuredCB).toHaveBeenCalledTimes(3);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(10, 14, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(10, 14, 20, 360, 690);
     expect(onMeasureEndCB).not.toHaveBeenCalled();
 
     expectOffsetToBeCalculatedUpToIndex(14);
@@ -397,7 +397,7 @@ describe('FixedListLayout', () => {
     expect(onMeasureEndCB).toHaveBeenCalledTimes(1);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(15, 19, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(15, 19, 20, 690, 1040);
     expect(onMeasureEndCB).toHaveBeenLastCalledWith(19);
 
     expectOffsetToBeCalculatedUpToIndex(19);
@@ -412,9 +412,9 @@ describe('FixedListLayout', () => {
     layout = new FixedListLayout({ maxMeasuredPortionSize: 9 });
     renderer = layout.attach(hooks, store);
 
-    layout.onMeasureStart(onMeasureStartCB);
-    layout.onPortionMeasured(onPortionMeasuredCB);
-    layout.onMeasureEnd(onMeasureEndCB);
+    layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
+    layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
+    layout.onMeasureEnd(range => onMeasureEndCB(range.endIndex));
 
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
@@ -436,7 +436,7 @@ describe('FixedListLayout', () => {
     expect(onPortionMeasuredCB).toHaveBeenCalledTimes(1);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 8, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 8, 20, 0, 320);
     expect(onMeasureEndCB).not.toHaveBeenCalled();
 
     expectOffsetToBeCalculatedUpToIndex(8);
@@ -447,7 +447,7 @@ describe('FixedListLayout', () => {
     expect(onPortionMeasuredCB).toHaveBeenCalledTimes(2);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(9, 17, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(9, 17, 20, 320, 900);
     expect(onMeasureEndCB).not.toHaveBeenCalled();
 
     expectOffsetToBeCalculatedUpToIndex(17);
@@ -459,7 +459,7 @@ describe('FixedListLayout', () => {
     expect(onMeasureEndCB).toHaveBeenCalledTimes(1);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(18, 19, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(18, 19, 20, 900, 1040);
     expect(onMeasureEndCB).toHaveBeenLastCalledWith(19);
 
     expectOffsetToBeCalculatedUpToIndex(19);
@@ -474,9 +474,9 @@ describe('FixedListLayout', () => {
     layout = new FixedListLayout({ maxMeasuredPortionSize: 20 });
     renderer = layout.attach(hooks, store);
 
-    layout.onMeasureStart(onMeasureStartCB);
-    layout.onPortionMeasured(onPortionMeasuredCB);
-    layout.onMeasureEnd(onMeasureEndCB);
+    layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
+    layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
+    layout.onMeasureEnd(range => onMeasureEndCB(range.endIndex));
 
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
@@ -499,7 +499,7 @@ describe('FixedListLayout', () => {
     expect(onMeasureEndCB).toHaveBeenCalledTimes(1);
 
     expect(onMeasureStartCB).toHaveBeenLastCalledWith(0);
-    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 19, 20);
+    expect(onPortionMeasuredCB).toHaveBeenLastCalledWith(0, 19, 20, 0, 1040);
     expect(onMeasureEndCB).toHaveBeenLastCalledWith(19);
 
     expectOffsetToBeCalculatedUpToIndex(19);

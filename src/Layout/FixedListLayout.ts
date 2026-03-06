@@ -55,8 +55,13 @@ export default class FixedListLayout implements IFixedListLayout {
     let processedItems = 0;
     let startIndex = index;
     let endIndex = currentIndex;
+    let startOffset = 0;
+    let endOffset = 0;
 
-    this._hooks.emit('onMeasureStart', startIndex);
+    this._hooks.emit(
+      'onMeasureStart', 
+      { startIndex, endIndex, total: store.size, startOffset, endOffset },
+    );
 
     if (currentItem) {
       do {
@@ -69,11 +74,16 @@ export default class FixedListLayout implements IFixedListLayout {
 
         if (portionProcessed || endReached) {
           endIndex = currentIndex;
+          endOffset = currentItem.offsetTop;
 
-          this._hooks.emit('onPortionMeasured', startIndex, endIndex, store.size);
+          this._hooks.emit(
+            'onPortionMeasured', 
+            { startIndex, endIndex, total: store.size, startOffset, endOffset },
+          );
           this._lastProcessedItemIndex = endIndex;
 
           startIndex = endIndex + 1;
+          startOffset = endOffset;
           processedItems = 0;
 
           if (!endReached) {
@@ -86,7 +96,10 @@ export default class FixedListLayout implements IFixedListLayout {
     }
 
     this._stopOffsetCalculation();
-    this._hooks.emit('onMeasureEnd', endIndex);
+    this._hooks.emit(
+      'onMeasureEnd', 
+      { startIndex, endIndex, total: store.size, startOffset, endOffset  },
+    );
   }
 
   constructor({ maxMeasuredPortionSize = 100_000 } = {}) {

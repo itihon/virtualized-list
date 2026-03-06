@@ -59,10 +59,18 @@ export interface IVirtualizedListHooks {
   onScroll: (position: number, direction: 'up' | 'down', speed: 'slow' | 'fast') => void;
 }
 
+export type MeasurementRange = {
+  startOffset: number;
+  endOffset: number;
+  startIndex: number; 
+  endIndex: number; 
+  total: number;
+}
+
 export interface IMeasurerHooks {
-  onMeasureStart: (startIndex: number) => void;
-  onPortionMeasured: (startIndex: number, endIndex: number, total: number) => void;
-  onMeasureEnd: (endIndex: number) => void;
+  onMeasureStart: (range: MeasurementRange) => void;
+  onPortionMeasured: (range: MeasurementRange) => void;
+  onMeasureEnd: (range: MeasurementRange) => void;
 }
 
 export interface IVirtualizeListEventEmitter<T extends { [K in keyof T]: (...args: any[]) => void }> {
