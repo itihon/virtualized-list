@@ -1,69 +1,48 @@
 /**
- * @fileoverview This ItemStore implementation keeps list items in an array, implements binary search by offset, interlinks (modifies) items into a double linked list.
+ * @fileoverview This ItemStore implementation keeps list items in an array, implements binary search by offset.
  * @license MIT
  * @author Alexandr Kalabin
  */
 
-import type { IItem, IItemStore } from '../types/types';
+import type { IItemStore, MeasuredItem } from '../types/types';
 
-export default class ArrayItemStore implements IItemStore {
-  private _store: IItem[] = [];
+export default class ArrayItemStore<ItemType> implements IItemStore<ItemType> {
+  private _store: MeasuredItem<ItemType>[] = [];
 
-  insertAt(index: number, item: IItem) {
+  private _assignIndex(item?: MeasuredItem<ItemType>, index?: number): MeasuredItem<ItemType> | undefined {
+    if (item && index !== undefined) {
+      item.index = index;
+      return item;
+    }
+  }
+
+  insertAt(index: number, item: ItemType) {
     const maxIdx = this._store.length;
     const idx = index < 0 ? 0 : index > maxIdx ? maxIdx : index;
-    this._store.splice(idx, 0, item);
-
-    const previouItem = this._store[idx - 1];
-    const currentItem = this._store[idx];
-    const nextItem = this._store[idx + 1];
-
-    if (previouItem) {
-      previouItem.next = currentItem;
-      currentItem.previous = previouItem;
-    }
-
-    if (nextItem) {
-      nextItem.previous = currentItem;
-      currentItem.next = nextItem;
-    }
+    this._store.splice(idx, 0, item as MeasuredItem<ItemType>);
   }
 
   deleteAt(index: number) {
     const removedItem = this._store[index];
 
     if (removedItem) {
-      const previouItem = removedItem.previous;
-      const nextItem = removedItem.next;
-
       this._store.splice(index, 1);
-
-      removedItem.previous = undefined;
-      removedItem.next = undefined;
-
-      if (previouItem) {
-        previouItem.next = nextItem;
-      }
-
-      if (nextItem) {
-        nextItem.previous = previouItem;
-      }
     }
   }
 
-  getByIndex(index: number): IItem | undefined {
-    return this._store[index];
+  getByIndex(index: number) {
+    return this._assignIndex(this._store[index], index);
   }
 
-  getByOffset(offset: number): IItem {
+  getByOffset(offset: number) {
     let startIndex = 0;
     let endIndex = this._store.length - 1;
-    let closestItem = this._store[startIndex];
+    let closestItem = this._assignIndex(this._store[startIndex], startIndex);
 
     while (startIndex <= endIndex) {
       const middleIndex = (startIndex + endIndex) >>> 1;
-      const item = this._store[middleIndex];
-      const itemOffset = item.offset || 0;
+      const item = this._assignIndex(this._store[middleIndex], middleIndex);
+      const itemOffset = item?.offsetTop || 0;
 
       if (offset === itemOffset) {
         return item;
@@ -81,15 +60,17 @@ export default class ArrayItemStore implements IItemStore {
     return closestItem; 
   }
 
-  getPrevious(item: IItem): IItem | undefined {
-    return item.previous;
+  getPrevious(item: MeasuredItem<ItemType>) {
+    const index = item.index - 1;
+    return this._assignIndex(this._store[index], index);
   }
 
-  getNext(item: IItem): IItem | undefined {
-    return item.next;
+  getNext(item: MeasuredItem<ItemType>) {
+    const index = item.index + 1;
+    return this._assignIndex(this._store[index], index);
   }
 
-  get size(): number {
+  get size() {
     return this._store.length;
   }
 }
