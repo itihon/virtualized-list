@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import FixedListLayout from '../../../src/Layout/FixedListLayout';
 import ArrayItemStore from '../../../src/ItemStore/ArrayItemStore';
 import EventBus from '../../../src/VirtualizedList/EventBus';
-import { IItem, IRenderer, IVirtualizedListHooks } from '../../../src/types/types';
+import { IFixedItem, IRenderer, IVirtualizedListHooks } from '../../../src/types/types';
 
 // mock render function
 const render = () => ({} as HTMLElement);
@@ -14,14 +14,14 @@ const expectOffsetToBeCalculatedUpToIndex = (index: number) => {
     for(let i = 0; i < store.size; i++) {
       if (i <= index) {
         if (i === 0) {
-          expect(store.getByIndex(i)?.offset).toBeGreaterThanOrEqual(0);
+          expect(store.getByIndex(i)?.offsetTop).toBeGreaterThanOrEqual(0);
         }
         else {
-          expect(store.getByIndex(i)?.offset).toBeGreaterThan(0);
+          expect(store.getByIndex(i)?.offsetTop).toBeGreaterThan(0);
         }
       }
       else {
-        expect(store.getByIndex(i)?.offset).toBe(0);
+        expect(store.getByIndex(i)?.offsetTop).toBe(0);
       }
     }
   }
@@ -30,10 +30,12 @@ const expectOffsetToBeCalculatedUpToIndex = (index: number) => {
   }
 };
 
-let itemsWithMargins: IItem[] = [];
-let itemsWithoutMargins: IItem[] = [];
+type Item = IFixedItem & { offsetTop?: number };
+
+let itemsWithMargins: Item[] = [];
+let itemsWithoutMargins: Item[] = [];
 let layout: FixedListLayout;
-let store: ArrayItemStore;
+let store: ArrayItemStore<IFixedItem>;
 let hooks: EventBus<IVirtualizedListHooks>;
 let renderer: IRenderer;
 
@@ -44,29 +46,29 @@ const marginBottom = 20;
 describe('FixedListLayout', () => {
   beforeEach(() => {
     itemsWithMargins = [
-      { offset: 0, height, marginTop, marginBottom, data: 0, render },
-      { offset: 0, height, marginTop, marginBottom, data: 1, render },
-      { offset: 0, height, marginTop, marginBottom, data: 2, render },
-      { offset: 0, height, marginTop, marginBottom, data: 3, render },
-      { offset: 0, height, marginTop, marginBottom, data: 4, render },
-      { offset: 0, height, marginTop, marginBottom, data: 5, render },
-      { offset: 0, height, marginTop, marginBottom, data: 6, render },
-      { offset: 0, height, marginTop, marginBottom, data: 7, render },
-      { offset: 0, height, marginTop, marginBottom, data: 8, render },
-      { offset: 0, height, marginTop, marginBottom, data: 9, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 0, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 1, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 2, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 3, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 4, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 5, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 6, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 7, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 8, render },
+      { offsetTop: 0, height, marginTop, marginBottom, data: 9, render },
     ];
 
     itemsWithoutMargins = [
-      { offset: 0, height, data: 0, render },
-      { offset: 0, height, data: 1, render },
-      { offset: 0, height, data: 2, render },
-      { offset: 0, height, data: 3, render },
-      { offset: 0, height, data: 4, render },
-      { offset: 0, height, data: 5, render },
-      { offset: 0, height, data: 6, render },
-      { offset: 0, height, data: 7, render },
-      { offset: 0, height, data: 8, render },
-      { offset: 0, height, data: 9, render },
+      { offsetTop: 0, height, data: 0, render },
+      { offsetTop: 0, height, data: 1, render },
+      { offsetTop: 0, height, data: 2, render },
+      { offsetTop: 0, height, data: 3, render },
+      { offsetTop: 0, height, data: 4, render },
+      { offsetTop: 0, height, data: 5, render },
+      { offsetTop: 0, height, data: 6, render },
+      { offsetTop: 0, height, data: 7, render },
+      { offsetTop: 0, height, data: 8, render },
+      { offsetTop: 0, height, data: 9, render },
     ];
 
     layout = new FixedListLayout();
@@ -100,7 +102,7 @@ describe('FixedListLayout', () => {
     ];
 
     itemsWithMargins.forEach((item, idx) => {
-      expect(item.offset).toBe(offsetsWithMargins[idx].calculatedOffset);
+      expect(item.offsetTop).toBe(offsetsWithMargins[idx].calculatedOffset);
     });
 
     // without margins
@@ -125,7 +127,7 @@ describe('FixedListLayout', () => {
     ];
 
     itemsWithoutMargins.forEach((item, idx) => {
-      expect(item.offset).toBe(offsetsWithoutMargins[idx].calculatedOffset);
+      expect(item.offsetTop).toBe(offsetsWithoutMargins[idx].calculatedOffset);
     });
 
     const combinedOffsets = [
@@ -155,7 +157,7 @@ describe('FixedListLayout', () => {
     ];
 
     itemsWithoutMargins.concat(itemsWithMargins).forEach((item, idx) => {
-      expect(item.offset).toBe(combinedOffsets[idx].calculatedOffset);
+      expect(item.offsetTop).toBe(combinedOffsets[idx].calculatedOffset);
     });
 
   });
@@ -203,7 +205,7 @@ describe('FixedListLayout', () => {
     ];
 
     itemsWithoutMargins.concat(itemsWithMargins).slice(1).forEach((item, idx) => {
-      expect(item.offset).toBe(combinedOffsets[idx].calculatedOffset);
+      expect(item.offsetTop).toBe(combinedOffsets[idx].calculatedOffset);
     });
 
     for (let i = 0; i < 9; i++) {
@@ -227,7 +229,7 @@ describe('FixedListLayout', () => {
     ];
 
     itemsWithMargins.forEach((item, idx) => {
-      expect(item.offset).toBe(offsetsWithMargins[idx].calculatedOffset);
+      expect(item.offsetTop).toBe(offsetsWithMargins[idx].calculatedOffset);
     });
   });
 
@@ -290,7 +292,7 @@ describe('FixedListLayout', () => {
     combinedItems.splice(16, 1);
 
     combinedItems.forEach((item, idx) => {
-      expect(item.offset).toBe(combinedOffsets[idx].calculatedOffset);
+      expect(item.offsetTop).toBe(combinedOffsets[idx].calculatedOffset);
     });
   });
 
@@ -324,7 +326,7 @@ describe('FixedListLayout', () => {
     ];
 
     itemsWithMargins.slice(0, -1).concat(newItem).forEach((item, idx) => {
-      expect(item.offset).toBe(offsetsWithMargins[idx].calculatedOffset);
+      expect(item.offsetTop).toBe(offsetsWithMargins[idx].calculatedOffset);
     });
   });
 
