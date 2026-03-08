@@ -52,11 +52,15 @@ export interface IItemStore<ItemType extends StoredItem = unknown> {
   readonly size: number;
 }
 
-export interface IVirtualizedListHooks {
+export interface IVirtualizedListEvents {
   onInsert: (index: number, item: IItem) => void;
   onDelete: (index: number, count: number) => void;
+}
+
+export interface IScrollableContainerEvents {
   onResize: (width: number, height: number) => void;
   onScroll: (position: number, direction: 'up' | 'down', speed: 'slow' | 'fast') => void;
+  onItemsOutOfView: (items: HTMLElement[]) => void;
 }
 
 export type MeasurementRange = {
@@ -67,20 +71,22 @@ export type MeasurementRange = {
   total: number;
 }
 
-export interface IMeasurerHooks {
+export interface IMeasurerEvents {
   onMeasureStart: (range: MeasurementRange) => void;
   onPortionMeasured: (range: MeasurementRange) => void;
   onMeasureEnd: (range: MeasurementRange) => void;
 }
 
-export interface IVirtualizeListEventEmitter<T extends { [K in keyof T]: (...args: any[]) => void }> {
+export type IEventMap = IVirtualizedListEvents & IScrollableContainerEvents & IMeasurerEvents;
+
+export interface IEventEmitter<T extends { [K in keyof T]: (...args: any[]) => void }> {
   on<K extends keyof T>(event: K, cb: T[K]): void;
   off<K extends keyof T>(event: K, cb: T[K]): void;
   emit<K extends keyof T>(event: K, ...args: Parameters<T[K]>): void;
 }
 
 export type LayoutHooks = {
-  [K in keyof IMeasurerHooks]: (cb: IMeasurerHooks[K]) => void;
+  [K in keyof IMeasurerEvents]: (cb: IMeasurerEvents[K]) => void;
 }
 
 export interface IRenderer {
@@ -88,11 +94,9 @@ export interface IRenderer {
   getContentPosition: () => { offset: number, from?: number };
 }
 
-export type ILifecycleHooks = IVirtualizeListEventEmitter<IVirtualizedListHooks>;
-
 export interface ILayout<ItemType> {
-  attach: (hooks: ILifecycleHooks, store: IItemStore<ItemType>) => IRenderer;
-  detach: (hooks: ILifecycleHooks) => void;
+  attach: (eventBus: IEventEmitter<IEventMap>, store: IItemStore<ItemType>) => IRenderer;
+  detach: () => void;
 }
 
 export interface IFixedListLayout extends ILayout<IFixedItem>, LayoutHooks {}

@@ -7,10 +7,10 @@
 import ScrollableContainer from "../ScrollableContainer/ScrollableContainer";
 import type { 
   IAsyncLayout, 
+  IEventMap, 
   IItem, 
   IItemStore, 
   IRenderer, 
-  IVirtualizedListHooks, 
   IVirtualizedListOptions 
 } from "../types/types";
 import EventBus from "./EventBus";
@@ -21,14 +21,14 @@ export default class VirtualizedList {
   private _container: HTMLElement;
   private _renderer: IRenderer;
   private _scrollableContainer: ScrollableContainer;
-  private _hooks = new EventBus<IVirtualizedListHooks>();
+  private _eventBus = new EventBus<IEventMap>();
 
   constructor({ layout, store, container }: IVirtualizedListOptions) {
     this._layout = layout;
     this._store = store;
     this._container = container;
     this._scrollableContainer = new ScrollableContainer(container);
-    this._renderer = this._layout.attach(this._hooks, this._store);
+    this._renderer = this._layout.attach(this._eventBus, this._store);
 
     this._layout.onPortionMeasured(() => {
 
@@ -49,7 +49,7 @@ export default class VirtualizedList {
     this._scrollableContainer.onScroll(() => {
       if (/* slow scroll */) {
         // get by index or get next/previuos
-        this._hooks.emit('onScroll', this._container.scrollTop, 'down', 'slow');
+        this._eventBus.emit('onScroll', this._container.scrollTop, 'down', 'slow');
         const itemsToRender = this._renderer.getRenderedElements();
         const { offset, from } = this._renderer.getContentPosition();
 
@@ -62,7 +62,7 @@ export default class VirtualizedList {
 
       if (/* fast scroll */) {
         // get by range
-        this._hooks.emit('onScroll', this._container.scrollTop, 'down', 'fast');
+        this._eventBus.emit('onScroll', this._container.scrollTop, 'down', 'fast');
         const itemsToRender = this._renderer.getRenderedElements();
         const { offset, from } = this._renderer.getContentPosition();
 
@@ -79,12 +79,12 @@ export default class VirtualizedList {
 
   insert(item: IItem, index: number) {
     this._store.insertAt(index, item);
-    this._hooks.emit('onInsert', index, item);
+    this._eventBus.emit('onInsert', index, item);
   }
 
   delete(index: number) {
     this._store.deleteAt(index);
-    this._hooks.emit('onDelete', index, 1);
+    this._eventBus.emit('onDelete', index, 1);
   }
 
   // setItems(items: IItem[]) {

@@ -8,9 +8,10 @@ import type {
   IFixedItem,
   MeasuredItem,
   IItemStore, 
-  ILifecycleHooks, 
   IRenderer, 
-  IVirtualizedListHooks,
+  IScrollableContainerEvents,
+  IEventEmitter,
+  IEventMap,
 } from "../types/types";
 
 export default class FixedListRenderer implements IRenderer {
@@ -19,7 +20,7 @@ export default class FixedListRenderer implements IRenderer {
   private _lastRenderedItem: MeasuredItem<IFixedItem> | null = null;
   private _firstRenderedItem: MeasuredItem<IFixedItem> | null = null;
 
-  private _scrollHook: IVirtualizedListHooks['onScroll'] = (position, direction, speed) => {
+  private _scrollHook: IScrollableContainerEvents['onScroll'] = (position, direction, speed) => {
     if (direction === 'down') {
       if (speed === 'slow') {
         // - will render one by one
@@ -49,7 +50,7 @@ export default class FixedListRenderer implements IRenderer {
     }
   }
 
-  constructor(hooks: ILifecycleHooks, store: IItemStore<IFixedItem>) {
+  constructor(hooks: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>) {
     this._store = store;
     hooks.on('onScroll', this._scrollHook);
   }

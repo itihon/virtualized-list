@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import FixedListLayout from '../../../src/Layout/FixedListLayout';
 import ArrayItemStore from '../../../src/ItemStore/ArrayItemStore';
 import EventBus from '../../../src/VirtualizedList/EventBus';
-import { IFixedItem, IRenderer, IVirtualizedListHooks } from '../../../src/types/types';
+import { IEventMap, IFixedItem, IRenderer } from '../../../src/types/types';
 
 // mock render function
 const render = () => ({} as HTMLElement);
@@ -36,7 +36,7 @@ let itemsWithMargins: Item[] = [];
 let itemsWithoutMargins: Item[] = [];
 let layout: FixedListLayout;
 let store: ArrayItemStore<IFixedItem>;
-let hooks: EventBus<IVirtualizedListHooks>;
+let eventBus: EventBus<IEventMap>;
 let renderer: IRenderer;
 
 const height = 40;
@@ -73,9 +73,9 @@ describe('FixedListLayout', () => {
 
     layout = new FixedListLayout();
     store = new ArrayItemStore();
-    hooks = new EventBus<IVirtualizedListHooks>();
+    eventBus = new EventBus<IEventMap>();
 
-    renderer = layout.attach(hooks, store);
+    renderer = layout.attach(eventBus, store);
   });
 
   test('calculates offset on sequential insertion in the beginning', async () => {
@@ -83,7 +83,7 @@ describe('FixedListLayout', () => {
     // with margins
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     await wait(16);
@@ -108,7 +108,7 @@ describe('FixedListLayout', () => {
     // without margins
     itemsWithoutMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     await wait(16);
@@ -166,16 +166,16 @@ describe('FixedListLayout', () => {
 
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     itemsWithoutMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     store.deleteAt(0);
-    hooks.emit('onDelete', 0, 1);
+    eventBus.emit('onDelete', 0, 1);
 
     await wait(16);
 
@@ -210,7 +210,7 @@ describe('FixedListLayout', () => {
 
     for (let i = 0; i < 9; i++) {
       store.deleteAt(0);
-      hooks.emit('onDelete', 0, 1);
+      eventBus.emit('onDelete', 0, 1);
     }
 
     await wait(16);
@@ -236,28 +236,28 @@ describe('FixedListLayout', () => {
   test('insert/delete in the middle', async () => {
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     itemsWithoutMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     const newItemWithMargins = { data: .4, height, marginTop, marginBottom, render };
     const newItemWithoutMargins = { data: .14, height, render };
 
     store.insertAt(4, newItemWithMargins);
-    hooks.emit('onInsert', 4, newItemWithMargins);
+    eventBus.emit('onInsert', 4, newItemWithMargins);
 
     store.insertAt(14, newItemWithoutMargins);
-    hooks.emit('onInsert', 14, newItemWithoutMargins);
+    eventBus.emit('onInsert', 14, newItemWithoutMargins);
 
     store.deleteAt(6);
-    hooks.emit('onDelete', 6, 1);
+    eventBus.emit('onDelete', 6, 1);
 
     store.deleteAt(16);
-    hooks.emit('onDelete', 16, 1);
+    eventBus.emit('onDelete', 16, 1);
 
     await wait(16);
 
@@ -299,15 +299,15 @@ describe('FixedListLayout', () => {
   test('insert/delete in the end', async () => {
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     store.deleteAt(9);
-    hooks.emit('onDelete', 9, 1);
+    eventBus.emit('onDelete', 9, 1);
 
     const newItem = { data: .99, height, render };
     store.insertAt(9, newItem);
-    hooks.emit('onInsert', 9, newItem);
+    eventBus.emit('onInsert', 9, newItem);
 
     await wait(16);
 
@@ -335,9 +335,9 @@ describe('FixedListLayout', () => {
     const onPortionMeasuredCB = vi.fn();
     const onMeasureEndCB = vi.fn();
 
-    layout.detach(hooks);
+    layout.detach();
     layout = new FixedListLayout({ maxMeasuredPortionSize: 5 });
-    renderer = layout.attach(hooks, store);
+    renderer = layout.attach(eventBus, store);
 
     layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
     layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
@@ -345,12 +345,12 @@ describe('FixedListLayout', () => {
 
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     itemsWithoutMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     expect(onMeasureStartCB).not.toHaveBeenCalled();
@@ -408,9 +408,9 @@ describe('FixedListLayout', () => {
     const onPortionMeasuredCB = vi.fn();
     const onMeasureEndCB = vi.fn();
 
-    layout.detach(hooks);
+    layout.detach();
     layout = new FixedListLayout({ maxMeasuredPortionSize: 9 });
-    renderer = layout.attach(hooks, store);
+    renderer = layout.attach(eventBus, store);
 
     layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
     layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
@@ -418,12 +418,12 @@ describe('FixedListLayout', () => {
 
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     itemsWithoutMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     expect(onMeasureStartCB).not.toHaveBeenCalled();
@@ -470,9 +470,9 @@ describe('FixedListLayout', () => {
     const onPortionMeasuredCB = vi.fn();
     const onMeasureEndCB = vi.fn();
 
-    layout.detach(hooks);
+    layout.detach();
     layout = new FixedListLayout({ maxMeasuredPortionSize: 20 });
-    renderer = layout.attach(hooks, store);
+    renderer = layout.attach(eventBus, store);
 
     layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
     layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
@@ -480,12 +480,12 @@ describe('FixedListLayout', () => {
 
     itemsWithMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     itemsWithoutMargins.forEach((item, idx) => {
       store.insertAt(idx, item);
-      hooks.emit('onInsert', idx, item);
+      eventBus.emit('onInsert', idx, item);
     });
 
     expect(onMeasureStartCB).not.toHaveBeenCalled();

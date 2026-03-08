@@ -8,10 +8,10 @@ import type {
   IFixedListLayout, 
   IFixedItem, 
   IItemStore, 
-  ILifecycleHooks, 
-  IMeasurerHooks, 
+  IMeasurerEvents,
+  IEventEmitter,
+  IEventMap, 
 } from "../types/types";
-import EventBus from "../VirtualizedList/EventBus";
 import FixedListRenderer from "./FixedListRenderer";
 
 export default class FixedListLayout implements IFixedListLayout {
@@ -19,7 +19,7 @@ export default class FixedListLayout implements IFixedListLayout {
   private _lastProcessedItemIndex: number = 0;
   private _runningOffsetCalculation: boolean = false;
   private _scheduledOffsetCalculation: number | undefined;
-  private _hooks = new EventBus<IMeasurerHooks>();
+  private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _attachedHook: ((index: number) => void) | null = null;
 
   private _stopOffsetCalculation() {
@@ -53,7 +53,9 @@ export default class FixedListLayout implements IFixedListLayout {
     let startOffset = 0;
     let endOffset = 0;
 
-    this._hooks.emit(
+    if (!this._eventBus) return;
+
+    this._eventBus.emit(
       'onMeasureStart', 
       { startIndex, endIndex, total: store.size, startOffset, endOffset },
     );
@@ -71,7 +73,7 @@ export default class FixedListLayout implements IFixedListLayout {
           endIndex = currentIndex;
           endOffset = currentItem.offsetTop;
 
-          this._hooks.emit(
+          this._eventBus.emit(
             'onPortionMeasured', 
             { startIndex, endIndex, total: store.size, startOffset, endOffset },
           );
@@ -91,7 +93,7 @@ export default class FixedListLayout implements IFixedListLayout {
     }
 
     this._stopOffsetCalculation();
-    this._hooks.emit(
+    this._eventBus.emit(
       'onMeasureEnd', 
       { startIndex, endIndex, total: store.size, startOffset, endOffset  },
     );
@@ -101,31 +103,32 @@ export default class FixedListLayout implements IFixedListLayout {
     this._maxMeasuredPortionSize = maxMeasuredPortionSize;
   }
 
-  attach(hooks: ILifecycleHooks, store: IItemStore<IFixedItem>) {
+  attach(eventBus: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>) {
     this._attachedHook = (index: number) => this._scheduleOffsetCalculation(index, store);
+    this._eventBus = eventBus;
 
-    hooks.on('onInsert', this._attachedHook);
-    hooks.on('onDelete', this._attachedHook);
+    eventBus.on('onInsert', this._attachedHook);
+    eventBus.on('onDelete', this._attachedHook);
    
-    return new FixedListRenderer(hooks, store);
+    return new FixedListRenderer(eventBus, store);
   } 
 
-  detach(hooks: ILifecycleHooks) {
-    if (this._attachedHook) {
-      hooks.off('onInsert', this._attachedHook);
-      hooks.off('onDelete', this._attachedHook);
+  detach() {
+    if (this._attachedHook && this._eventBus) {
+      this._eventBus.off('onInsert', this._attachedHook);
+      this._eventBus.off('onDelete', this._attachedHook);
     }
   }
 
-  onMeasureStart(cb: IMeasurerHooks['onMeasureStart']) {
-    this._hooks.on('onMeasureStart', cb);
+  onMeasureStart(cb: IMeasurerEvents['onMeasureStart']) {
+    this._eventBus?.on('onMeasureStart', cb);
   }
 
-  onMeasureEnd(cb: IMeasurerHooks['onMeasureEnd']) {
-    this._hooks.on('onMeasureEnd', cb);
+  onMeasureEnd(cb: IMeasurerEvents['onMeasureEnd']) {
+    this._eventBus?.on('onMeasureEnd', cb);
   }
 
-  onPortionMeasured(cb: IMeasurerHooks['onPortionMeasured']) {
-    this._hooks.on('onPortionMeasured', cb);
+  onPortionMeasured(cb: IMeasurerEvents['onPortionMeasured']) {
+    this._eventBus?.on('onPortionMeasured', cb);
   }
 }
