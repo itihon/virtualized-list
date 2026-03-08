@@ -12,6 +12,7 @@ import type {
   IMeasurerHooks, 
 } from "../types/types";
 import EventBus from "../VirtualizedList/EventBus";
+import FixedListRenderer from "./FixedListRenderer";
 
 export default class FixedListLayout implements IFixedListLayout {
   private _maxMeasuredPortionSize: number;
@@ -20,12 +21,6 @@ export default class FixedListLayout implements IFixedListLayout {
   private _scheduledOffsetCalculation: number | undefined;
   private _hooks = new EventBus<IMeasurerHooks>();
   private _attachedHook: ((index: number) => void) | null = null;
-
-  private _renderer: IRenderer = {
-    getRenderedElements() {
-      return Array.from({ length: 4 }).map(() => document.createElement('div'));
-    },
-  };
 
   private _stopOffsetCalculation() {
     this._runningOffsetCalculation = false;
@@ -112,7 +107,7 @@ export default class FixedListLayout implements IFixedListLayout {
     hooks.on('onInsert', this._attachedHook);
     hooks.on('onDelete', this._attachedHook);
    
-    return this._renderer;
+    return new FixedListRenderer(hooks, store);
   } 
 
   detach(hooks: ILifecycleHooks) {

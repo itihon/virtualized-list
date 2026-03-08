@@ -37,7 +37,7 @@ export default class ScrollableContainer {
     this._container.addEventListener('scroll', cb);
   }
 
-  updateContentPosition(offset: number): Promise<Animation> {
+  updateContentPosition(offset: number, fromOffset?: number): Promise<Animation> {
 
     const position = -offset;
   
@@ -48,7 +48,11 @@ export default class ScrollableContainer {
       this._scrollAnimation.cancel();
     }
 
-    this._previousKeyframe.transform = `translateY(${currentPosition || this._previousPosition}px)`;
+    const fromPosition = fromOffset !== undefined 
+      ? -fromOffset
+      : currentPosition || this._previousPosition;
+
+    this._previousKeyframe.transform = `translateY(${fromPosition}px)`;
     this._nextKeyframe.transform = `translateY(${position}px)`;
     
     this._scrollAnimation = this._contentLayer.DOMRoot.animate(
