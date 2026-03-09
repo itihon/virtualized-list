@@ -20,6 +20,7 @@ export default class FixedListLayout implements IFixedListLayout {
   private _runningOffsetCalculation: boolean = false;
   private _scheduledOffsetCalculation: number | undefined;
   private _eventBus: IEventEmitter<IEventMap> | null = null;
+  private _renderer: FixedListRenderer | null = null;
   private _attachedHook: ((index: number) => void) | null = null;
 
   private _stopOffsetCalculation() {
@@ -103,14 +104,13 @@ export default class FixedListLayout implements IFixedListLayout {
     this._maxMeasuredPortionSize = maxMeasuredPortionSize;
   }
 
-  attach(eventBus: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>) {
+  attach(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>) {
     this._attachedHook = (index: number) => this._scheduleOffsetCalculation(index, store);
     this._eventBus = eventBus;
+    this._renderer =  new FixedListRenderer(container, eventBus, store);
 
     eventBus.on('onInsert', this._attachedHook);
     eventBus.on('onDelete', this._attachedHook);
-   
-    return new FixedListRenderer(eventBus, store);
   } 
 
   detach() {

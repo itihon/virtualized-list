@@ -9,10 +9,12 @@
   <body>
     <script type="module">
       import ScrollableContainer from '../../src/ScrollableContainer/ScrollableContainer.ts';
+      import EventBus from '../../src/EventBus/EventBus.ts';
 
       const container = document.createElement('div');
       const nonVirtualizedContainer = document.createElement('div');
-      const scrollableContainer = new ScrollableContainer(container);
+      const eventBus = new EventBus();
+      const scrollableContainer = new ScrollableContainer(container, eventBus);
 
       function createItem(content = '') {
         const item = document.createElement('div');
@@ -41,11 +43,11 @@
         nonVirtualizedContainer.appendChild(createItem(`Item ${i}.`));
       }
 
-      scrollableContainer.onScroll((e) => {
-        new IntersectionObserver((_, observer) => {
-          scrollableContainer.updateContentPosition(e.target.scrollTop);
-          observer.unobserve(container);
-        }).observe(container);
+      eventBus.on('onScroll', (position) => {
+        // new IntersectionObserver((_, observer) => {
+          scrollableContainer.updateContentPosition(position);
+          // observer.unobserve(container);
+        // }).observe(container);
       });
 
       window.scrollableContainer = scrollableContainer;

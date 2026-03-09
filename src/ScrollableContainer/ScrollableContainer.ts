@@ -4,6 +4,7 @@
  * @author Alexandr Kalabin
  */
 
+import type { IEventEmitter, IEventMap } from '../types/types';
 import DOMConstructor from './DOMConstructor';
 import classes from './ScrollableContainer.module.css';
 import extractTYValue from './extractTYValue';
@@ -18,9 +19,14 @@ export default class ScrollableContainer {
   private _animationOptions: KeyframeAnimationOptions = { duration: 4, fill: 'forwards', playbackRate: 1, easing: 'cubic-bezier(0, 0.49, 0.03, 0.42)' };
   private _previousKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 0 };
   private _nextKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 1 }; 
+  private _previousScrollTop: number = 0;
+  private _overscanHeight: number = 0;
+  private _eventBus: IEventEmitter<IEventMap>;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, overscanHeight = 200) {
     this._container = container;
+    this._eventBus = eventBus;
+    this._overscanHeight = overscanHeight;
     this._scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
     this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
     this._contentLayer = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.contentLayer]);

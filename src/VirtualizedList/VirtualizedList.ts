@@ -27,8 +27,9 @@ export default class VirtualizedList {
     this._layout = layout;
     this._store = store;
     this._container = container;
-    this._scrollableContainer = new ScrollableContainer(container);
-    this._renderer = this._layout.attach(this._eventBus, this._store);
+    this._scrollableContainer = new ScrollableContainer(container, this._eventBus);
+    
+    this._layout.attach(this._container, this._eventBus, this._store);
 
     this._layout.onPortionMeasured(() => {
 

@@ -37,7 +37,6 @@ let itemsWithoutMargins: Item[] = [];
 let layout: FixedListLayout;
 let store: ArrayItemStore<IFixedItem>;
 let eventBus: EventBus<IEventMap>;
-let renderer: IRenderer;
 
 const height = 40;
 const marginTop = 10;
@@ -75,7 +74,7 @@ describe('FixedListLayout', () => {
     store = new ArrayItemStore();
     eventBus = new EventBus<IEventMap>();
 
-    renderer = layout.attach(eventBus, store);
+    layout.attach(document.createElement('div'), eventBus, store);
   });
 
   test('calculates offset on sequential insertion in the beginning', async () => {
@@ -337,7 +336,7 @@ describe('FixedListLayout', () => {
 
     layout.detach();
     layout = new FixedListLayout({ maxMeasuredPortionSize: 5 });
-    renderer = layout.attach(eventBus, store);
+    layout.attach(document.createElement('div'), eventBus, store);
 
     layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
     layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
@@ -410,7 +409,7 @@ describe('FixedListLayout', () => {
 
     layout.detach();
     layout = new FixedListLayout({ maxMeasuredPortionSize: 9 });
-    renderer = layout.attach(eventBus, store);
+    layout.attach(document.createElement('div'), eventBus, store);
 
     layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
     layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));
@@ -472,7 +471,7 @@ describe('FixedListLayout', () => {
 
     layout.detach();
     layout = new FixedListLayout({ maxMeasuredPortionSize: 20 });
-    renderer = layout.attach(eventBus, store);
+    layout.attach(document.createElement('div'), eventBus, store);
 
     layout.onMeasureStart(range => onMeasureStartCB(range.startIndex));
     layout.onPortionMeasured(range => onPortionMeasuredCB(range.startIndex, range.endIndex, range.total, range.startOffset, range.endOffset));

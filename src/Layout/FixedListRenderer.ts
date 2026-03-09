@@ -50,7 +50,7 @@ export default class FixedListRenderer implements IRenderer {
     }
   }
 
-  constructor(hooks: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>) {
+  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>) {
     this._store = store;
     hooks.on('onScroll', this._scrollHook);
   }

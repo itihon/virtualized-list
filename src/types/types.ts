@@ -95,7 +95,7 @@ export interface IRenderer {
 }
 
 export interface ILayout<ItemType> {
-  attach: (eventBus: IEventEmitter<IEventMap>, store: IItemStore<ItemType>) => IRenderer;
+  attach: (container: HTMLElement, eventBus: IEventEmitter<IEventMap>, store: IItemStore<ItemType>) => void;
   detach: () => void;
 }
 
