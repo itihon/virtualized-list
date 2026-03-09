@@ -23,6 +23,23 @@ export default class ScrollableContainer {
   private _overscanHeight: number = 0;
   private _eventBus: IEventEmitter<IEventMap>;
 
+  private _emitOnScroll = () => {
+    const previousScrollTop = this._previousScrollTop;
+    const scrollTop = this._container.scrollTop;
+    const speed = Math.abs(previousScrollTop - scrollTop) >= this._overscanHeight 
+      ? 'fast' 
+      : 'slow';
+
+    if (previousScrollTop < scrollTop) {
+      this._eventBus.emit('onScroll', scrollTop, 'down', speed);
+    }
+    else if (previousScrollTop > scrollTop) {
+      this._eventBus.emit('onScroll', scrollTop, 'up', speed);
+    }
+
+    this._previousScrollTop = scrollTop;
+  };
+
   constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, overscanHeight = 200) {
     this._container = container;
     this._eventBus = eventBus;
@@ -32,6 +49,7 @@ export default class ScrollableContainer {
     this._contentLayer = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.contentLayer]);
     this._container.classList.add(classes.scrollableContainer);
     this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`});
+    this._container.addEventListener('scroll', this._emitOnScroll);
   }
 
   setScrollHeight(scrollHeight: number) {
