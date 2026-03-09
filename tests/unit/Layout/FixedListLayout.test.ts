@@ -1,8 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import FixedListLayout from '../../../src/Layout/FixedListLayout';
 import ArrayItemStore from '../../../src/ItemStore/ArrayItemStore';
-import EventBus from '../../../src/VirtualizedList/EventBus';
-import { IEventMap, IFixedItem, IRenderer } from '../../../src/types/types';
+import EventBus from '../../../src/EventBus/EventBus';
+import { IEventMap, IFixedItem } from '../../../src/types/types';
 
 // mock render function
 const render = () => ({} as HTMLElement);

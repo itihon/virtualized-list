@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import EventBus from '../../../src/VirtualizedList/EventBus';
-import type { IVirtualizedListHooks, IItem } from '../../../src/types/types';
+import EventBus from '../../../src/EventBus/EventBus';
+import type { IEventMap, IItem } from '../../../src/types/types';
 
 // mock render function
 const render = () => ({} as HTMLElement);
 
 describe('EventBus', () => {
-  let bus: EventBus<IVirtualizedListHooks>;
-  let mockOnScrollCallback: IVirtualizedListHooks['onScroll'];
-  let mockOnInsertCallback: IVirtualizedListHooks['onInsert'];
+  let bus: EventBus<IEventMap>;
+  let mockOnScrollCallback: IEventMap['onScroll'];
+  let mockOnInsertCallback: IEventMap['onInsert'];
 
   beforeEach(() => {
-    bus = new EventBus<IVirtualizedListHooks>();
+    bus = new EventBus<IEventMap>();
     mockOnScrollCallback = vi.fn();
     mockOnInsertCallback = vi.fn();
   });
@@ -19,9 +19,9 @@ describe('EventBus', () => {
   describe('on()', () => {
     it('should register a listener for an event', () => {
       bus.on('onScroll', mockOnScrollCallback);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
       expect(mockOnScrollCallback).toHaveBeenCalledTimes(1);
-      expect(mockOnScrollCallback).toHaveBeenCalledWith(100, 'up');
+      expect(mockOnScrollCallback).toHaveBeenCalledWith(100, 'up', 'fast');
     });
 
     it('should register multiple listeners for the same event', () => {
@@ -30,7 +30,7 @@ describe('EventBus', () => {
 
       bus.on('onScroll', callback1);
       bus.on('onScroll', callback2);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       expect(callback1).toHaveBeenCalledTimes(1);
       expect(callback2).toHaveBeenCalledTimes(1);
@@ -43,10 +43,10 @@ describe('EventBus', () => {
       bus.on('onScroll', scrollCallback);
       bus.on('onResize', resizeCallback);
 
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
       bus.emit('onResize', 800, 600);
 
-      expect(scrollCallback).toHaveBeenCalledWith(100, 'up');
+      expect(scrollCallback).toHaveBeenCalledWith(100, 'up', 'fast');
       expect(resizeCallback).toHaveBeenCalledWith(800, 600);
     });
 
@@ -66,7 +66,7 @@ describe('EventBus', () => {
     it('should allow registering the same callback multiple times', () => {
       bus.on('onScroll', mockOnScrollCallback);
       bus.on('onScroll', mockOnScrollCallback);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       // Set deduplicates, so should only be called once
       expect(mockOnScrollCallback).toHaveBeenCalledTimes(1);
@@ -81,7 +81,7 @@ describe('EventBus', () => {
       bus.on('onScroll', callback1);
       bus.on('onScroll', callback2);
       bus.off('onScroll', callback1);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       expect(callback1).not.toHaveBeenCalled();
       expect(callback2).toHaveBeenCalledTimes(1);
@@ -90,7 +90,7 @@ describe('EventBus', () => {
     it('should clean up empty listener sets', () => {
       bus.on('onScroll', mockOnScrollCallback);
       bus.off('onScroll', mockOnScrollCallback);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       expect(mockOnScrollCallback).not.toHaveBeenCalled();
     });
@@ -115,7 +115,7 @@ describe('EventBus', () => {
       bus.on('onScroll', callback2);
       bus.on('onScroll', callback1); // Register same callback again
       bus.off('onScroll', callback1);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       // Since we use Set, callback1 is deduplicated
       expect(callback1).not.toHaveBeenCalled();
@@ -134,7 +134,7 @@ describe('EventBus', () => {
 
     it('should not throw when emitting to event with no listeners', () => {
       expect(() => {
-        bus.emit('onScroll', 100, 'up');
+        bus.emit('onScroll', 100, 'up', 'fast');
       }).not.toThrow();
     });
 
@@ -142,10 +142,10 @@ describe('EventBus', () => {
       const callbacks = [vi.fn(), vi.fn(), vi.fn()];
       callbacks.forEach(cb => bus.on('onScroll', cb));
 
-      bus.emit('onScroll', 100, 'down');
+      bus.emit('onScroll', 100, 'down', 'fast');
 
       callbacks.forEach(cb => {
-        expect(cb).toHaveBeenCalledWith(100, 'down');
+        expect(cb).toHaveBeenCalledWith(100, 'down', 'fast');
       });
     });
 
@@ -157,7 +157,7 @@ describe('EventBus', () => {
       bus.on('onScroll', successCallback);
 
       expect(() => {
-        bus.emit('onScroll', 100, 'up');
+        bus.emit('onScroll', 100, 'up', 'fast');
       }).toThrow();
 
       // The error callback was called before throwing
@@ -200,18 +200,18 @@ describe('EventBus', () => {
       const callback = vi.fn();
       bus.on('onScroll', callback);
 
-      bus.emit('onScroll', 500, 'up');
+      bus.emit('onScroll', 500, 'up', 'fast');
 
-      expect(callback).toHaveBeenCalledWith(500, 'up');
+      expect(callback).toHaveBeenCalledWith(500, 'up', 'fast');
     });
 
     it('should handle onScroll event with down direction', () => {
       const callback = vi.fn();
       bus.on('onScroll', callback);
 
-      bus.emit('onScroll', 500, 'down');
+      bus.emit('onScroll', 500, 'down', 'fast');
 
-      expect(callback).toHaveBeenCalledWith(500, 'down');
+      expect(callback).toHaveBeenCalledWith(500, 'down', 'fast');
     });
   });
 
@@ -222,7 +222,7 @@ describe('EventBus', () => {
       bus.on('onScroll', callback);
       bus.off('onScroll', callback);
       bus.on('onScroll', callback);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       expect(callback).toHaveBeenCalledTimes(1);
     });
@@ -230,7 +230,7 @@ describe('EventBus', () => {
     it('should handle emitting after all listeners removed', () => {
       bus.on('onScroll', mockOnScrollCallback);
       bus.off('onScroll', mockOnScrollCallback);
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       expect(mockOnScrollCallback).not.toHaveBeenCalled();
     });
@@ -241,7 +241,7 @@ describe('EventBus', () => {
       bus.on('onScroll', () => callOrder.push('second'));
       bus.on('onScroll', () => callOrder.push('third'));
 
-      bus.emit('onScroll', 100, 'up');
+      bus.emit('onScroll', 100, 'up', 'fast');
 
       expect(callOrder).toEqual(['first', 'second', 'third']);
     });
@@ -258,19 +258,19 @@ describe('EventBus', () => {
 
   describe('Multiple EventBus instances', () => {
     it('should maintain separate listener registries', () => {
-      const bus1 = new EventBus<IVirtualizedListHooks>();
-      const bus2 = new EventBus<IVirtualizedListHooks>();
+      const bus1 = new EventBus<IEventMap>();
+      const bus2 = new EventBus<IEventMap>();
       const callback1 = vi.fn();
       const callback2 = vi.fn();
 
       bus1.on('onScroll', callback1);
       bus2.on('onScroll', callback2);
 
-      bus1.emit('onScroll', 100, 'up');
-      bus2.emit('onScroll', 200, 'down');
+      bus1.emit('onScroll', 100, 'up', 'fast');
+      bus2.emit('onScroll', 200, 'down', 'fast');
 
-      expect(callback1).toHaveBeenCalledWith(100, 'up');
-      expect(callback2).toHaveBeenCalledWith(200, 'down');
+      expect(callback1).toHaveBeenCalledWith(100, 'up', 'fast');
+      expect(callback2).toHaveBeenCalledWith(200, 'down', 'fast');
       expect(callback1).not.toHaveBeenCalledWith(200, 'down');
       expect(callback2).not.toHaveBeenCalledWith(100, 'up');
     });

@@ -13,7 +13,7 @@ import type {
   IRenderer, 
   IVirtualizedListOptions 
 } from "../types/types";
-import EventBus from "./EventBus";
+import EventBus from "../EventBus/EventBus";
 
 export default class VirtualizedList {
   private _layout: IAsyncLayout;
