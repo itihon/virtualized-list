@@ -69,6 +69,7 @@ export type MeasurementRange = {
   startIndex: number; 
   endIndex: number; 
   total: number;
+  totalHeight: number;
 }
 
 export interface IMeasurerEvents {
@@ -89,11 +90,6 @@ export type LayoutHooks = {
   [K in keyof IMeasurerEvents]: (cb: IMeasurerEvents[K]) => void;
 }
 
-export interface IRenderer {
-  getRenderedElements: () => HTMLElement[];
-  getContentPosition: () => { offset: number, from?: number };
-}
-
 export interface ILayout<ItemType> {
   attach: (container: HTMLElement, eventBus: IEventEmitter<IEventMap>, store: IItemStore<ItemType>) => void;
   detach: () => void;
@@ -103,8 +99,14 @@ export interface IFixedListLayout extends ILayout<IFixedItem>, LayoutHooks {}
 
 export interface IDynamicListLayout extends ILayout<IItem>, LayoutHooks {}
 
-export interface IVirtualizedListOptions {
-  layout: IFixedListLayout | IDynamicListLayout;
-  store: IItemStore;
+export interface IVirtualizedFixedListOptions {
+  layout: IFixedListLayout;
+  store: IItemStore<IFixedItem>;
+  container: HTMLElement;
+}
+
+export interface IVirtualizedDynamicListOptions {
+  layout: IDynamicListLayout;
+  store: IItemStore<IItem>;
   container: HTMLElement;
 }

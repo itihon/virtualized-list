@@ -16,6 +16,7 @@ import FixedListRenderer from "./FixedListRenderer";
 
 export default class FixedListLayout implements IFixedListLayout {
   private _maxMeasuredPortionSize: number;
+  private _overscanHeight: number;
   private _lastProcessedItemIndex: number = 0;
   private _runningOffsetCalculation: boolean = false;
   private _scheduledOffsetCalculation: number | undefined;
@@ -53,12 +54,13 @@ export default class FixedListLayout implements IFixedListLayout {
     let endIndex = currentIndex;
     let startOffset = 0;
     let endOffset = 0;
+    let totalHeight = 0;
 
     if (!this._eventBus) return;
 
     this._eventBus.emit(
       'onMeasureStart', 
-      { startIndex, endIndex, total: store.size, startOffset, endOffset },
+      { startIndex, endIndex, total: store.size, startOffset, endOffset, totalHeight },
     );
 
     if (currentItem) {
@@ -73,10 +75,11 @@ export default class FixedListLayout implements IFixedListLayout {
         if (portionProcessed || endReached) {
           endIndex = currentIndex;
           endOffset = currentItem.offsetTop;
+          totalHeight += currentItem.offsetTop + currentItem.height + (currentItem.marginBottom || 0);
 
           this._eventBus.emit(
             'onPortionMeasured', 
-            { startIndex, endIndex, total: store.size, startOffset, endOffset },
+            { startIndex, endIndex, total: store.size, startOffset, endOffset, totalHeight },
           );
           this._lastProcessedItemIndex = endIndex;
 
@@ -96,18 +99,19 @@ export default class FixedListLayout implements IFixedListLayout {
     this._stopOffsetCalculation();
     this._eventBus.emit(
       'onMeasureEnd', 
-      { startIndex, endIndex, total: store.size, startOffset, endOffset  },
+      { startIndex, endIndex, total: store.size, startOffset, endOffset, totalHeight },
     );
   }
 
-  constructor({ maxMeasuredPortionSize = 100_000 } = {}) {
+  constructor({ maxMeasuredPortionSize = 100_000, overscanHeight = 100 } = {}) {
     this._maxMeasuredPortionSize = maxMeasuredPortionSize;
+    this._overscanHeight = overscanHeight;
   }
 
   attach(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>) {
     this._attachedHook = (index: number) => this._scheduleOffsetCalculation(index, store);
     this._eventBus = eventBus;
-    this._renderer =  new FixedListRenderer(container, eventBus, store);
+    this._renderer =  new FixedListRenderer(container, eventBus, store, this._overscanHeight);
 
     eventBus.on('onInsert', this._attachedHook);
     eventBus.on('onDelete', this._attachedHook);
