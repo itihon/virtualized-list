@@ -72,9 +72,6 @@ export default class FixedListRenderer {
   }
 
   private _renderRange(start: number, necessaryHeight: number) {
-    if (start >= this._scrollableContainer.getScrollHeight()) return;
-    if (start < 0) return;
-
     let item = this._store.getByOffset(start);
 
     if (item) {
