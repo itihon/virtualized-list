@@ -16,12 +16,17 @@ export default class ScrollableContainer {
   private _contentLayer: DOMConstructor;
   private _scrollAnimation: Animation;
   private _previousPosition = 0;
-  private _animationOptions: KeyframeAnimationOptions = { duration: 4, fill: 'forwards', playbackRate: 1, easing: 'cubic-bezier(0, 0.49, 0.03, 0.42)' };
+  private _observer: IntersectionObserver;
+  private _currentAnimatedPosition = 0;
+  private _animationOptions: KeyframeAnimationOptions = { duration: 32, fill: 'forwards', playbackRate: 4, easing: 'cubic-bezier(0, 0.49, 0.03, 0.42)' };
   private _previousKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 0 };
   private _nextKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 1 }; 
   private _previousScrollTop: number = 0;
   private _overscanHeight: number = 0;
   private _eventBus: IEventEmitter<IEventMap>;
+  private _scrollHeight = 0;
+  private _clientWidth = 0;
+  private _clientHeight = 0;
 
   private _emitOnScroll = () => {
     const previousScrollTop = this._previousScrollTop;
@@ -38,6 +43,21 @@ export default class ScrollableContainer {
     }
 
     this._previousScrollTop = scrollTop;
+    this._observer.observe(this._contentLayer.DOMRoot);
+  };
+
+  private _saveCurrentAnimatedPosition: IntersectionObserverCallback = (_, observer) => {
+    const contentLayer = this._contentLayer.DOMRoot;
+
+    this._currentAnimatedPosition = extractTYValue(getComputedStyle(contentLayer).transform);
+    observer.unobserve(contentLayer);
+  };
+
+  private _saveCurrentSize: ResizeObserverCallback = () => {
+    this._clientWidth = this._container.clientWidth;
+    this._clientHeight = this._container.clientHeight;
+
+    this._eventBus.emit('onResize', this._clientWidth, this._clientHeight);
   };
 
   constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, overscanHeight = 200) {
@@ -50,15 +70,19 @@ export default class ScrollableContainer {
     this._container.classList.add(classes.scrollableContainer);
     this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`});
     this._container.addEventListener('scroll', this._emitOnScroll);
+    this._observer = new IntersectionObserver(this._saveCurrentAnimatedPosition, { root: this._container });
+    this._observer.observe(this._contentLayer.DOMRoot);
+    new ResizeObserver(this._saveCurrentSize).observe(this._container);
   }
 
   setScrollHeight(scrollHeight: number) {
     this._scrollHeightFiller.setHeight(scrollHeight);
     this._contentLayer.setHeight(scrollHeight);
+    this._scrollHeight = scrollHeight;
   }
 
-  onScroll(cb: EventListener) {
-    this._container.addEventListener('scroll', cb);
+  getScrollHeight(): number {
+    return this._scrollHeight;
   }
 
   updateContentPosition(offset: number, fromOffset?: number): Promise<Animation> {
@@ -68,7 +92,8 @@ export default class ScrollableContainer {
     let currentPosition: number | null = null;
 
     if (this._scrollAnimation.playState !== 'finished') {
-      currentPosition = extractTYValue(getComputedStyle(this._contentLayer.DOMRoot).transform);
+      // currentPosition = extractTYValue(getComputedStyle(this._contentLayer.DOMRoot).transform);
+      currentPosition = this._currentAnimatedPosition;
       this._scrollAnimation.cancel();
     }
 
@@ -90,8 +115,32 @@ export default class ScrollableContainer {
     return this._scrollAnimation.finished;
   }
 
+  getContentPostion(): number {
+    return Math.abs(this._currentAnimatedPosition);
+  }
+
   appendItem(item: HTMLElement) {
     this._contentLayer.DOMRoot.appendChild(item);
+  }
+
+  prependItem(item: HTMLElement) {
+    this._contentLayer.DOMRoot.prepend(item);
+  }
+
+  getClientWidth(): number {
+    return this._clientWidth;
+  }
+
+  getClientHeight(): number {
+    return this._clientHeight;
+  }
+
+  getFirstItem(): Element | null {
+    return this._contentLayer.DOMRoot.firstElementChild;
+  }
+
+  getLastItem(): Element | null {
+    return this._contentLayer.DOMRoot.lastElementChild;
   }
 
   clear() {
