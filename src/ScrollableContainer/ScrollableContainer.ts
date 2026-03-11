@@ -53,6 +53,11 @@ export default class ScrollableContainer {
     observer.unobserve(contentLayer);
   };
 
+  private _observeContentLayer = (animation: Animation) => { 
+    this._observer.observe(this._contentLayer.DOMRoot); 
+    return animation; 
+  };
+
   private _saveCurrentSize: ResizeObserverCallback = () => {
     this._clientWidth = this._container.clientWidth;
     this._clientHeight = this._container.clientHeight;
@@ -111,8 +116,12 @@ export default class ScrollableContainer {
 
     this._scrollAnimation.currentTime = 1;
     this._previousPosition = position;
+    this._currentAnimatedPosition = fromPosition;
 
-    return this._scrollAnimation.finished;
+    return this._scrollAnimation.finished.then(
+      this._observeContentLayer,
+      this._observeContentLayer,
+    );
   }
 
   getContentPostion(): number {
