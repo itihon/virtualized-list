@@ -4,6 +4,14 @@ import ArrayItemStore from '../../../src/ItemStore/ArrayItemStore';
 import EventBus from '../../../src/EventBus/EventBus';
 import { IEventMap, IFixedItem } from '../../../src/types/types';
 
+// mock animate method
+if (!HTMLElement.prototype.animate) {
+  HTMLElement.prototype.animate = () => ({} as Animation);
+}
+
+// mock appendChild method
+HTMLElement.prototype.appendChild = () => ({} as any);
+
 // mock render function
 const render = () => ({} as HTMLElement);
 
