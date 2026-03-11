@@ -155,7 +155,7 @@ export default class FixedListRenderer {
 
       if (speed === 'fast') {
         this._scrollableContainer.clear();
-        this._renderRange(position, this._scrollableContainer.getClientHeight() + this._overscanHeight);
+        this._renderRange(position, this._scrollableContainer.getClientHeight());
         this._scrollableContainer.updateContentPosition(position, position);
       }
     }
