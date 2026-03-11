@@ -41,7 +41,7 @@ export default class FixedListRenderer {
     let lastItem = fromElement;
 
     if (lastItem) {
-      const necessaryHeight = (this._scrollableContainer.getClientHeight() + this._overscanHeight) - ((lastItem.offsetTop || 0) - this._scrollableContainer.getContentPostion());
+      const necessaryHeight = (this._scrollableContainer.getClientHeight() + this._overscanHeight) - ((lastItem.offsetTop || 0) - this._scrollableContainer.getContentPosition());
       const lastItemOffset = lastItem.offsetTop || 0;
       let accumulatedHeight = 0;
 
@@ -58,7 +58,7 @@ export default class FixedListRenderer {
     let lastItem = fromElement;
 
     if (lastItem) {
-      const necessaryHeight = (lastItem.offsetTop || 0) - (this._scrollableContainer.getContentPostion() - this._overscanHeight);
+      const necessaryHeight = (lastItem.offsetTop || 0) - (this._scrollableContainer.getContentPosition() - this._overscanHeight);
       const lastItemOffset = lastItem.offsetTop || 0;
       let accumulatedHeight = 0;
 
@@ -93,7 +93,7 @@ export default class FixedListRenderer {
   private _removeItemsOutOfView(direction: 'up' | 'down') {
     if (direction === 'down') {
       let itemFullOffset = 0;
-      const contentOffset = this._scrollableContainer.getContentPostion();
+      const contentOffset = this._scrollableContainer.getContentPosition();
 
       while (itemFullOffset < contentOffset) {
         const firstRenderedElement = this._scrollableContainer.getFirstItem();
@@ -115,7 +115,7 @@ export default class FixedListRenderer {
 
     if (direction === 'up') {
       let itemOffset = Infinity;
-      const contentOffsetBottom = this._scrollableContainer.getContentPostion() 
+      const contentOffsetBottom = this._scrollableContainer.getContentPosition() 
         + this._scrollableContainer.getClientHeight() 
         + this._overscanHeight;
 

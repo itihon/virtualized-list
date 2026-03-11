@@ -77,7 +77,7 @@ test.describe('Scrollable Container Methods', () => {
       await ((window as any).scrollableContainer as ScrollableContainer).updateContentPosition(offset);
     };
 
-    const getContentPosition = async () => ((window as any).scrollableContainer as ScrollableContainer).getContentPostion();
+    const getContentPosition = async () => ((window as any).scrollableContainer as ScrollableContainer).getContentPosition();
 
     await page.evaluate(updateContentPosition, 100);
     expect(await page.evaluate(getContentPosition)).toBe(100);

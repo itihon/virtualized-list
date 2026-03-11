@@ -124,7 +124,7 @@ export default class ScrollableContainer {
     );
   }
 
-  getContentPostion(): number {
+  getContentPosition(): number {
     return Math.abs(this._currentAnimatedPosition);
   }
 
