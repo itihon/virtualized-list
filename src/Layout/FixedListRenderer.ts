@@ -93,9 +93,9 @@ export default class FixedListRenderer {
   private _removeItemsOutOfView(direction: 'up' | 'down') {
     if (direction === 'down') {
       let itemFullOffset = 0;
-      const contentOffset = this._scrollableContainer.getContentPosition();
+      const contentOffsetTop = this._scrollableContainer.getContentPosition() - this._overscanHeight;
 
-      while (itemFullOffset < contentOffset) {
+      while (itemFullOffset < contentOffsetTop) {
         const firstRenderedElement = this._scrollableContainer.getFirstItem();
 
         if (firstRenderedElement) {
@@ -105,7 +105,7 @@ export default class FixedListRenderer {
 
             itemFullOffset = (firstItem.offsetTop || 0) + (firstItem.height || 0);
 
-            if (itemFullOffset < contentOffset) {
+            if (itemFullOffset < contentOffsetTop) {
               firstRenderedElement.remove();
             }
           }
