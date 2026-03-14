@@ -41,7 +41,7 @@ export default class FixedListRenderer {
     let lastItem = fromElement;
 
     if (lastItem) {
-      const necessaryHeight = (this._scrollableContainer.getClientHeight() + this._overscanHeight) - ((lastItem.offsetTop || 0) - this._scrollableContainer.getContentPosition());
+      const necessaryHeight = (this._scrollableContainer.getClientHeight() + this._overscanHeight) - ((lastItem.offsetTop || 0) - this._container.scrollTop);
       const lastItemOffset = lastItem.offsetTop || 0;
       let accumulatedHeight = 0;
 
@@ -58,7 +58,7 @@ export default class FixedListRenderer {
     let lastItem = fromElement;
 
     if (lastItem) {
-      const necessaryHeight = (lastItem.offsetTop || 0) - (this._scrollableContainer.getContentPosition() - this._overscanHeight);
+      const necessaryHeight = (lastItem.offsetTop || 0) - (this._container.scrollTop - this._overscanHeight);
       const lastItemOffset = lastItem.offsetTop || 0;
       let accumulatedHeight = 0;
 
