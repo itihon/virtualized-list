@@ -27,6 +27,7 @@ export default class ScrollableContainer {
   private _scrollHeight = 0;
   private _clientWidth = 0;
   private _clientHeight = 0;
+  private _lastScrollingDirection: 'up' | 'down' | '' = '';
 
   private _emitOnScroll = () => {
     const previousScrollTop = this._previousScrollTop;
@@ -37,24 +38,66 @@ export default class ScrollableContainer {
 
     if (previousScrollTop < scrollTop) {
       this._eventBus.emit('onScroll', scrollTop, 'down', speed);
+      this._lastScrollingDirection = 'down';
     }
     else if (previousScrollTop > scrollTop) {
       this._eventBus.emit('onScroll', scrollTop, 'up', speed);
+      this._lastScrollingDirection = 'up';
     }
 
     this._previousScrollTop = scrollTop;
     this._observer.observe(this._contentLayer.DOMRoot);
   };
 
-  private _saveCurrentAnimatedPosition: IntersectionObserverCallback = (_, observer) => {
+  private _doPostAnimationJob: IntersectionObserverCallback = (entries, observer) => {
     const contentLayer = this._contentLayer.DOMRoot;
+    const entriesCount = entries.length;
+    const itemsOutOfView: HTMLElement[] = [];
+
+    // pick items which went out of view
+    for (let i = 0; i < entriesCount; i++) {
+      const entry = entries[i]!;
+
+      if (entry.target.parentElement === contentLayer) {
+        const { height, top, bottom } = entry.rootBounds!;
+        const scaleFactor = this._container.clientHeight / height; // WebKit gives unscaled coordinates of rootBounds
+
+        if (this._lastScrollingDirection === 'down') {
+          if (entry.boundingClientRect.bottom < top * scaleFactor) {
+            itemsOutOfView.push((entry.target as HTMLElement));
+          }
+        }
+        else if (this._lastScrollingDirection === 'up') {
+          if (entry.boundingClientRect.top > bottom * scaleFactor) {
+            itemsOutOfView.push((entry.target as HTMLElement));
+          }
+        }
+      } 
+    }
 
     this._currentAnimatedPosition = extractTYValue(getComputedStyle(contentLayer).transform);
-    observer.unobserve(contentLayer);
+
+    // scroll end
+    // if (Math.round(Math.abs(this._currentAnimatedPosition)) === Math.round(this._container.scrollTop)) {
+    //   this._lastScrollingDirection = '';
+    // }
+
+    if (itemsOutOfView.length) {
+      this._eventBus.emit('onItemsOutOfView', itemsOutOfView);
+    }
+
+    observer.disconnect();
   };
 
-  private _observeContentLayer = (animation: Animation) => { 
-    this._observer.observe(this._contentLayer.DOMRoot); 
+  private _schedulePostAnimationJob = (animation: Animation) => { 
+    const renderedElements = this._contentLayer.DOMRoot.children;
+    const renderedElementsCount = renderedElements.length;
+    const observer = this._observer;
+
+    for (let i = 0; i < renderedElementsCount; i++) {
+      observer.observe(renderedElements.item(i)!);
+    }
+
     return animation; 
   };
 
@@ -75,7 +118,7 @@ export default class ScrollableContainer {
     this._container.classList.add(classes.scrollableContainer);
     this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`});
     this._container.addEventListener('scroll', this._emitOnScroll);
-    this._observer = new IntersectionObserver(this._saveCurrentAnimatedPosition, { root: this._container });
+    this._observer = new IntersectionObserver(this._doPostAnimationJob, { root: this._container });
     this._observer.observe(this._contentLayer.DOMRoot);
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
   }
@@ -119,8 +162,8 @@ export default class ScrollableContainer {
     this._currentAnimatedPosition = fromPosition;
 
     return this._scrollAnimation.finished.then(
-      this._observeContentLayer,
-      this._observeContentLayer,
+      this._schedulePostAnimationJob,
+      this._schedulePostAnimationJob,
     );
   }
 
