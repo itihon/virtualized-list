@@ -46,7 +46,6 @@ export default class ScrollableContainer {
     }
 
     this._previousScrollTop = scrollTop;
-    this._observer.observe(this._contentLayer.DOMRoot);
   };
 
   private _doPostAnimationJob: IntersectionObserverCallback = (entries, observer) => {
@@ -119,7 +118,6 @@ export default class ScrollableContainer {
     this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`});
     this._container.addEventListener('scroll', this._emitOnScroll);
     this._observer = new IntersectionObserver(this._doPostAnimationJob, { root: this._container });
-    this._observer.observe(this._contentLayer.DOMRoot);
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
   }
 
