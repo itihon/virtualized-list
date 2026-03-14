@@ -90,54 +90,6 @@ export default class FixedListRenderer {
     }
   }
 
-  private _removeItemsOutOfView(direction: 'up' | 'down') {
-    if (direction === 'down') {
-      let itemFullOffset = 0;
-      const contentOffsetTop = this._scrollableContainer.getContentPosition() - this._overscanHeight;
-
-      while (itemFullOffset < contentOffsetTop) {
-        const firstRenderedElement = this._scrollableContainer.getFirstItem();
-
-        if (firstRenderedElement) {
-          const firstItem = this._renderedItemsRegistry.get(firstRenderedElement);
-
-          if (firstItem) {
-
-            itemFullOffset = (firstItem.offsetTop || 0) + (firstItem.height || 0);
-
-            if (itemFullOffset < contentOffsetTop) {
-              firstRenderedElement.remove();
-            }
-          }
-        }
-      }
-    }
-
-    if (direction === 'up') {
-      let itemOffset = Infinity;
-      const contentOffsetBottom = this._scrollableContainer.getContentPosition() 
-        + this._scrollableContainer.getClientHeight() 
-        + this._overscanHeight;
-
-      while (itemOffset > contentOffsetBottom) {
-        const lastRenderedElement = this._scrollableContainer.getLastItem();
-
-        if (lastRenderedElement) {
-          const lastItem = this._renderedItemsRegistry.get(lastRenderedElement);
-
-          if (lastItem) {
-
-            itemOffset = (lastItem.offsetTop || 0);
-
-            if (itemOffset > contentOffsetBottom) {
-              lastRenderedElement.remove();
-            }
-          }
-        }
-      }
-    }
-  }
-
   private _renderItems: IScrollableContainerEvents['onScroll'] = (position, direction, speed) => {
     if (direction === 'down') {
       if (speed === 'slow') {
@@ -149,7 +101,6 @@ export default class FixedListRenderer {
           this._renderNext(lastItem);
         }
 
-        this._removeItemsOutOfView(direction);
         this._scrollableContainer.updateContentPosition(position);
       }
 
@@ -170,7 +121,6 @@ export default class FixedListRenderer {
           this._renderPrevious(firstItem);
         }
 
-        this._removeItemsOutOfView(direction);
         this._scrollableContainer.updateContentPosition(position);
       }
 
@@ -210,6 +160,10 @@ export default class FixedListRenderer {
     this._scrollableContainer.setScrollHeight(range.totalHeight);
   }
 
+  private _removeItem = (item: HTMLElement) => item.remove();
+
+  private _removeItems = (items: HTMLElement[]) => items.forEach(this._removeItem);
+
   constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, store: IItemStore<IFixedItem>, overscanHeight = 100) {
     this._container = container;
     this._store = store;
@@ -220,5 +174,6 @@ export default class FixedListRenderer {
     eventBus.on('onPortionMeasured', this._updateVisibleItems);
     eventBus.on('onResize', this._updateOnResize);
     eventBus.on('onMeasureEnd', this._setScrollHeight);
+    eventBus.on('onItemsOutOfView', this._removeItems);
   }
 }
