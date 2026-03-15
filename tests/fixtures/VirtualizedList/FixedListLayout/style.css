@@ -1,0 +1,7 @@
+#virtualized-list {
+  border: 16px solid gray;
+}
+
+.list-item {
+  outline: 1px solid lightgray;
+}

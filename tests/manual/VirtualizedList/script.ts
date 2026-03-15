@@ -9,7 +9,7 @@ function render(data: { i: number } | unknown) {
 }
 
 const store = new ArrayItemStore();
-const layout = new FixedListLayout();
+const layout = new FixedListLayout({ overscanHeight: 100 });
 const container = document.createElement('div');
 container.style.width = '200px';
 container.style.height = '300px';
@@ -18,7 +18,7 @@ container.style.overflow = 'auto';
 document.body.appendChild(container);
 const list = new VirtualizedList({ layout, store, container });
 
-for (let i = 0; i < 10000; i++) {
+for (let i = 0; i < 1000; i++) {
   list.insert({
     data: { i: i },
     render,
