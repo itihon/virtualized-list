@@ -1,5 +1,6 @@
 #virtualized-list {
   border: 16px solid gray;
+  resize: vertical;
 }
 
 .list-item {
