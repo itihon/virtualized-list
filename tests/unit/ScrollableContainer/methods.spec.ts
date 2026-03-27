@@ -16,10 +16,15 @@ test.describe('Scrollable Container Methods', () => {
     await page.close();
   });
 
+  /**
+   * It's not necessary to set height of the content layer,
+   * since items are positioned absolutely on it. Shows better performance in 
+   * Chrome Dev Tools' Layers tab while debugging.
+   */
   test('setScrollHeight() method', async () => {
     const scrollableContainer = page.locator('.scrollableContainer').first();
     const scrollHeightFiller = page.locator('.scrollHeightFiller').first();
-    const contentLayer = page.locator('.contentLayer').first();
+    // const contentLayer = page.locator('.contentLayer').first();
 
     await page.evaluate((scrollHeight) => {
       ((window as any).scrollableContainer as ScrollableContainer).setScrollHeight(scrollHeight);
@@ -37,13 +42,13 @@ test.describe('Scrollable Container Methods', () => {
       (node) => getComputedStyle(node).height
     );
 
-    const clHeight = await contentLayer.evaluate(
-      (node) => getComputedStyle(node).height
-    );
+    // const clHeight = await contentLayer.evaluate(
+    //   (node) => getComputedStyle(node).height
+    // );
 
     expect(scScrollHeight - parseInt(scHeight)).toBe(9951);
     expect(shfHeight).toBe(`${scrollHeight}px`);
-    expect(clHeight).toBe(`${scrollHeight}px`);
+    // expect(clHeight).toBe(`${scrollHeight}px`);
   });
 
   test('updateContentPosition() moves content layer correctly', async () => {

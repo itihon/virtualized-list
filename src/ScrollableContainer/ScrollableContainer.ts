@@ -123,7 +123,7 @@ export default class ScrollableContainer {
 
   setScrollHeight(scrollHeight: number) {
     this._scrollHeightFiller.setHeight(scrollHeight);
-    this._contentLayer.setHeight(scrollHeight);
+    // this._contentLayer.setHeight(scrollHeight); // Since items are positioned absolutely, it's not necessary to change height of the content layer. Shows better performance in Chrome Dev Tools' Layers tab.
     this._scrollHeight = scrollHeight;
   }
 
