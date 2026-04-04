@@ -72,7 +72,7 @@ function updateContentPosition() {
   const itemTop1 = renderedItem1.offsetTop;
   const itemTop2 = renderedItem2.offsetTop;
   const itemHeight1 = renderedItem1.offsetHeight;
-  const interpolatedHeight = indexFraction * (itemTop2 - itemTop1) || itemHeight1 * scrollRatio;
+  const interpolatedHeight = indexFraction * (itemTop2 - itemTop1) || itemHeight1 * indexFraction;
   const interpolatedTop = itemTop1 + interpolatedHeight;
 
   const viewportAnchor = clientHeight * scrollRatio;
