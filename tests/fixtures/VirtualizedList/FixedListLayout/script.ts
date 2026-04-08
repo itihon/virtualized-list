@@ -203,6 +203,13 @@ const assignTestConditions = (container: HTMLElement) => {
 };
 
 addEventListener('DOMContentLoaded', () => {
+  const ignoreTests = new URLSearchParams(window.location.search).get('ignoreTests');
+
+  if (ignoreTests) {
+    console.warn('Tests are being ignored.');
+    return;
+  }
+
   setTimeout(() => {
     assignTestConditions(container);
 
