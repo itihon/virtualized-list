@@ -21,7 +21,7 @@ export default defineConfig([
           content: "(fileoverview)\n(license)\n(author)",
           patterns: {
             fileoverview: {
-              pattern: "@fileoverview .{5,}",
+              pattern: "@fileoverview .{5,}(?:\\n\\s*\\*\\s+.+)*",
             },
             license: {
               pattern: "@license MIT",
