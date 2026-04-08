@@ -76,6 +76,7 @@ export interface IMeasurerEvents {
   onMeasureStart: (range: MeasurementRange) => void;
   onPortionMeasured: (range: MeasurementRange) => void;
   onMeasureEnd: (range: MeasurementRange) => void;
+  onItemsReady: (range: MeasurementRange, items: IntersectionObserverEntry[]) => void;
 }
 
 export type IEventMap = IVirtualizedListEvents & IScrollableContainerEvents & IMeasurerEvents;
@@ -95,7 +96,7 @@ export interface ILayout<ItemType> {
   detach: () => void;
 }
 
-export interface IFixedListLayout extends ILayout<IFixedItem>, LayoutHooks {}
+export interface IFixedListLayout extends ILayout<IFixedItem>, Omit<LayoutHooks, 'onItemsReady'> {}
 
 export interface IDynamicListLayout extends ILayout<IItem>, LayoutHooks {}
 
