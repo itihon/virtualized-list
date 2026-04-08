@@ -1,0 +1,18 @@
+#virtualized-list {
+  border: 16px solid gray;
+  resize: vertical;
+}
+
+.list-item {
+  outline: 1px solid lightgray;
+}
+
+.list-item::after {
+  content: 'top:' attr(data-top);
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: blue;
+  font-size: 10px;
+}
