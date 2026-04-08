@@ -65,8 +65,8 @@ const assignTestConditions = (container: HTMLElement) => {
 
       acc.top = Math.min(acc.top, top);
       acc.bottom = Math.max(acc.bottom, bottom);
-      acc.rootBoundsTop = entry.rootBounds!.top * scaleFactor;
-      acc.rootBoundsBottom = entry.rootBounds!.bottom * scaleFactor;
+      acc.rootBoundsTop = entry.rootBounds!.top * scaleFactor + 1;
+      acc.rootBoundsBottom = entry.rootBounds!.bottom * scaleFactor - 1;
 
       return acc;
     }, { top: 0, bottom: 0, rootBoundsTop: 0, rootBoundsBottom: 0 });
