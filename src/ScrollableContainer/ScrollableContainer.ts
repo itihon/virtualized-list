@@ -52,22 +52,26 @@ export default class ScrollableContainer {
     const contentLayer = this._contentLayer.DOMRoot;
     const entriesCount = entries.length;
     const itemsOutOfView: HTMLElement[] = [];
+    const overscanHeight = this._overscanHeight;
+    const halfOverscanHeight = overscanHeight / 2;
 
     // pick items which went out of view
     for (let i = 0; i < entriesCount; i++) {
       const entry = entries[i]!;
 
+      // if (!(entry.target as HTMLElement).offsetParent) continue; // skip unmounted elements
+
       if (entry.target.parentElement === contentLayer) {
         const { height, top, bottom } = entry.rootBounds!;
-        const scaleFactor = this._container.clientHeight / height; // WebKit gives unscaled coordinates of rootBounds
+        const scaleFactor = this._clientHeight / height; // WebKit gives unscaled coordinates of rootBounds
 
         if (this._lastScrollingDirection === 'down') {
-          if (entry.boundingClientRect.bottom < top * scaleFactor) {
+          if (entry.boundingClientRect.bottom < top * scaleFactor - halfOverscanHeight) {
             itemsOutOfView.push((entry.target as HTMLElement));
           }
         }
         else if (this._lastScrollingDirection === 'up') {
-          if (entry.boundingClientRect.top > bottom * scaleFactor) {
+          if (entry.boundingClientRect.top > bottom * scaleFactor + halfOverscanHeight) {
             itemsOutOfView.push((entry.target as HTMLElement));
           }
         }
@@ -75,11 +79,6 @@ export default class ScrollableContainer {
     }
 
     this._currentAnimatedPosition = extractTYValue(getComputedStyle(contentLayer).transform);
-
-    // scroll end
-    // if (Math.round(Math.abs(this._currentAnimatedPosition)) === Math.round(this._container.scrollTop)) {
-    //   this._lastScrollingDirection = '';
-    // }
 
     if (itemsOutOfView.length) {
       this._eventBus.emit('onItemsOutOfView', itemsOutOfView);
@@ -119,6 +118,11 @@ export default class ScrollableContainer {
     this._container.addEventListener('scroll', this._emitOnScroll);
     this._observer = new IntersectionObserver(this._doPostAnimationJob, { root: this._container });
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
+  }
+
+  getScrollTop(): number {
+    return this._container.scrollTop;
+    // return this._previousScrollTop;
   }
 
   setScrollHeight(scrollHeight: number) {
