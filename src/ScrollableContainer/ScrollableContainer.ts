@@ -1,5 +1,8 @@
 /**
- * @fileoverview Scrollable container encapsulates all DOM parts necessary for virtual scroll
+ * @fileoverview Provides the scroll host abstraction used by the virtualized list.
+ * Creates and owns the DOM layers (scroll-height filler, viewport, and content layer),
+ * tracks container size and scroll state, animates vertical content translation, and
+ * emits lifecycle events for scrolling, resizing, and items leaving the overscan area.
  * @license MIT
  * @author Alexandr Kalabin
  */
