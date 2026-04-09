@@ -10,26 +10,25 @@
 import type { IEventEmitter, IEventMap } from '../types/types';
 import DOMConstructor from './DOMConstructor';
 import classes from './ScrollableContainer.module.css';
-import extractTYValue from './extractTYValue';
 
 export default class ScrollableContainer {
   private _container: HTMLElement;
   private _scrollHeightFiller: DOMConstructor;
-  private _viewportContainer: DOMConstructor;
+  private _topFiller: DOMConstructor;
+  private _bottomFiller: DOMConstructor;
   private _contentLayer: DOMConstructor;
-  private _scrollAnimation: Animation;
-  private _previousPosition = 0;
-  private _observer: IntersectionObserver;
   private _currentAnimatedPosition = 0;
-  private _animationOptions: KeyframeAnimationOptions = { duration: 32, fill: 'forwards', playbackRate: 4, easing: 'cubic-bezier(0, 0.49, 0.03, 0.42)' };
-  private _previousKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 0 };
-  private _nextKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 1 }; 
+  private _observer: IntersectionObserver;
   private _previousScrollTop: number = 0;
   private _overscanHeight: number = 0;
   private _eventBus: IEventEmitter<IEventMap>;
   private _scrollHeight = 0;
   private _clientWidth = 0;
   private _clientHeight = 0;
+  private _scrollTopLimit = 0;
+  private _scrollBottomLimit = 0;
+  private _contentLayerHeight = 0;
+  private _contentLayerTop = 0;
   private _lastScrollingDirection: 'up' | 'down' | '' = '';
 
   private _emitOnScroll = () => {
@@ -49,9 +48,11 @@ export default class ScrollableContainer {
     }
 
     this._previousScrollTop = scrollTop;
+
+    this._schedulePostScrollingJob();
   };
 
-  private _doPostAnimationJob: IntersectionObserverCallback = (entries, observer) => {
+  private _doPostScrollingJob: IntersectionObserverCallback = (entries, observer) => {
     const contentLayer = this._contentLayer.DOMRoot;
     const entriesCount = entries.length;
     const itemsOutOfView: HTMLElement[] = [];
@@ -81,16 +82,17 @@ export default class ScrollableContainer {
       } 
     }
 
-    this._currentAnimatedPosition = extractTYValue(getComputedStyle(contentLayer).transform);
-
     if (itemsOutOfView.length) {
       this._eventBus.emit('onItemsOutOfView', itemsOutOfView);
     }
 
+    this._calculateContentLayerBounds();
+    requestAnimationFrame(this._updateContentLayerBounds);
+
     observer.disconnect();
   };
 
-  private _schedulePostAnimationJob = (animation: Animation) => { 
+  private _schedulePostScrollingJob = () => { 
     const renderedElements = this._contentLayer.DOMRoot.children;
     const renderedElementsCount = renderedElements.length;
     const observer = this._observer;
@@ -98,8 +100,6 @@ export default class ScrollableContainer {
     for (let i = 0; i < renderedElementsCount; i++) {
       observer.observe(renderedElements.item(i)!);
     }
-
-    return animation; 
   };
 
   private _saveCurrentSize: ResizeObserverCallback = () => {
@@ -109,17 +109,52 @@ export default class ScrollableContainer {
     this._eventBus.emit('onResize', this._clientWidth, this._clientHeight);
   };
 
+  private _calculateContentLayerBounds() {
+    const contentLayerRoot = this._contentLayer.DOMRoot;
+    const { clientHeight } = this._container;
+    const contentHeight = contentLayerRoot.scrollHeight;
+    const scrollTopLimit = contentHeight - clientHeight;
+    const scrollBottomLimit = clientHeight;
+   
+    this._scrollTopLimit = scrollTopLimit;
+    this._scrollBottomLimit = scrollBottomLimit;
+    this._contentLayerHeight = contentLayerRoot.scrollHeight;
+    this._contentLayerTop = contentLayerRoot.offsetTop;
+  }
+
+  private _updateScrollLimit = () => {
+    this._contentLayer.DOMRoot.style.setProperty('--scroll-top-limit', `${this._scrollTopLimit}px`);
+    this._contentLayer.DOMRoot.style.setProperty('--scroll-bottom-limit', `${this._scrollBottomLimit}px`);
+  };
+
+  private _updateContentPosition = (newPosition = this._contentLayerTop) => {
+    const scrollHeight = this._scrollHeight;
+    const contentLayerHeight = this._contentLayerHeight;
+
+    const minPosition = 0;
+    const maxPosition = scrollHeight - contentLayerHeight;
+    const position = Math.min(Math.max(newPosition, minPosition), maxPosition);
+
+    this._topFiller.setHeight(position);
+    this._bottomFiller.setHeight(scrollHeight - position);
+  };
+
+  private _updateContentLayerBounds = () => {
+    this._updateScrollLimit();
+    this._updateContentPosition();
+  };
+
   constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, overscanHeight = 200) {
     this._container = container;
     this._eventBus = eventBus;
     this._overscanHeight = overscanHeight;
-    this._scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
-    this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
-    this._contentLayer = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.contentLayer]);
+    this._scrollHeightFiller = new DOMConstructor(container, [classes.filler, classes.scrollHeightFiller]);
+    this._topFiller = new DOMConstructor(container, [classes.filler]);
+    this._contentLayer = new DOMConstructor(container, [classes.contentLayer]);
+    this._bottomFiller = new DOMConstructor(container, [classes.filler]);
     this._container.classList.add(classes.scrollableContainer);
-    this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`});
     this._container.addEventListener('scroll', this._emitOnScroll);
-    this._observer = new IntersectionObserver(this._doPostAnimationJob, { root: this._container });
+    this._observer = new IntersectionObserver(this._doPostScrollingJob, { root: this._container });
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
   }
 
@@ -129,8 +164,12 @@ export default class ScrollableContainer {
   }
 
   setScrollHeight(scrollHeight: number) {
+    const { scrollTop } = this._container;
+
     this._scrollHeightFiller.setHeight(scrollHeight);
-    // this._contentLayer.setHeight(scrollHeight); // Since items are positioned absolutely, it's not necessary to change height of the content layer. Shows better performance in Chrome Dev Tools' Layers tab.
+    this._topFiller.setHeight(scrollTop);
+    this._bottomFiller.setHeight(scrollHeight - scrollTop);
+
     this._scrollHeight = scrollHeight;
   }
 
@@ -138,38 +177,8 @@ export default class ScrollableContainer {
     return this._scrollHeight;
   }
 
-  updateContentPosition(offset: number, fromOffset?: number): Promise<Animation> {
-
-    const position = -offset;
-  
-    let currentPosition: number | null = null;
-
-    if (this._scrollAnimation.playState !== 'finished') {
-      // currentPosition = extractTYValue(getComputedStyle(this._contentLayer.DOMRoot).transform);
-      currentPosition = this._currentAnimatedPosition;
-      this._scrollAnimation.cancel();
-    }
-
-    const fromPosition = fromOffset !== undefined 
-      ? -fromOffset
-      : currentPosition || this._previousPosition;
-
-    this._previousKeyframe.transform = `translateY(${fromPosition}px)`;
-    this._nextKeyframe.transform = `translateY(${position}px)`;
-    
-    this._scrollAnimation = this._contentLayer.DOMRoot.animate(
-      [ this._previousKeyframe, this._nextKeyframe ],
-      this._animationOptions,
-    );
-
-    this._scrollAnimation.currentTime = 1;
-    this._previousPosition = position;
-    this._currentAnimatedPosition = fromPosition;
-
-    return this._scrollAnimation.finished.then(
-      this._schedulePostAnimationJob,
-      this._schedulePostAnimationJob,
-    );
+  updateContentPosition(newPosition: number) {
+    this._updateContentPosition(newPosition);
   }
 
   getContentPosition(): number {

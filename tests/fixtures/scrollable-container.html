@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Scrollable Container</title>
+    <style>
+      .scrollableContainer {
+        width: 100px;
+        height: 150px;
+        position: relative;
+      }
+
+      .contentLayer {
+        outline: 2px solid red;
+      }
+
+      .listItem {
+        outline: 1px solid royalblue;
+      }
+
+      .nonVirtualizedContainer {
+        width: 100px;
+        height: 150px;
+        position: relative;
+        overflow-y: auto;
+        margin-top: 16px;
+      }
+    </style>
   </head>
   <body>
     <script type="module">
@@ -15,39 +38,43 @@
       const nonVirtualizedContainer = document.createElement('div');
       const eventBus = new EventBus();
       const scrollableContainer = new ScrollableContainer(container, eventBus);
+      const itemHeight = 40;
+      const itemsCount = 10000;
+      const scrollHeight = itemHeight * itemsCount;
 
-      function createItem(content = '') {
+      function renderItem(content = '', offsetTop = 0) {
         const item = document.createElement('div');
 
-        item.style.height = '20px';
-        item.style.outline = '1px solid royalblue';
         item.textContent = content;
+        item.style.position = 'absolute';
+        item.style.width = '100%';
+        item.style.top = `${offsetTop}px`;
+        item.style.height = `${itemHeight}px`;
+        item.classList.add('listItem');
 
         return item;
       }
 
-      container.style.width = '100px';
-      container.style.height = '150px';
-      container.style.position = 'relative';
+      nonVirtualizedContainer.classList.add('nonVirtualizedContainer');
 
-      nonVirtualizedContainer.style.width = '100px';
-      nonVirtualizedContainer.style.height = '150px';
-      nonVirtualizedContainer.style.position = 'relative';
-      nonVirtualizedContainer.style.overflowY = 'auto';
-      nonVirtualizedContainer.style.marginTop = '16px';
+      scrollableContainer.setScrollHeight(scrollHeight);
 
-      scrollableContainer.setScrollHeight(200000);
-
-      for (let i = 0; i < 10000; i++) {
-        scrollableContainer.appendItem(createItem(`Item ${i}.`));
-        nonVirtualizedContainer.appendChild(createItem(`Item ${i}.`));
+      for (let i = 0; i < itemsCount; i++) {
+      //   scrollableContainer.appendItem(createItem(`Item ${i}.`));
+        nonVirtualizedContainer.appendChild(renderItem(`Item ${i}.`, i * itemHeight));
       }
 
       eventBus.on('onScroll', (position) => {
-        // new IntersectionObserver((_, observer) => {
-          scrollableContainer.updateContentPosition(position);
-          // observer.unobserve(container);
-        // }).observe(container);
+        scrollableContainer.clear();
+
+        const startIndex = Math.floor(position / itemHeight);
+        const endIndex = Math.min(Math.ceil(startIndex + (scrollableContainer.getClientHeight() / itemHeight)), itemsCount - 1);
+
+        for (let idx = startIndex, i = 0; idx <= endIndex; idx++, i++) {
+          scrollableContainer.appendItem(renderItem(`Item ${idx}.`, i * itemHeight));
+        }
+
+        // scrollableContainer.updateContentPosition(position);
       });
 
       window.scrollableContainer = scrollableContainer;
