@@ -22,10 +22,17 @@
 
       .nonVirtualizedContainer {
         width: 100px;
-        height: 150px;
+        height: 350px;
         position: relative;
         overflow-y: auto;
         margin-top: 16px;
+      }
+
+      .scrollHeightFiller {
+        width: 0;
+        float: left;
+        position: relative;
+        visibility: hidden;
       }
     </style>
   </head>
@@ -35,6 +42,7 @@
       import EventBus from '../../src/EventBus/EventBus.ts';
 
       const container = document.createElement('div');
+      const scrollHeightFiller = document.createElement('div');
       const nonVirtualizedContainer = document.createElement('div');
       const eventBus = new EventBus();
       const scrollableContainer = new ScrollableContainer(container, eventBus);
@@ -46,9 +54,19 @@
         const item = document.createElement('div');
 
         item.textContent = content;
-        item.style.position = 'absolute';
+
+        if (content === 'Item 5.X') {
+          item.style.position = 'sticky';
+          // item.style.top = '0';
+          item.style.backgroundColor = 'gray';
+          item.style.zIndex = '1';
+        }
+        else {
+          item.style.position = 'absolute';
+        }
         item.style.width = '100%';
-        item.style.top = `${offsetTop}px`;
+        item.style.top = '0';
+        item.style.marginTop = `${offsetTop}px`;
         item.style.height = `${itemHeight}px`;
         item.classList.add('listItem');
 
@@ -56,10 +74,13 @@
       }
 
       nonVirtualizedContainer.classList.add('nonVirtualizedContainer');
+      scrollHeightFiller.classList.add('scrollHeightFiller');
+      nonVirtualizedContainer.appendChild(scrollHeightFiller);
 
       scrollableContainer.setScrollHeight(scrollHeight);
+      scrollHeightFiller.style.height = `${scrollHeight}px`;
 
-      for (let i = 0; i < itemsCount; i++) {
+      for (let i = 0; i < 10; i++) {
       //   scrollableContainer.appendItem(createItem(`Item ${i}.`));
         nonVirtualizedContainer.appendChild(renderItem(`Item ${i}.`, i * itemHeight));
       }
@@ -68,13 +89,72 @@
         scrollableContainer.clear();
 
         const startIndex = Math.floor(position / itemHeight);
-        const endIndex = Math.min(Math.ceil(startIndex + (scrollableContainer.getClientHeight() / itemHeight)), itemsCount - 1);
+        const endIndex = Math.min(Math.ceil(startIndex + (scrollableContainer.getClientHeight() * 4 / itemHeight)), itemsCount - 1);
 
         for (let idx = startIndex, i = 0; idx <= endIndex; idx++, i++) {
           scrollableContainer.appendItem(renderItem(`Item ${idx}.`, i * itemHeight));
         }
 
         // scrollableContainer.updateContentPosition(position);
+      });
+
+      const observer = new IntersectionObserver((entries, observer) => {
+
+        for (const entry of entries) {
+          if (!entry.target.offsetParent) continue;
+
+          if (entry.boundingClientRect.bottom < entry.rootBounds.top) {
+            itemsToRemove.push(entry.target);
+          }
+          else if (entry.target.parentElement.lastChild === entry.target) {
+            if (entry.boundingClientRect.top - 160 < entry.rootBounds.bottom) {
+              requestAnimationFrame(appendItems);
+            }
+          }
+        }
+
+        if (itemsToRemove.length > 10) {
+          requestAnimationFrame(removeItems);
+        }
+
+        observer.disconnect();
+      }, { root: nonVirtualizedContainer });
+
+      let lastIndex = 0;
+
+      const itemsToRemove = [];
+
+      const removeItems = () => {
+        for (const item of itemsToRemove) {
+          item.remove();
+        }
+      };
+
+      const appendItems = () => {
+        const startIndex = lastIndex + 1;
+        const endIndex = startIndex + 10;
+
+        for (let idx = startIndex, i = 0; idx <= endIndex; idx++, i++) {
+          nonVirtualizedContainer.appendChild(renderItem(`Item ${idx}.`, idx * itemHeight));
+          lastIndex = idx;
+        }
+      };
+
+      nonVirtualizedContainer.addEventListener('scroll', () => {
+      //   nonVirtualizedContainer.appendChild(renderItem(`Item ${i}.`, i * itemHeight));
+        const position = nonVirtualizedContainer.scrollTop;
+        const scrollHeight = nonVirtualizedContainer.scrollHeight - nonVirtualizedContainer.clientHeight;
+
+        // if (position / scrollHeight > .9) {
+        //   appendItems();
+        // } 
+
+
+        const children = nonVirtualizedContainer.children;
+
+        for (const child of children) {
+          observer.observe(child);
+        }
       });
 
       window.scrollableContainer = scrollableContainer;
