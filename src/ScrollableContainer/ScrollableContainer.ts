@@ -1,8 +1,8 @@
 /**
  * @fileoverview Provides the scroll host abstraction used by the virtualized list.
  * Creates and owns the DOM layers (scroll-height filler, viewport, and content layer),
- * tracks container size and scroll state, animates vertical content translation, and
- * emits lifecycle events for scrolling, resizing, and items leaving the overscan area.
+ * tracks container size and scroll state, and emits lifecycle events 
+ * for scrolling, resizing.
  * @license MIT
  * @author Alexandr Kalabin
  */
@@ -16,14 +16,10 @@ export default class ScrollableContainer {
   private _container: HTMLElement;
   private _scrollHeightFiller: DOMConstructor;
   private _viewportContainer: DOMConstructor;
+  private _scrollCanvas: DOMConstructor;
+  private _topSpacer: DOMConstructor;
+  private _bottomSpacer: DOMConstructor;
   private _contentLayer: DOMConstructor;
-  private _scrollAnimation: Animation;
-  private _previousPosition = 0;
-  private _observer: IntersectionObserver;
-  private _currentAnimatedPosition = 0;
-  private _animationOptions: KeyframeAnimationOptions = { duration: 32, fill: 'forwards', playbackRate: 4, easing: 'cubic-bezier(0, 0.49, 0.03, 0.42)' };
-  private _previousKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 0 };
-  private _nextKeyframe: Keyframe = { transform: 'translateY(0)', composite: 'replace', offset: 1 }; 
   private _previousScrollTop: number = 0;
   private _overscanHeight: number = 0;
   private _eventBus: IEventEmitter<IEventMap>;
@@ -51,57 +47,6 @@ export default class ScrollableContainer {
     this._previousScrollTop = scrollTop;
   };
 
-  private _doPostAnimationJob: IntersectionObserverCallback = (entries, observer) => {
-    const contentLayer = this._contentLayer.DOMRoot;
-    const entriesCount = entries.length;
-    const itemsOutOfView: HTMLElement[] = [];
-    const overscanHeight = this._overscanHeight;
-    const halfOverscanHeight = overscanHeight / 2;
-
-    // pick items which went out of view
-    for (let i = 0; i < entriesCount; i++) {
-      const entry = entries[i]!;
-
-      // if (!(entry.target as HTMLElement).offsetParent) continue; // skip unmounted elements
-
-      if (entry.target.parentElement === contentLayer) {
-        const { height, top, bottom } = entry.rootBounds!;
-        const scaleFactor = this._clientHeight / height; // WebKit gives unscaled coordinates of rootBounds
-
-        if (this._lastScrollingDirection === 'down') {
-          if (entry.boundingClientRect.bottom < top * scaleFactor - halfOverscanHeight) {
-            itemsOutOfView.push((entry.target as HTMLElement));
-          }
-        }
-        else if (this._lastScrollingDirection === 'up') {
-          if (entry.boundingClientRect.top > bottom * scaleFactor + halfOverscanHeight) {
-            itemsOutOfView.push((entry.target as HTMLElement));
-          }
-        }
-      } 
-    }
-
-    this._currentAnimatedPosition = extractTYValue(getComputedStyle(contentLayer).transform);
-
-    if (itemsOutOfView.length) {
-      this._eventBus.emit('onItemsOutOfView', itemsOutOfView);
-    }
-
-    observer.disconnect();
-  };
-
-  private _schedulePostAnimationJob = (animation: Animation) => { 
-    const renderedElements = this._contentLayer.DOMRoot.children;
-    const renderedElementsCount = renderedElements.length;
-    const observer = this._observer;
-
-    for (let i = 0; i < renderedElementsCount; i++) {
-      observer.observe(renderedElements.item(i)!);
-    }
-
-    return animation; 
-  };
-
   private _saveCurrentSize: ResizeObserverCallback = () => {
     this._clientWidth = this._container.clientWidth;
     this._clientHeight = this._container.clientHeight;
@@ -115,11 +60,12 @@ export default class ScrollableContainer {
     this._overscanHeight = overscanHeight;
     this._scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
     this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
-    this._contentLayer = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.contentLayer]);
+    this._scrollCanvas = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.scrollCanvas]);
+    this._topSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.topSpacer]);
+    this._contentLayer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.contentLayer]);
+    this._bottomSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.bottomSpacer]);
     this._container.classList.add(classes.scrollableContainer);
-    this._scrollAnimation = this._contentLayer.DOMRoot.animate({ transform: `translateY(0)`});
     this._container.addEventListener('scroll', this._emitOnScroll);
-    this._observer = new IntersectionObserver(this._doPostAnimationJob, { root: this._container });
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
   }
 
@@ -136,44 +82,6 @@ export default class ScrollableContainer {
 
   getScrollHeight(): number {
     return this._scrollHeight;
-  }
-
-  updateContentPosition(offset: number, fromOffset?: number): Promise<Animation> {
-
-    const position = -offset;
-  
-    let currentPosition: number | null = null;
-
-    if (this._scrollAnimation.playState !== 'finished') {
-      // currentPosition = extractTYValue(getComputedStyle(this._contentLayer.DOMRoot).transform);
-      currentPosition = this._currentAnimatedPosition;
-      this._scrollAnimation.cancel();
-    }
-
-    const fromPosition = fromOffset !== undefined 
-      ? -fromOffset
-      : currentPosition || this._previousPosition;
-
-    this._previousKeyframe.transform = `translateY(${fromPosition}px)`;
-    this._nextKeyframe.transform = `translateY(${position}px)`;
-    
-    this._scrollAnimation = this._contentLayer.DOMRoot.animate(
-      [ this._previousKeyframe, this._nextKeyframe ],
-      this._animationOptions,
-    );
-
-    this._scrollAnimation.currentTime = 1;
-    this._previousPosition = position;
-    this._currentAnimatedPosition = fromPosition;
-
-    return this._scrollAnimation.finished.then(
-      this._schedulePostAnimationJob,
-      this._schedulePostAnimationJob,
-    );
-  }
-
-  getContentPosition(): number {
-    return Math.abs(this._currentAnimatedPosition);
   }
 
   appendItem(item: HTMLElement) {

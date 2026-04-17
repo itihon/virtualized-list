@@ -1,26 +1,50 @@
 .scrollableContainer {
+  position: relative; /* position is required because .scrollHeightFiller is positioned absolutely */
   overflow-y: auto;
 }
 
 .scrollHeightFiller {
-  position: relative;
-  width: 0;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
   min-height: 100%;
   visibility: hidden;
-  float: left;
 }
 
 .viewportContainer {
+  display: block;
   position: sticky;
   top: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-width: none; /* Hides scrollbar in Firefox */
+  overscroll-behavior-y: contain;
+  contain: layout paint;
+}
+
+/* Hides scrollbar in Chrome, Safari, and Opera (WebKit) */
+.viewportContainer::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollCanvas {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 .contentLayer {
-  position: absolute;
+  display: block;
   width: 100%;
-  min-height: 100%;
-  contain: layout;
+}
+
+.topSpacer,
+.bottomSpacer {
+  display: block;
+  width: 0;
+  flex-grow: 1;
+  visibility: hidden;
 }

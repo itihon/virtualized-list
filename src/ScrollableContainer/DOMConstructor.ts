@@ -38,7 +38,6 @@ export default class DOMConstructor {
     // this._DOMRoot = new DOMDivElement();
     this._DOMRoot = document.createElement('vl-div') as VLDivElement;
     this._DOMRoot.classList.add(...classList);
-    this._DOMRoot.style.display = 'block';
     requestAnimationFrame(() => {
       this._parentContainer.appendChild(this._DOMRoot);
     });
