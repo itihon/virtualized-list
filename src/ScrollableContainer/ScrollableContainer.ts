@@ -54,6 +54,17 @@ export default class ScrollableContainer {
     this._eventBus.emit('onResize', this._clientWidth, this._clientHeight);
   };
 
+  private _setSpacerHeight(spacer: DOMConstructor, height: number | 'auto') {
+    if (height === 'auto') {
+      spacer.setHeight(0);
+      spacer.DOMRoot.style.flexGrow = '1';
+    }
+    else {
+      spacer.setHeight(height);
+      spacer.DOMRoot.style.flexGrow = '0';
+    }
+  }
+
   constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, overscanHeight = 200) {
     this._container = container;
     this._eventBus = eventBus;
@@ -76,12 +87,28 @@ export default class ScrollableContainer {
 
   setScrollHeight(scrollHeight: number) {
     this._scrollHeightFiller.setHeight(scrollHeight);
-    // this._contentLayer.setHeight(scrollHeight); // Since items are positioned absolutely, it's not necessary to change height of the content layer. Shows better performance in Chrome Dev Tools' Layers tab.
+    this._scrollCanvas.setHeight(scrollHeight);
     this._scrollHeight = scrollHeight;
   }
 
   getScrollHeight(): number {
     return this._scrollHeight;
+  }
+
+  setTopSpacerHeight(height: number | 'auto') {
+    this._setSpacerHeight(this._topSpacer, height);
+  }
+
+  getTopSpacerHeight(): number {
+    return this._topSpacer.DOMRoot.offsetHeight;
+  }
+
+  setBottomSpacerHeight(height: number | 'auto') {
+    this._setSpacerHeight(this._bottomSpacer, height);
+  }
+
+  getBottomSpacerHeight(): number {
+    return this._bottomSpacer.DOMRoot.offsetHeight;
   }
 
   appendItem(item: HTMLElement) {
