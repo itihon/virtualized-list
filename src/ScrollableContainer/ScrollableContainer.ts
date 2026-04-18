@@ -87,8 +87,11 @@ export default class ScrollableContainer {
 
   setScrollHeight(scrollHeight: number) {
     this._scrollHeightFiller.setHeight(scrollHeight);
-    this._scrollCanvas.setHeight(scrollHeight);
     this._scrollHeight = scrollHeight;
+  }
+
+  setScrollCanvasHeight(height: number) {
+    this._scrollCanvas.setHeight(height);
   }
 
   getScrollHeight(): number {
