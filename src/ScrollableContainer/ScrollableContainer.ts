@@ -9,48 +9,9 @@
 
 import type { IEventEmitter, IEventMap } from '../types/types';
 import DOMConstructor from './DOMConstructor';
+import ScrollRelay from './ScrollRelay';
 import classes from './ScrollableContainer.module.css';
 import extractTYValue from './extractTYValue';
-
-class ScrollRelay {
-  private _container: HTMLElement;
-  private _previousScrollTop: number = 0;
-  private _eventBus: IEventEmitter<IEventMap>;
-  private _eventType: 'onScroll' | 'onContentScroll';
-  private _ignoreNextScroll = false;
-
-  private _emit = () => {
-    if (this._ignoreNextScroll) {
-      this._ignoreNextScroll = false;
-      return;
-    }
-
-    const previousScrollTop = this._previousScrollTop;
-    const scrollTop = this._container.scrollTop;
-
-    if (previousScrollTop < scrollTop) {
-      this._eventBus.emit(this._eventType, scrollTop, 'down');
-    }
-    else if (previousScrollTop > scrollTop) {
-      this._eventBus.emit(this._eventType, scrollTop, 'up');
-    }
-
-    this._previousScrollTop = scrollTop;
-  };
-
-  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, eventType: 'onScroll' | 'onContentScroll') {
-    this._container = container;
-    this._eventBus = eventBus;
-    this._eventType = eventType;
-
-    this._container.addEventListener('scroll', this._emit);
-  }
-
-  setScrollTop(scrollTop: number) {
-    this._ignoreNextScroll = true;
-    this._container.scrollTop = scrollTop;
-  }
-}
 
 export default class ScrollableContainer {
   private _container: HTMLElement;
