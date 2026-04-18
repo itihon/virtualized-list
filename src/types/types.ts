@@ -59,7 +59,8 @@ export interface IVirtualizedListEvents {
 
 export interface IScrollableContainerEvents {
   onResize: (width: number, height: number) => void;
-  onScroll: (position: number, direction: 'up' | 'down', speed: 'slow' | 'fast') => void;
+  onScroll: (position: number, direction: 'up' | 'down') => void;
+  onContentScroll: (position: number, direction: 'up' | 'down') => void;
   onItemsOutOfView: (items: HTMLElement[]) => void;
 }
 

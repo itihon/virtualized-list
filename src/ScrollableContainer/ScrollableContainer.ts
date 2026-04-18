@@ -12,6 +12,46 @@ import DOMConstructor from './DOMConstructor';
 import classes from './ScrollableContainer.module.css';
 import extractTYValue from './extractTYValue';
 
+class ScrollRelay {
+  private _container: HTMLElement;
+  private _previousScrollTop: number = 0;
+  private _eventBus: IEventEmitter<IEventMap>;
+  private _eventType: 'onScroll' | 'onContentScroll';
+  private _ignoreNextScroll = false;
+
+  private _emit = () => {
+    if (this._ignoreNextScroll) {
+      this._ignoreNextScroll = false;
+      return;
+    }
+
+    const previousScrollTop = this._previousScrollTop;
+    const scrollTop = this._container.scrollTop;
+
+    if (previousScrollTop < scrollTop) {
+      this._eventBus.emit(this._eventType, scrollTop, 'down');
+    }
+    else if (previousScrollTop > scrollTop) {
+      this._eventBus.emit(this._eventType, scrollTop, 'up');
+    }
+
+    this._previousScrollTop = scrollTop;
+  };
+
+  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, eventType: 'onScroll' | 'onContentScroll') {
+    this._container = container;
+    this._eventBus = eventBus;
+    this._eventType = eventType;
+
+    this._container.addEventListener('scroll', this._emit);
+  }
+
+  setScrollTop(scrollTop: number) {
+    this._ignoreNextScroll = true;
+    this._container.scrollTop = scrollTop;
+  }
+}
+
 export default class ScrollableContainer {
   private _container: HTMLElement;
   private _scrollHeightFiller: DOMConstructor;
@@ -20,32 +60,11 @@ export default class ScrollableContainer {
   private _topSpacer: DOMConstructor;
   private _bottomSpacer: DOMConstructor;
   private _contentLayer: DOMConstructor;
-  private _previousScrollTop: number = 0;
-  private _overscanHeight: number = 0;
   private _eventBus: IEventEmitter<IEventMap>;
+  private _containerScroller: ScrollRelay;
   private _scrollHeight = 0;
   private _clientWidth = 0;
   private _clientHeight = 0;
-  private _lastScrollingDirection: 'up' | 'down' | '' = '';
-
-  private _emitOnScroll = () => {
-    const previousScrollTop = this._previousScrollTop;
-    const scrollTop = this._container.scrollTop;
-    const speed = Math.abs(previousScrollTop - scrollTop) >= this._overscanHeight 
-      ? 'fast' 
-      : 'slow';
-
-    if (previousScrollTop < scrollTop) {
-      this._eventBus.emit('onScroll', scrollTop, 'down', speed);
-      this._lastScrollingDirection = 'down';
-    }
-    else if (previousScrollTop > scrollTop) {
-      this._eventBus.emit('onScroll', scrollTop, 'up', speed);
-      this._lastScrollingDirection = 'up';
-    }
-
-    this._previousScrollTop = scrollTop;
-  };
 
   private _saveCurrentSize: ResizeObserverCallback = () => {
     this._clientWidth = this._container.clientWidth;
@@ -65,19 +84,26 @@ export default class ScrollableContainer {
     }
   }
 
-  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, overscanHeight = 200) {
+  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>) {
     this._container = container;
     this._eventBus = eventBus;
-    this._overscanHeight = overscanHeight;
     this._scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
     this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
     this._scrollCanvas = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.scrollCanvas]);
     this._topSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.topSpacer]);
     this._contentLayer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.contentLayer]);
     this._bottomSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.bottomSpacer]);
-    this._container.classList.add(classes.scrollableContainer);
-    this._container.addEventListener('scroll', this._emitOnScroll);
+    this._containerScroller = new ScrollRelay(this._container, eventBus, 'onScroll');
+    
+    new ScrollRelay(this._viewportContainer.DOMRoot, eventBus, 'onContentScroll');
+
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
+
+    this._container.classList.add(classes.scrollableContainer);
+  }
+
+  setScrollTop(scrollTop: number) {
+    this._containerScroller.setScrollTop(scrollTop);
   }
 
   getScrollTop(): number {
