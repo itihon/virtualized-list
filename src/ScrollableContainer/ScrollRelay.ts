@@ -9,39 +9,46 @@ import type { IEventEmitter, IEventMap } from '../types/types';
 export default class ScrollRelay {
   private _container: HTMLElement;
   private _previousScrollTop: number = 0;
-  private _eventBus: IEventEmitter<IEventMap>;
-  private _eventType: 'onScroll' | 'onContentScroll';
+  private _eventBus: IEventEmitter<IEventMap> | null = null;
+  private _eventType: 'onScroll' | 'onContentScroll' | null = null;
   private _ignoreNextScroll = false;
 
   private _emit = () => {
     if (this._ignoreNextScroll) {
       this._ignoreNextScroll = false;
+      this._previousScrollTop = this._container.scrollTop;
       return;
     }
 
+    const eventBus = this._eventBus;
+    const eventType = this._eventType;
     const previousScrollTop = this._previousScrollTop;
     const scrollTop = this._container.scrollTop;
 
+    if (!eventBus || !eventType) return;
+
     if (previousScrollTop < scrollTop) {
-      this._eventBus.emit(this._eventType, scrollTop, 'down');
+      eventBus.emit(eventType, scrollTop, 'down');
     }
     else if (previousScrollTop > scrollTop) {
-      this._eventBus.emit(this._eventType, scrollTop, 'up');
+      eventBus.emit(eventType, scrollTop, 'up');
     }
 
     this._previousScrollTop = scrollTop;
   };
 
-  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>, eventType: 'onScroll' | 'onContentScroll') {
+  constructor(container: HTMLElement) {
     this._container = container;
-    this._eventBus = eventBus;
-    this._eventType = eventType;
-
     this._container.addEventListener('scroll', this._emit);
   }
 
   setScrollTop(scrollTop: number) {
     this._ignoreNextScroll = true;
     this._container.scrollTop = scrollTop;
+  }
+
+  attach(eventBus: IEventEmitter<IEventMap>, eventType: 'onScroll' | 'onContentScroll') {
+    this._eventBus = eventBus;
+    this._eventType = eventType;
   }
 }

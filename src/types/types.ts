@@ -93,7 +93,7 @@ export type LayoutHooks = {
 }
 
 export interface ILayout<ItemType> {
-  attach: (container: HTMLElement, eventBus: IEventEmitter<IEventMap>, store: IItemStore<ItemType>) => void;
+  attach: (eventBus: IEventEmitter<IEventMap>, store: IItemStore<ItemType>) => void;
   detach: () => void;
 }
 

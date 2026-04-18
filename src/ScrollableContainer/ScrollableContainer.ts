@@ -21,8 +21,9 @@ export default class ScrollableContainer {
   private _topSpacer: DOMConstructor;
   private _bottomSpacer: DOMConstructor;
   private _contentLayer: DOMConstructor;
-  private _eventBus: IEventEmitter<IEventMap>;
+  private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _containerScroller: ScrollRelay;
+  private _viewportScroller: ScrollRelay;
   private _scrollHeight = 0;
   private _clientWidth = 0;
   private _clientHeight = 0;
@@ -31,7 +32,7 @@ export default class ScrollableContainer {
     this._clientWidth = this._container.clientWidth;
     this._clientHeight = this._container.clientHeight;
 
-    this._eventBus.emit('onResize', this._clientWidth, this._clientHeight);
+    this._eventBus?.emit('onResize', this._clientWidth, this._clientHeight);
   };
 
   private _setSpacerHeight(spacer: DOMConstructor, height: number | 'auto') {
@@ -45,22 +46,26 @@ export default class ScrollableContainer {
     }
   }
 
-  constructor(container: HTMLElement, eventBus: IEventEmitter<IEventMap>) {
+  constructor(container: HTMLElement) {
     this._container = container;
-    this._eventBus = eventBus;
     this._scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
     this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
     this._scrollCanvas = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.scrollCanvas]);
     this._topSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.topSpacer]);
     this._contentLayer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.contentLayer]);
     this._bottomSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.bottomSpacer]);
-    this._containerScroller = new ScrollRelay(this._container, eventBus, 'onScroll');
-    
-    new ScrollRelay(this._viewportContainer.DOMRoot, eventBus, 'onContentScroll');
+    this._containerScroller = new ScrollRelay(this._container);
+    this._viewportScroller = new ScrollRelay(this._viewportContainer.DOMRoot);
 
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
 
     this._container.classList.add(classes.scrollableContainer);
+  }
+
+  attach(eventBus: IEventEmitter<IEventMap>) {
+    this._eventBus = eventBus;
+    this._containerScroller.attach(eventBus, 'onScroll');
+    this._viewportScroller.attach(eventBus, 'onContentScroll');
   }
 
   setScrollTop(scrollTop: number) {
