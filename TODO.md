@@ -2,8 +2,11 @@
 
 # Refactor 
 
-- [ ] Move out the repetetive part of range utilities (normalization).
-- [ ] Use margin-top instead of top
+<!--   - [ ] Move out the repetetive part of range utilities (normalization).
+  - [ ] Use margin-top instead of top -->
+
+  - [ ] Try to keep one instance of document fragment and itemsToRemove array between scroll events to ease garbage collection load.
+  - [ ] change some methods of ScrollableContainer to getters and setters.
 
 # Bugs
 
