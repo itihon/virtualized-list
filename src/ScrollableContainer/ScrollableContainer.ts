@@ -130,6 +130,10 @@ export default class ScrollableContainer {
     return this._contentLayer.DOMRoot.lastElementChild;
   }
 
+  getItems(): HTMLCollection {
+    return this._contentLayer.DOMRoot.children;
+  }
+
   clear() {
     const contentLayer = this._contentLayer.DOMRoot;
 

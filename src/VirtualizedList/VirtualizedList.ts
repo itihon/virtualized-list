@@ -16,14 +16,11 @@ import EventBus from "../EventBus/EventBus";
 
 export default class VirtualizedList {
   private _store: IItemStore<IFixedItem<unknown>> & IItemStore<IItem<unknown>>;
-  private _container: HTMLElement;
   private _eventBus = new EventBus<IEventMap>();
 
-  constructor({ layout, store, container }: IVirtualizedFixedListOptions & IVirtualizedDynamicListOptions) {
+  constructor({ layout, store }: IVirtualizedFixedListOptions & IVirtualizedDynamicListOptions) {
     this._store = store;
-    this._container = container;
-
-    layout.attach(this._container, this._eventBus, this._store);
+    layout.attach(this._eventBus, this._store);
   }
 
   insert(item: IItem, index: number) {

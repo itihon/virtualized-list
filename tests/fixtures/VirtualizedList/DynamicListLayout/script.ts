@@ -3,7 +3,7 @@ import DynamicListLayout from '../../../../src/Layout/DynamicListLayout';
 import ArrayItemStore from '../../../../src/ItemStore/ArrayItemStore';
 
 const auto = new URLSearchParams(window.location.search).get('auto');
-const itemsCount = new URLSearchParams(window.location.search).get('itemsCount') || 1000;
+const itemsCount = Number(new URLSearchParams(window.location.search).get('itemsCount')) || 1000;
 
 function render(data: { i: number } | unknown) {
   const item = document.createElement('div');
@@ -44,16 +44,17 @@ function render(data: { i: number } | unknown) {
   return item;
 }
 
-const store = new ArrayItemStore();
-const layout = new DynamicListLayout({ overscanHeight: 100 });
 const container = document.createElement('div');
+const store = new ArrayItemStore();
+const layout = new DynamicListLayout({ overscanHeight: 100, container });
+const list = new VirtualizedList({ layout, store });
+
 container.id = 'virtualized-list';
 container.style.width = '200px';
 container.style.height = '300px';
 container.style.overflow = 'auto';
 
 document.body.appendChild(container);
-const list = new VirtualizedList({ layout, store, container });
 
 for (let i = 0; i < itemsCount; i++) {
   list.insert({
