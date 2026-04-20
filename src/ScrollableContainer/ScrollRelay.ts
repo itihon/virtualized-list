@@ -17,7 +17,6 @@ export default class ScrollRelay {
   private _emit = () => {
     if (this._ignoreNextScroll) {
       this._ignoreNextScroll = false;
-      this._previousScrollTop = this._container.scrollTop;
       return;
     }
 

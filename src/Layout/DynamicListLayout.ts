@@ -244,8 +244,32 @@ export default class DynamicListLayout implements IDynamicListLayout {
     }
   };
 
-  private _scrollContent = (scrollTop: number, direction: 'down' | 'up') => {
+  private _adjustScrollbarThumb = () => {
+    const scrollableContainer = this._scrollableContainer;
+    const viewportTop = scrollableContainer.getViewportTop();
+    const scrollHeight = scrollableContainer.getScrollHeight();
+    const clientHeight = scrollableContainer.getClientHeight();
+    const firstItem = scrollableContainer.getFirstItem();
+    const store = this._store;
 
+    if (!store) return;
+
+    if (firstItem) {
+      const firstItemIndex = this._renderedIndexRegistry.get(firstItem);
+
+      if (firstItemIndex !== undefined) {
+        const firstItemTop = (firstItem as HTMLElement).offsetTop;
+        const correction = viewportTop - firstItemTop;
+        const indexRatio = firstItemIndex / (store.size - 1);
+        const scrollTop = indexRatio * (scrollHeight - clientHeight - correction);
+        
+        scrollableContainer.setScrollTop(scrollTop);
+      }
+    }
+  };
+
+  private _scrollContent = (scrollTop: number, direction: 'down' | 'up') => {
+    console.warn('_scrollContent')
   };
 
   private _updateItemHeightRange = () => {
@@ -296,6 +320,7 @@ export default class DynamicListLayout implements IDynamicListLayout {
     this._eventBus.on('onDelete', scheduleUpdate);
     this._eventBus.on('onResize', scheduleUpdate);
 
+    this._eventBus.on('onContentScroll', this._adjustScrollbarThumb);
     this._eventBus.on('onContentScroll', this._renderItems);
     this._eventBus.on('onScroll', this._scrollContent);
 
