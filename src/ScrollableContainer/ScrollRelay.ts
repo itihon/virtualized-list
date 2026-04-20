@@ -9,6 +9,7 @@ import type { IEventEmitter, IEventMap } from '../types/types';
 export default class ScrollRelay {
   private _container: HTMLElement;
   private _previousScrollTop: number = 0;
+  private _previousDirection: 'down' | 'up' = 'down'; // Keeping previous scroll direction prevents incorrect direction detection when scrollHeight changes during scrolling.
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _eventType: 'onScroll' | 'onContentScroll' | null = null;
   private _ignoreNextScroll = false;
@@ -28,10 +29,24 @@ export default class ScrollRelay {
     if (!eventBus || !eventType) return;
 
     if (previousScrollTop < scrollTop) {
-      eventBus.emit(eventType, scrollTop, 'down');
+      const direction = 'down';
+
+      // scrollHeight change protection
+      if (this._previousDirection === direction) {
+        eventBus.emit(eventType, scrollTop, direction);
+      }
+
+      this._previousDirection = direction;
     }
     else if (previousScrollTop > scrollTop) {
-      eventBus.emit(eventType, scrollTop, 'up');
+      const direction = 'up';
+
+      // scrollHeight change protection
+      if (this._previousDirection === direction) {
+        eventBus.emit(eventType, scrollTop, direction);
+      }
+
+      this._previousDirection = direction;
     }
 
     this._previousScrollTop = scrollTop;

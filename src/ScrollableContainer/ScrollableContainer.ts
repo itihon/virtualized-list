@@ -77,6 +77,10 @@ export default class ScrollableContainer {
     // return this._previousScrollTop;
   }
 
+  getViewportTop(): number {
+    return this._viewportContainer.DOMRoot.scrollTop;
+  }
+
   setScrollHeight(scrollHeight: number) {
     this._scrollHeightFiller.setHeight(scrollHeight);
     this._scrollHeight = scrollHeight;
@@ -88,6 +92,14 @@ export default class ScrollableContainer {
 
   getScrollHeight(): number {
     return this._scrollHeight;
+  }
+
+  getTopSpacerBottom(): number {
+    return this._topSpacer.DOMRoot.offsetHeight;
+  }
+
+  getBottomSpacerTop(): number {
+    return this._bottomSpacer.DOMRoot.offsetTop;
   }
 
   setTopSpacerHeight(height: number | 'auto') {
@@ -120,6 +132,14 @@ export default class ScrollableContainer {
 
   getClientHeight(): number {
     return this._clientHeight;
+  }
+  
+  getViewportWidth(): number {
+    return this._viewportContainer.DOMRoot.clientWidth;
+  }
+
+  getViewportHeight(): number {
+    return this._viewportContainer.DOMRoot.clientHeight;
   }
 
   getFirstItem(): Element | null {
