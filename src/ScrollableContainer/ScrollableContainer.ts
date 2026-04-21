@@ -60,10 +60,12 @@ export default class ScrollableContainer {
 
     this._container.classList.add(classes.scrollableContainer);
 
-    this._container.scrollTop = 0;
-    this._viewportContainer.DOMRoot.scrollTop = 0;
-    this.setTopSpacerHeight(0);
-    this.setBottomSpacerHeight('auto');
+    this._viewportContainer.DOMRoot.onMounted(() => {
+      this._container.scrollTop = 0;
+      this._viewportContainer.DOMRoot.scrollTop = 0;
+      this.setTopSpacerHeight(0);
+      this.setBottomSpacerHeight('auto');
+    });
   }
 
   attach(eventBus: IEventEmitter<IEventMap>) {
