@@ -70,6 +70,10 @@ export default class ScrollableContainer {
     this._viewportScroller.attach(eventBus, 'onContentScroll');
   }
 
+  scroll(top: number) {
+    this._viewportContainer.DOMRoot.scroll({ top });
+  }
+
   setScrollTop(scrollTop: number) {
     this._containerScroller.setScrollTop(scrollTop);
   }
@@ -88,12 +92,16 @@ export default class ScrollableContainer {
     this._scrollHeight = scrollHeight;
   }
 
+  getScrollHeight(): number {
+    return this._scrollHeight;
+  }
+
   setScrollCanvasHeight(height: number) {
     this._scrollCanvas.setHeight(height);
   }
 
-  getScrollHeight(): number {
-    return this._scrollHeight;
+  getScrollCanvasHeight(): number {
+    return this._scrollCanvas.DOMRoot.offsetHeight;
   }
 
   getTopSpacerBottom(): number {

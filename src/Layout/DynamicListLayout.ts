@@ -13,7 +13,6 @@ import type {
   IEventMap,
 } from "../types/types";
 import ScrollableContainer from "../ScrollableContainer/ScrollableContainer";
-import { scrollableContainer } from "../ScrollableContainer/ScrollableContainer.module.css";
 
 type DynamicListLayoutOptions = { overscanHeight: number, container: HTMLElement };
 
@@ -56,16 +55,15 @@ class RAFScheduler {
 }
 
 export default class DynamicListLayout implements IDynamicListLayout {
-  private _container: HTMLElement;
   private _overscanHeight: number;
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _store: IItemStore<IItem> | null = null;
   private _scrollableContainer: ScrollableContainer;
   private _renderedIndexRegistry = new WeakMap<Element, number>();
-  private _scheduledUpdate = 0;
   private _minItemHeight = document.documentElement.clientHeight;
   private _maxItemHeight = 0;
   private _previousDirection: 'down' | 'up' = 'down';
+  private _ignoreThumbAdjustment = false;
 
   private _getScrollRatio(offset = 0): number {
     const scrollableContainer = this._scrollableContainer;
@@ -245,6 +243,11 @@ export default class DynamicListLayout implements IDynamicListLayout {
   };
 
   private _adjustScrollbarThumb = () => {
+    if (this._ignoreThumbAdjustment) {
+      this._ignoreThumbAdjustment = false;
+      return;
+    }
+
     const scrollableContainer = this._scrollableContainer;
     const viewportTop = scrollableContainer.getViewportTop();
     const scrollHeight = scrollableContainer.getScrollHeight();
@@ -270,6 +273,18 @@ export default class DynamicListLayout implements IDynamicListLayout {
 
   private _scrollContent = (scrollTop: number, direction: 'down' | 'up') => {
     console.warn('_scrollContent')
+
+    const scrollableContainer = this._scrollableContainer;
+    const scrollHeight = scrollableContainer.getScrollHeight();
+    const clientHeight = scrollableContainer.getClientHeight();
+    const viewportHeight = scrollableContainer.getViewportHeight();
+    const scrollCanvasHeight = scrollableContainer.getScrollCanvasHeight();
+    const scrollRatio = scrollTop / (scrollHeight - clientHeight);
+    const viewportTop = scrollRatio * (scrollCanvasHeight - viewportHeight);
+
+    scrollableContainer.scroll(viewportTop);
+
+    this._ignoreThumbAdjustment = true;
   };
 
   private _updateItemHeightRange = () => {
@@ -304,7 +319,6 @@ export default class DynamicListLayout implements IDynamicListLayout {
   constructor({ overscanHeight = 100, container }: DynamicListLayoutOptions) {
     this._scrollableContainer = new ScrollableContainer(container);
     this._overscanHeight = overscanHeight;
-    this._container = container;
   }
 
   attach(eventBus: IEventEmitter<IEventMap>, store: IItemStore<IItem>) {
