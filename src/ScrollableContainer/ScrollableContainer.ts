@@ -11,7 +11,6 @@ import type { IEventEmitter, IEventMap } from '../types/types';
 import DOMConstructor from './DOMConstructor';
 import ScrollRelay from './ScrollRelay';
 import classes from './ScrollableContainer.module.css';
-import extractTYValue from './extractTYValue';
 
 export default class ScrollableContainer {
   private _container: HTMLElement;
@@ -60,6 +59,9 @@ export default class ScrollableContainer {
     new ResizeObserver(this._saveCurrentSize).observe(this._container);
 
     this._container.classList.add(classes.scrollableContainer);
+
+    this._container.scrollTop = 0;
+    this._viewportContainer.DOMRoot.scrollTop = 0;
   }
 
   attach(eventBus: IEventEmitter<IEventMap>) {
