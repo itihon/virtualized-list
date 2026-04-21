@@ -120,11 +120,11 @@ export default class ScrollableContainer {
     return this._bottomSpacer.DOMRoot.offsetHeight;
   }
 
-  appendItem(item: HTMLElement) {
+  appendItem(item: HTMLElement | DocumentFragment) {
     this._contentLayer.DOMRoot.appendChild(item);
   }
 
-  prependItem(item: HTMLElement) {
+  prependItem(item: HTMLElement | DocumentFragment) {
     this._contentLayer.DOMRoot.prepend(item);
   }
 
