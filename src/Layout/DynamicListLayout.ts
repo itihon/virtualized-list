@@ -242,7 +242,7 @@ export default class DynamicListLayout implements IDynamicListLayout {
     }
   };
 
-  private _adjustScrollbarThumb = () => {
+  private _adjustScrollbarThumb = (_: number, direction: 'down' | 'up') => {
     if (this._ignoreThumbAdjustment) {
       this._ignoreThumbAdjustment = false;
       return;
@@ -250,23 +250,31 @@ export default class DynamicListLayout implements IDynamicListLayout {
 
     const scrollableContainer = this._scrollableContainer;
     const viewportTop = scrollableContainer.getViewportTop();
+    const viewportHeight = scrollableContainer.getViewportHeight();
     const scrollHeight = scrollableContainer.getScrollHeight();
     const clientHeight = scrollableContainer.getClientHeight();
-    const firstItem = scrollableContainer.getFirstItem();
+    const items = scrollableContainer.getItems();
+    const offsetAnchor = direction === 'down' 
+      ? viewportTop + viewportHeight
+      : viewportTop;
+
     const store = this._store;
 
     if (!store) return;
 
-    if (firstItem) {
-      const firstItemIndex = this._renderedIndexRegistry.get(firstItem);
+    for (const item of items) {
+      const { offsetTop, offsetHeight } = (item as HTMLElement);
 
-      if (firstItemIndex !== undefined) {
-        const firstItemTop = (firstItem as HTMLElement).offsetTop;
-        const correction = viewportTop - firstItemTop;
-        const indexRatio = firstItemIndex / (store.size - 1);
-        const scrollTop = indexRatio * (scrollHeight - clientHeight - correction);
-        
-        scrollableContainer.setScrollTop(scrollTop);
+      if (offsetTop <= offsetAnchor && offsetTop + offsetHeight >= offsetAnchor) {
+        const itemIndex = this._renderedIndexRegistry.get(item);
+        const fraction = (offsetAnchor - offsetTop) / offsetHeight;
+
+        if (itemIndex !== undefined) {
+          const indexRatio = (itemIndex + fraction) / (store.size - 1);
+          const scrollTop = indexRatio * (scrollHeight - clientHeight);
+          
+          scrollableContainer.setScrollTop(scrollTop);
+        }
       }
     }
   };
