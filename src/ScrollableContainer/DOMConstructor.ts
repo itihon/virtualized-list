@@ -4,6 +4,8 @@
  * @author Alexandr Kalabin
  */
 
+import ElementMetricsCache from "./ElementMetricsCache";
+
 type LifecycleCallback = (element: VLDivElement) => void;
 
 export class VLDivElement extends HTMLElement {
@@ -29,14 +31,16 @@ export class VLDivElement extends HTMLElement {
 
 customElements.define('vl-div', VLDivElement);
 
-export default class DOMConstructor {
+export default class DOMConstructor extends ElementMetricsCache {
   private _parentContainer: HTMLElement;
   private _DOMRoot: VLDivElement;
 
   constructor(parentContainer: HTMLElement, classList: string[]) {
+    super(document.createElement('vl-div'));
+
     this._parentContainer = parentContainer;    
     // this._DOMRoot = new DOMDivElement();
-    this._DOMRoot = document.createElement('vl-div') as VLDivElement;
+    this._DOMRoot = this._element as VLDivElement;
     this._DOMRoot.classList.add(...classList);
     requestAnimationFrame(() => {
       this._parentContainer.appendChild(this._DOMRoot);

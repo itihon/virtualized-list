@@ -5,25 +5,27 @@
  */
 
 import type { IEventEmitter, IEventMap } from '../types/types';
+import ElementMetricsCache from './ElementMetricsCache';
 
-export default class ScrollRelay {
+export default class ScrollRelay extends ElementMetricsCache {
   private _container: HTMLElement;
-  private _previousScrollTop: number = 0;
   private _previousDirection: 'down' | 'up' = 'down'; // Keeping track of previous scroll direction prevents incorrect direction detection when scrollHeight changes during scrolling.
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _eventType: 'onScroll' | 'onContentScroll' | null = null;
   private _ignoreNextScroll = false;
 
   handleEvent() {
+    const eventBus = this._eventBus;
+    const eventType = this._eventType;
+    const previousScrollTop = this.scrollTop;
+    const scrollTop = this._container.scrollTop;
+
+    this.refresh();
+
     if (this._ignoreNextScroll) {
       this._ignoreNextScroll = false;
       return;
     }
-
-    const eventBus = this._eventBus;
-    const eventType = this._eventType;
-    const previousScrollTop = this._previousScrollTop;
-    const scrollTop = this._container.scrollTop;
 
     if (!eventBus || !eventType) return;
 
@@ -47,11 +49,10 @@ export default class ScrollRelay {
 
       this._previousDirection = direction;
     }
-
-    this._previousScrollTop = scrollTop;
   };
 
   constructor(container: HTMLElement) {
+    super(container);
     this._container = container;
     this._container.addEventListener('scroll', this);
   }

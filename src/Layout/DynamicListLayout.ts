@@ -167,6 +167,9 @@ export default class DynamicListLayout implements IDynamicListLayout {
 
   private _renderItems = (scrollTop: number, direction: 'down' | 'up') => {
     const scrollableContainer = this._scrollableContainer;
+
+    scrollableContainer.refresh();
+
     const renderedItems = this._renderedIndexRegistry;
     const viewportTop = scrollableContainer.getViewportTop();
     const viewportHeight = scrollableContainer.getViewportHeight();
@@ -336,7 +339,11 @@ export default class DynamicListLayout implements IDynamicListLayout {
 
     const scheduleUpdate = this._scheduleVisibleItemsUpdate
       .done(this._scheduleItemHeightRangeUpdate)
-      .done(this._scheduleScrollHeightUpdate);
+      .done(
+        this._scheduleScrollHeightUpdate.done(
+          () => this._scrollableContainer.refresh()
+        )
+      );
 
     this._eventBus.on('onInsert', scheduleUpdate);
     this._eventBus.on('onDelete', scheduleUpdate);

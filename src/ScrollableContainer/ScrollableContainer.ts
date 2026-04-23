@@ -23,19 +23,14 @@ export default class ScrollableContainer {
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _containerScroller: ScrollRelay;
   private _viewportScroller: ScrollRelay;
-  private _scrollHeight = 0;
-  private _clientWidth = 0;
-  private _clientHeight = 0;
-  private _viewportWidth = 0;
-  private _viewportHeight = 0;
 
   private _handleResize: ResizeObserverCallback = () => {
-    this._clientWidth = this._container.clientWidth;
-    this._clientHeight = this._container.clientHeight;
-    this._viewportWidth = this._viewportContainer.DOMRoot.clientWidth;
-    this._viewportHeight = this._viewportContainer.DOMRoot.clientHeight;
 
-    this._eventBus?.emit('onResize', this._clientWidth, this._clientHeight);
+    this.refresh();
+
+    const { clientWidth, clientHeight } = this._container;
+
+    this._eventBus?.emit('onResize', clientWidth, clientHeight);
   };
 
   private _setSpacerHeight(spacer: DOMConstructor, height: number | 'auto') {
@@ -68,8 +63,8 @@ export default class ScrollableContainer {
     this._container.classList.add(classes.scrollableContainer);
 
     this._viewportContainer.DOMRoot.onMounted(() => {
-      this._container.scrollTop = 0;
-      this._viewportContainer.DOMRoot.scrollTop = 0;
+      this._containerScroller.setScrollTop(0);
+      this._viewportScroller.setScrollTop(0);
       this.setTopSpacerHeight(0);
       this.setBottomSpacerHeight('auto');
     });
@@ -90,21 +85,19 @@ export default class ScrollableContainer {
   }
 
   getScrollTop(): number {
-    return this._container.scrollTop;
-    // return this._previousScrollTop;
+    return this._containerScroller.scrollTop;
   }
 
   getViewportTop(): number {
-    return this._viewportContainer.DOMRoot.scrollTop;
+    return this._viewportScroller.scrollTop;
   }
 
   setScrollHeight(scrollHeight: number) {
     this._scrollHeightFiller.setHeight(scrollHeight);
-    this._scrollHeight = scrollHeight;
   }
 
   getScrollHeight(): number {
-    return this._scrollHeight;
+    return this._containerScroller.scrollHeight;
   }
 
   setScrollCanvasHeight(height: number) {
@@ -112,15 +105,15 @@ export default class ScrollableContainer {
   }
 
   getScrollCanvasHeight(): number {
-    return this._scrollCanvas.DOMRoot.offsetHeight;
+    return this._viewportScroller.scrollHeight;
   }
 
   getTopSpacerBottom(): number {
-    return this._topSpacer.DOMRoot.offsetHeight;
+    return this._topSpacer.offsetHeight;
   }
 
   getBottomSpacerTop(): number {
-    return this._bottomSpacer.DOMRoot.offsetTop;
+    return this._bottomSpacer.offsetTop;
   }
 
   setTopSpacerHeight(height: number | 'auto') {
@@ -128,7 +121,7 @@ export default class ScrollableContainer {
   }
 
   getTopSpacerHeight(): number {
-    return this._topSpacer.DOMRoot.offsetHeight;
+    return this._topSpacer.offsetHeight;
   }
 
   setBottomSpacerHeight(height: number | 'auto') {
@@ -136,7 +129,7 @@ export default class ScrollableContainer {
   }
 
   getBottomSpacerHeight(): number {
-    return this._bottomSpacer.DOMRoot.offsetHeight;
+    return this._bottomSpacer.offsetHeight;
   }
 
   appendItem(item: HTMLElement | DocumentFragment) {
@@ -148,19 +141,19 @@ export default class ScrollableContainer {
   }
 
   getClientWidth(): number {
-    return this._clientWidth;
+    return this._containerScroller.clientWidth;
   }
 
   getClientHeight(): number {
-    return this._clientHeight;
+    return this._containerScroller.clientHeight;
   }
   
   getViewportWidth(): number {
-    return this._viewportWidth;
+    return this._viewportScroller.clientWidth;
   }
 
   getViewportHeight(): number {
-    return this._viewportHeight;
+    return this._viewportScroller.clientHeight;
   }
 
   getFirstItem(): Element | null {
@@ -181,5 +174,13 @@ export default class ScrollableContainer {
     while(contentLayer.firstChild) {
       contentLayer.firstChild.remove();
     }
+  }
+
+  refresh() {
+    this._containerScroller.refresh();
+    this._viewportScroller.refresh();
+    // this._viewportContainer.refresh();
+    this._topSpacer.refresh();
+    this._bottomSpacer.refresh();
   }
 }
