@@ -26,10 +26,14 @@ export default class ScrollableContainer {
   private _scrollHeight = 0;
   private _clientWidth = 0;
   private _clientHeight = 0;
+  private _viewportWidth = 0;
+  private _viewportHeight = 0;
 
-  private _saveCurrentSize: ResizeObserverCallback = () => {
+  private _handleResize: ResizeObserverCallback = () => {
     this._clientWidth = this._container.clientWidth;
     this._clientHeight = this._container.clientHeight;
+    this._viewportWidth = this._viewportContainer.DOMRoot.clientWidth;
+    this._viewportHeight = this._viewportContainer.DOMRoot.clientHeight;
 
     this._eventBus?.emit('onResize', this._clientWidth, this._clientHeight);
   };
@@ -56,7 +60,10 @@ export default class ScrollableContainer {
     this._containerScroller = new ScrollRelay(this._container);
     this._viewportScroller = new ScrollRelay(this._viewportContainer.DOMRoot);
 
-    new ResizeObserver(this._saveCurrentSize).observe(this._container);
+    const resizeObserver = new ResizeObserver(this._handleResize);
+    
+    resizeObserver.observe(this._container);
+    resizeObserver.observe(this._viewportContainer.DOMRoot);
 
     this._container.classList.add(classes.scrollableContainer);
 
@@ -149,11 +156,11 @@ export default class ScrollableContainer {
   }
   
   getViewportWidth(): number {
-    return this._viewportContainer.DOMRoot.clientWidth;
+    return this._viewportWidth;
   }
 
   getViewportHeight(): number {
-    return this._viewportContainer.DOMRoot.clientHeight;
+    return this._viewportHeight;
   }
 
   getFirstItem(): Element | null {
