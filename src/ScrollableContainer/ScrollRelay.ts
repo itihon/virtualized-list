@@ -14,7 +14,7 @@ export default class ScrollRelay {
   private _eventType: 'onScroll' | 'onContentScroll' | null = null;
   private _ignoreNextScroll = false;
 
-  private _emit = () => {
+  handleEvent() {
     if (this._ignoreNextScroll) {
       this._ignoreNextScroll = false;
       return;
@@ -53,7 +53,7 @@ export default class ScrollRelay {
 
   constructor(container: HTMLElement) {
     this._container = container;
-    this._container.addEventListener('scroll', this._emit);
+    this._container.addEventListener('scroll', this);
   }
 
   setScrollTop(scrollTop: number) {
