@@ -20,32 +20,6 @@ type SchedulerFn = {
   done(cb: () => void): SchedulerFn;
 };
 
-function subtractRange(start1: number, end1: number, start2: number, end2: number, direction: ScrollDirection) {
-  // normalization in case start and end are swapped
-  const min1 = Math.min(start1, end1);
-  const max1 = Math.max(start1, end1);
-  const min2 = Math.min(start2, end2);
-  const max2 = Math.max(start2, end2);
-
-  let start = 0;
-  let end = 0;
-
-  if (direction === 'down') {
-    start = Math.max(max1, min2) === max1 ? max1 + 1 : min2;
-    end = max2;
-  }
-  else if (direction === 'up') {
-    start = min2;
-    end = Math.min(min1, max2) === min1 ? min1 - 1 : max2;
-  }
-
-  if (end - start >= 0) {
-    return { start, end };
-  }
-
-  return null;
-}
-
 class RAFScheduler {
   private _rAFid: number | null = null;
   private _doneCBs: (() => void)[] = [];
@@ -79,62 +53,11 @@ class RAFScheduler {
   };
 }
 
-class ItemsRemover {
-  private _scrollableContainer: ScrollableContainer;
-  private _itemsToRemove: Element[] = [];
-  private _removedRangeStart = Infinity;
-  private _removedRangeEnd = 0;
-  private _overscanHeight: number = 0;
-  private _direction: ScrollDirection = 'down';
-
-  constructor(scrollableContainer: ScrollableContainer) {
-    this._scrollableContainer = scrollableContainer;
-  }
-
-  init(direction: ScrollDirection, overscanHeight: number = 0) {
-    this._direction = direction;
-    this._overscanHeight = overscanHeight;
-    this._itemsToRemove.length = 0;
-    this._removedRangeStart = Infinity;
-    this._removedRangeEnd = 0;
-  }
-
-  check(item: Element) {
-    const scrollableContainer = this._scrollableContainer;
-    const viewportTop = scrollableContainer.getViewportTop();
-    const viewportHeight = scrollableContainer.getViewportHeight();
-    const overscanHeight = this._overscanHeight;
-
-    const itemTop = (item as HTMLElement).offsetTop;
-    const itemHeight = (item as HTMLElement).offsetHeight;
-    const isItemLeftOverscan = this._direction === 'down' 
-      ? itemTop + itemHeight < viewportTop - overscanHeight
-      : this._direction === 'up'
-        ? itemTop > viewportTop + viewportHeight + overscanHeight
-        : false;
-
-    if (isItemLeftOverscan) {
-      this._removedRangeStart = Math.min(this._removedRangeStart, itemTop);
-      this._removedRangeEnd = Math.max(this._removedRangeEnd, itemTop + itemHeight);
-      this._itemsToRemove.push(item);
-    }
-  }
-
-  getRemovedHeight(): number {
-    return this._removedRangeEnd - this._removedRangeStart;
-  }
-
-  getItems(): Element[] {
-    return this._itemsToRemove;
-  }
-}
-
 export default class DynamicListLayout {
   private _overscanHeight: number;
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _store: IItemStore<IItem> | null = null;
   private _scrollableContainer: ScrollableContainer;
-  private _itemsRemover: ItemsRemover;
   private _renderedIndexRegistry = new WeakMap<Element, number>();
   private _minItemHeight = document.documentElement.clientHeight;
   private _maxItemHeight = 0;
@@ -286,29 +209,22 @@ export default class DynamicListLayout {
 
   private _renderItems = (scrollTop: number, direction: ScrollDirection) => {
     const scrollableContainer = this._scrollableContainer;
-    const itemsRemover = this._itemsRemover;
     const overscanHeight = this._overscanHeight;
 
     scrollableContainer.refresh();
 
     // prevents layout shift in Firefox
-    if (this._previousDirection !== direction) {
-      scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight());
-      scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight());
-      this._previousDirection = direction;
-      return;
-    }
-
-    itemsRemover.init(direction, overscanHeight);
+    // if (this._previousDirection !== direction) {
+    //   scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight());
+    //   scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight());
+    //   this._previousDirection = direction;
+    //   return;
+    // }
 
     for (const item of scrollableContainer.getItems()) {
-
+      
       // update min and max item height
       this._updateItemHeightBounds(item);
-
-      // find items to be removed
-      // calculate removed height
-      itemsRemover.check(item);
 
       this._detectScrollAnchorItemOffset(item, direction);
     }
@@ -524,7 +440,6 @@ export default class DynamicListLayout {
 
   constructor({ overscanHeight = 100, container }: DynamicListLayoutOptions) {
     this._scrollableContainer = new ScrollableContainer(container);
-    this._itemsRemover = new ItemsRemover(this._scrollableContainer);
     this._overscanHeight = overscanHeight;
   }
 
