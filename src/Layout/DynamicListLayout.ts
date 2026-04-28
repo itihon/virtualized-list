@@ -272,10 +272,10 @@ export default class DynamicListLayout {
     }
   }
 
-  private _getEdgeRenderedIndex(edge: 'first' | 'last'): number | undefined {
-    const renderedItem = edge === 'first'
+  private _getRenderedBoundaryIndex(boundary: 'first' | 'last'): number | undefined {
+    const renderedItem = boundary === 'first'
       ? this._scrollableContainer.getFirstItem()
-      : edge === 'last'
+      : boundary === 'last'
         ? this._scrollableContainer.getLastItem()
         : null;
 
@@ -327,7 +327,7 @@ export default class DynamicListLayout {
       let endIndex = Math.ceil(middleIndex + rangeToFill / this._minItemHeight);
 
       if (direction === 'down') {
-        const lastRenderedIndex = this._getEdgeRenderedIndex('last');
+        const lastRenderedIndex = this._getRenderedBoundaryIndex('last');
 
         if (lastRenderedIndex !== undefined) {
           startIndex = Math.max(lastRenderedIndex + 1, startIndex);
@@ -337,7 +337,7 @@ export default class DynamicListLayout {
         scrollableContainer.setBottomSpacerHeight('auto');
       }
       else if (direction === 'up') {
-        const firstRenderedIndex = this._getEdgeRenderedIndex('first');
+        const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
 
         if (firstRenderedIndex !== undefined) {
           endIndex = Math.min(firstRenderedIndex - 1, endIndex);
@@ -357,7 +357,7 @@ export default class DynamicListLayout {
         const startOffset = scrollableContainer.getBottomSpacerTop();
         const endOffset = scrollTop + viewportHeight + overscanHeight;
         const rangeToFill = endOffset - startOffset;
-        const lastRenderedIndex = this._getEdgeRenderedIndex('last');
+        const lastRenderedIndex = this._getRenderedBoundaryIndex('last');
        
         if (rangeToFill > 0 && lastRenderedIndex !== undefined) {
           const startIndex = lastRenderedIndex + 1;
@@ -373,7 +373,7 @@ export default class DynamicListLayout {
         const startOffset = scrollTop - overscanHeight;
         const endOffset = scrollableContainer.getTopSpacerBottom();
         const rangeToFill = endOffset - startOffset;
-        const firstRenderedIndex = this._getEdgeRenderedIndex('first');
+        const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
 
         if (rangeToFill > 0 && firstRenderedIndex !== undefined) {
           const endIndex = firstRenderedIndex - 1;
@@ -420,7 +420,7 @@ export default class DynamicListLayout {
 
   private _findRenderedItemByIndex(index: number): Element | undefined {
     const renderedItems = this._scrollableContainer.getItems();
-    const firstRenderedIndex = this._getEdgeRenderedIndex('first');
+    const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
 
     if (firstRenderedIndex === undefined) return undefined;
 
