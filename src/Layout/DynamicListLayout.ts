@@ -353,15 +353,17 @@ export default class DynamicListLayout {
     const renderedItems = this._scrollableContainer.getItems(); 
 
     for (const item of renderedItems) {
-      const itemHeight = (item as HTMLElement).offsetHeight;
-      this._minItemHeight = Math.min(this._minItemHeight, itemHeight);
-      this._maxItemHeight = Math.max(this._maxItemHeight, itemHeight);
+      this._updateItemHeightBounds(item);
     }
-
-    console.log('_updateItemHeightRange minItemHeight:', this._minItemHeight, 'maxItemHeight:', this._maxItemHeight)
   };
   
   private _scheduleItemHeightRangeUpdate = new RAFScheduler().schedule(this._updateItemHeightRange);
+
+  private _updateItemHeightBounds(item: Element) {
+    const itemHeight = (item as HTMLElement).offsetHeight;
+    this._minItemHeight = Math.min(this._minItemHeight, itemHeight);
+    this._maxItemHeight = Math.max(this._maxItemHeight, itemHeight);
+  }
 
   private _getAvgItemHeight() {
     return (this._minItemHeight + this._maxItemHeight) / 2;
