@@ -5,10 +5,8 @@
  */
 
 import type { 
-  IDynamicListLayout, 
   IItem, 
   IItemStore, 
-  IMeasurerEvents,
   IEventEmitter,
   IEventMap,
 } from "../types/types";
@@ -20,6 +18,32 @@ type SchedulerFn = {
   (): void;
   done(cb: () => void): SchedulerFn;
 };
+
+function subtractRange(start1: number, end1: number, start2: number, end2: number, direction: 'down' | 'up') {
+  // normalization in case start and end are swapped
+  const min1 = Math.min(start1, end1);
+  const max1 = Math.max(start1, end1);
+  const min2 = Math.min(start2, end2);
+  const max2 = Math.max(start2, end2);
+
+  let start = 0;
+  let end = 0;
+
+  if (direction === 'down') {
+    start = Math.max(max1, min2) === max1 ? max1 + 1 : min2;
+    end = max2;
+  }
+  else if (direction === 'up') {
+    start = min2;
+    end = Math.min(min1, max2) === min1 ? min1 - 1 : max2;
+  }
+
+  if (end - start >= 0) {
+    return { start, end };
+  }
+
+  return null;
+}
 
 class RAFScheduler {
   private _rAFid: number | null = null;
@@ -113,8 +137,10 @@ export default class DynamicListLayout {
   private _renderedIndexRegistry = new WeakMap<Element, number>();
   private _minItemHeight = document.documentElement.clientHeight;
   private _maxItemHeight = 0;
-  private _previousDirection: 'down' | 'up' = 'down';
-  private _ignoreThumbAdjustment = false;
+  private _previousDirection: 'down' | 'up' | '' = '';
+  private _scrollAnchorItemOffsetTop = 0;
+  private _scrollAnchorItemOffsetHeight = 0;
+  private _scrollAnchorItemIndex = 0;
 
   private _getScrollRatio(offset = 0): number {
     const scrollableContainer = this._scrollableContainer;
@@ -122,9 +148,9 @@ export default class DynamicListLayout {
     const scrollHeight = scrollableContainer.getScrollHeight(); 
     const clientHeight = scrollableContainer.getClientHeight();
     
-    const scrollRatio = Math.min(Math.max(scrollTop + offset, 0) / Math.min(Math.max(scrollHeight - clientHeight, 1), 0), 0) || 0;
-
-    console.log('scrollRatio:', scrollRatio, 'offset:', offset);
+    // const scrollRatio = Math.min(Math.max(viewportTop + offset, 0) / Math.min(Math.max(scrollCanvasHeight - viewportHeight, 1), 0), 0) || 0;
+    const scrollRatio = Math.max(scrollTop + offset, 0) / (scrollHeight - clientHeight) || 0;
+    console.log('scrollRatio:', scrollRatio, 'offset:', offset, scrollTop, scrollHeight, clientHeight);
 
     return scrollRatio;
   }
@@ -134,11 +160,13 @@ export default class DynamicListLayout {
 
     const lastIndex = this._store.size - 1;
 
-    return Math.min(Math.ceil(this._getScrollRatio(offset) * lastIndex), lastIndex);
+    return Math.min(Math.round(this._getScrollRatio(offset) * lastIndex), lastIndex);
   }
 
   private _renderRange(startIndex: number, endIndex: number, direction: 'down' | 'up') {
-    console.log('_renderRange', startIndex, endIndex)
+    console.log('_renderRange', startIndex, endIndex, direction)
+    if (startIndex > endIndex) console.error('_renderRange', startIndex, endIndex, direction);
+
     const store = this._store;
     const scrollableContainer = this._scrollableContainer;
     const renderedItems = this._renderedIndexRegistry;
@@ -172,11 +200,9 @@ export default class DynamicListLayout {
     const viewportHeight = scrollableContainer.getViewportHeight();
     const overscanHeight = this._overscanHeight;
 
-    const startIndex = this._getItemIndexByScrollTop(-overscanHeight);
-    const endIndex = startIndex + Math.ceil((viewportHeight + overscanHeight * 2) / this._getAvgItemHeight());
+    const startIndex = this._getItemIndexByScrollTop();
+    const endIndex = startIndex + Math.ceil((viewportHeight + overscanHeight) / this._getAvgItemHeight());
 
-    scrollableContainer.setTopSpacerHeight(scrollableContainer.getViewportTop());
-    scrollableContainer.setBottomSpacerHeight('auto');
     scrollableContainer.clear();
 
     this._renderRange(startIndex, endIndex, 'down');
@@ -184,52 +210,87 @@ export default class DynamicListLayout {
 
   private _scheduleVisibleItemsUpdate = new RAFScheduler().schedule(this._updateVisibleItems);
 
-  private _getItemsToBeRemoved(direction: 'down' | 'up') {
+  private _addSpareSpace(startIndex: number, endIndex: number) {
+    const spareSpace = 1000;
+    const store = this._store;
+    const scrollableContainer = this._scrollableContainer;
+
+    if (!store) return;
+
+    if (startIndex > 0 && endIndex < store.size - 1) {
+      const topSpacerHeight = scrollableContainer.getTopSpacerHeight();
+      const bottomSpacerHeight = scrollableContainer.getBottomSpacerHeight(); 
+
+      if (topSpacerHeight < spareSpace || bottomSpacerHeight < spareSpace) {
+        console.warn('_addSpareSpace');
+      
+        scrollableContainer.setViewportTop(scrollableContainer.getViewportTop());
+        scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() + spareSpace);
+      }
+    }
+  }
+
+  private _cutBottomSpacer() {
+    const scrollableContainer = this._scrollableContainer;
+    const lastItem = scrollableContainer.getLastItem();
+    const store = this._store;
+
+    if (!store) return;
+
+    if (lastItem) {
+      const lastIndex = this._renderedIndexRegistry.get(lastItem);
+
+      if (lastIndex === store.size - 1) {
+        const scrollCanvasHeight = scrollableContainer.getScrollCanvasHeight();
+        const bottomSpacerHeight = scrollableContainer.getBottomSpacerHeight();
+
+        scrollableContainer.setBottomSpacerHeight(0);
+        scrollableContainer.setScrollCanvasHeight(scrollCanvasHeight - bottomSpacerHeight);
+        console.log('cut bottom spacer')
+      }
+    }
+  }
+
+  private _detectScrollAnchorItemOffset(item: Element, direction: 'down' | 'up') {
     const scrollableContainer = this._scrollableContainer;
     const viewportTop = scrollableContainer.getViewportTop();
     const viewportHeight = scrollableContainer.getViewportHeight();
-    const overscanHeight = this._overscanHeight;
-    const items = scrollableContainer.getItems();
-    const itemsToRemove: Element[] = [];
+    const offsetAnchor = direction === 'down' 
+      ? viewportTop + viewportHeight
+      : viewportTop;
 
-    let removedRangeStart = Infinity;
-    let removedRangeEnd = 0;
+    const { offsetTop, offsetHeight } = (item as HTMLElement);
+    const itemIndex = this._renderedIndexRegistry.get(item);
 
-    for (const item of items) {
-      const itemTop = (item as HTMLElement).offsetTop;
-      const itemHeight = (item as HTMLElement).offsetHeight;
-      const isItemLeftOverscan = direction === 'down' 
-        ? itemTop + itemHeight < viewportTop - overscanHeight
-        : direction === 'up'
-          ? itemTop > viewportTop + viewportHeight + overscanHeight
-          : false;
+    if (itemIndex === undefined) return;
 
-      if (isItemLeftOverscan) {
-        removedRangeStart = Math.min(removedRangeStart, itemTop);
-        removedRangeEnd = Math.max(removedRangeEnd, itemTop + itemHeight);
-        itemsToRemove.push(item);
-      }
+    if (offsetTop <= offsetAnchor && offsetTop + offsetHeight >= offsetAnchor) {
+      this._scrollAnchorItemOffsetTop = offsetTop;
+      this._scrollAnchorItemOffsetHeight = offsetHeight;
+      this._scrollAnchorItemIndex = itemIndex;
     }
+  }
 
-    const removedHeight = removedRangeEnd - removedRangeStart;
+  private _getEdgeRenderedIndex(edge: 'first' | 'last'): number | undefined {
+    const renderedItem = edge === 'first'
+      ? this._scrollableContainer.getFirstItem()
+      : edge === 'last'
+        ? this._scrollableContainer.getLastItem()
+        : null;
 
-    return { itemsToRemove, removedHeight };
+    if (!renderedItem) return;
+
+    return this._renderedIndexRegistry.get(renderedItem);
   }
 
   private _renderItems = (scrollTop: number, direction: 'down' | 'up') => {
     const scrollableContainer = this._scrollableContainer;
+    const itemsRemover = this._itemsRemover;
+    const overscanHeight = this._overscanHeight;
 
     scrollableContainer.refresh();
 
-    const renderedItems = this._renderedIndexRegistry;
-    const viewportTop = scrollableContainer.getViewportTop();
-    const viewportHeight = scrollableContainer.getViewportHeight();
-    const bottomSpacerTop = scrollableContainer.getBottomSpacerTop();
-    const topSpacerBottom = scrollableContainer.getTopSpacerBottom();
-    const overscanHeight = this._overscanHeight;
-    const { itemsToRemove, removedHeight } = this._getItemsToBeRemoved(direction);
-
-    // prevents layout shift in firefox
+    // prevents layout shift in Firefox
     if (this._previousDirection !== direction) {
       scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight());
       scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight());
@@ -237,77 +298,107 @@ export default class DynamicListLayout {
       return;
     }
 
-    if (direction === 'down') {
-      const isFastScrolling =  bottomSpacerTop < viewportTop + viewportHeight / 2;
+    itemsRemover.init(direction, overscanHeight);
 
-      if (isFastScrolling) {
-        console.error('fast scroll down');
-      }
-      else {
-        const isOverscanReached =  bottomSpacerTop < viewportTop + viewportHeight + overscanHeight;
-        const lastItem = scrollableContainer.getLastItem();
-        
-        scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight() + removedHeight);
+    for (const item of scrollableContainer.getItems()) {
+
+      // update min and max item height
+      this._updateItemHeightBounds(item);
+
+      // find items to be removed
+      // calculate removed height
+      itemsRemover.check(item);
+
+      this._detectScrollAnchorItemOffset(item, direction);
+    }
+
+    // calculate index range to be rendered
+    const viewportHeight = scrollableContainer.getViewportHeight();
+
+    if (scrollableContainer.getBottomSpacerTop() < scrollTop || scrollableContainer.getTopSpacerBottom() > scrollTop + viewportHeight) {
+      // Fast scroll.
+
+      console.error('Fast scroll.');
+      const halfViewportHeight = viewportHeight / 2;
+      const rangeToFill = halfViewportHeight + overscanHeight;
+      const middleIndex = this._getItemIndexByScrollTop(halfViewportHeight);
+      let startIndex = Math.ceil(middleIndex - rangeToFill / this._minItemHeight);
+      let endIndex = Math.ceil(middleIndex + rangeToFill / this._minItemHeight);
+
+      if (direction === 'down') {
+        const lastRenderedIndex = this._getEdgeRenderedIndex('last');
+
+        if (lastRenderedIndex !== undefined) {
+          startIndex = Math.max(lastRenderedIndex + 1, startIndex);
+        }
+
+        scrollableContainer.setTopSpacerHeight(scrollTop - overscanHeight);
         scrollableContainer.setBottomSpacerHeight('auto');
+      }
+      else if (direction === 'up') {
+        const firstRenderedIndex = this._getEdgeRenderedIndex('first');
 
-        // add items
-        if (lastItem && isOverscanReached) {
-          const lastIndex = renderedItems.get(lastItem);
-
-          if (lastIndex !== undefined) {
-            const startIndex = lastIndex + 1;
-            const endIndex = startIndex + Math.ceil(overscanHeight / this._minItemHeight);
-
-            this._renderRange(startIndex, endIndex, direction);
-          }
+        if (firstRenderedIndex !== undefined) {
+          endIndex = Math.min(firstRenderedIndex - 1, endIndex);
         }
-      }
-    }
-    else if (direction === 'up') {
-      const isFastScrolling = topSpacerBottom > viewportTop + viewportHeight / 2;
 
-      if (isFastScrolling) {
-        console.error('fast scroll up');
-      }
-      else {
-        const isOverscanReached = topSpacerBottom > viewportTop - overscanHeight;
-        const firstItem = scrollableContainer.getFirstItem();
-        
-        scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight() + removedHeight);
         scrollableContainer.setTopSpacerHeight('auto');
-
-        // add items
-        if (firstItem && isOverscanReached) {
-          const firstIndex = renderedItems.get(firstItem);
-
-          if (firstIndex !== undefined) {
-            const endIndex = firstIndex - 1;
-            const startIndex = endIndex - Math.ceil(overscanHeight / this._minItemHeight);
-
-            this._renderRange(startIndex, endIndex, direction);
-          }
-        }
+        scrollableContainer.setBottomSpacerHeight(scrollableContainer.getScrollCanvasHeight() - (scrollTop + viewportHeight + overscanHeight));
       }
-    }
 
-    for (const item of itemsToRemove) {
-      item.remove();
-      renderedItems.delete(item);
+      scrollableContainer.clear();
+      this._renderRange(startIndex, endIndex, direction);
+    }
+    else {
+      // Slow scroll, render from the last rendered item up to the overscan edge.
+
+      if (direction === 'down') {
+        const startOffset = scrollableContainer.getBottomSpacerTop();
+        const endOffset = scrollTop + viewportHeight + overscanHeight;
+        const rangeToFill = endOffset - startOffset;
+        const lastRenderedIndex = this._getEdgeRenderedIndex('last');
+       
+        if (rangeToFill > 0 && lastRenderedIndex !== undefined) {
+          const startIndex = lastRenderedIndex + 1;
+          const endIndex = Math.ceil(startIndex + (rangeToFill) / this._minItemHeight);
+
+          this._renderRange(startIndex, endIndex, direction);
+        }
+
+        scrollableContainer.setBottomSpacerHeight('auto');
+        scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight() + itemsRemover.getRemovedHeight());
+      }
+      else if (direction === 'up') {
+        const startOffset = scrollTop - overscanHeight;
+        const endOffset = scrollableContainer.getTopSpacerBottom();
+        const rangeToFill = endOffset - startOffset;
+        const firstRenderedIndex = this._getEdgeRenderedIndex('first');
+
+        if (rangeToFill > 0 && firstRenderedIndex !== undefined) {
+          const endIndex = firstRenderedIndex - 1;
+          const startIndex = Math.ceil(endIndex - (rangeToFill) / this._minItemHeight);
+          
+          this._renderRange(startIndex, endIndex, direction);
+        }
+        
+        scrollableContainer.setTopSpacerHeight('auto');
+        scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight() + itemsRemover.getRemovedHeight());
+      }
+      
+      // remove items
+      for (const item of itemsRemover.getItems()) {
+        item.remove();
+      }
     }
   };
 
-  private _adjustScrollbarThumb = (_: number, direction: 'down' | 'up') => {
-    if (this._ignoreThumbAdjustment) {
-      this._ignoreThumbAdjustment = false;
-      return;
-    }
-
+  private _adjustScrollbarThumb = (viewportTop: number, direction: 'down' | 'up') => {
     const scrollableContainer = this._scrollableContainer;
-    const viewportTop = scrollableContainer.getViewportTop();
+    // const viewportTop = scrollableContainer.getViewportTop();
     const viewportHeight = scrollableContainer.getViewportHeight();
     const scrollHeight = scrollableContainer.getScrollHeight();
     const clientHeight = scrollableContainer.getClientHeight();
-    const items = scrollableContainer.getItems();
+    // const items = scrollableContainer.getItems();
     const offsetAnchor = direction === 'down' 
       ? viewportTop + viewportHeight
       : viewportTop;
@@ -316,37 +407,87 @@ export default class DynamicListLayout {
 
     if (!store) return;
 
-    for (const item of items) {
-      const { offsetTop, offsetHeight } = (item as HTMLElement);
+    const fraction = (offsetAnchor - this._scrollAnchorItemOffsetTop) / this._scrollAnchorItemOffsetHeight;
 
-      if (offsetTop <= offsetAnchor && offsetTop + offsetHeight >= offsetAnchor) {
-        const itemIndex = this._renderedIndexRegistry.get(item);
-        const fraction = (offsetAnchor - offsetTop) / offsetHeight;
+    console.log('_adjustScrollbarThumb scroll anchor item index:', this._scrollAnchorItemIndex)
 
-        if (itemIndex !== undefined) {
-          const indexRatio = (itemIndex + fraction) / (store.size - 1);
-          const scrollTop = indexRatio * (scrollHeight - clientHeight);
-          
-          scrollableContainer.setScrollTop(scrollTop);
-        }
-      }
-    }
+    const indexRatio = (this._scrollAnchorItemIndex + fraction) / (store.size - 1);
+    const scrollbarThumbPosition = indexRatio * (scrollHeight - clientHeight);
+    
+    scrollableContainer.setScrollTop(scrollbarThumbPosition);
   };
 
-  private _scrollContent = (scrollTop: number, direction: 'down' | 'up') => {
-    console.warn('_scrollContent')
+  private _findRenderedItemByIndex(index: number): Element | undefined {
+    const renderedItems = this._scrollableContainer.getItems();
+    const firstRenderedIndex = this._getEdgeRenderedIndex('first');
+
+    if (firstRenderedIndex === undefined) return undefined;
+
+    return renderedItems[index - firstRenderedIndex];
+  }
+
+  private _getScrollAnchorItemPosition(): number {
+    const scrollableContainer = this._scrollableContainer;
+    const totalItems = this._store?.size || 0;
+    
+    // scrollableContainer.refresh();
+
+    // const scrollTop = scrollableContainer.getScrollTop();
+    // const scrollHeight = scrollableContainer.getScrollHeight();
+    const clientHeight = scrollableContainer.getClientHeight();
+    // const scrollRatio = scrollTop / (scrollHeight - clientHeight) || 0;
+    const scrollRatio = this._getScrollRatio();
+    const lastIndex = totalItems - 1;
+    const fractionalIndex = totalItems * scrollRatio;
+    const index1 = Math.min(Math.floor(fractionalIndex), lastIndex);
+    const index2 = Math.min(Math.ceil(fractionalIndex), lastIndex);
+    const renderedItem1 = this._findRenderedItemByIndex(index1) as HTMLElement;
+    const renderedItem2 = this._findRenderedItemByIndex(index2) as HTMLElement || renderedItem1;
+    const indexFraction = fractionalIndex - index1;
+
+    if (!renderedItem1 || !renderedItem2) {
+      console.error('Missing items for interpolation', index1, index2);
+      return 0;
+    };
+
+    const itemTop1 = renderedItem1.offsetTop;
+    const itemTop2 = renderedItem2.offsetTop;
+    const itemHeight1 = renderedItem1.offsetHeight;
+    const interpolatedHeight = indexFraction * (itemTop2 - itemTop1) || itemHeight1 * indexFraction;
+    const interpolatedTop = itemTop1 + interpolatedHeight;
+
+    const viewportAnchor = clientHeight * scrollRatio;
+
+    const position = interpolatedTop - viewportAnchor;
+
+    console.log('_getScrollAnchorItemPosition', index1, index2)
+
+    return position;
+  }
+
+  private _scrollContent = (scrollTop: number, direction: 'down' | 'up', scrollDelta: number) => {
 
     const scrollableContainer = this._scrollableContainer;
+
+    // scrollableContainer.refresh();
+
     const scrollHeight = scrollableContainer.getScrollHeight();
     const clientHeight = scrollableContainer.getClientHeight();
+    // const clientHeight = scrollableContainer.getClientHeight();
     const viewportHeight = scrollableContainer.getViewportHeight();
     const scrollCanvasHeight = scrollableContainer.getScrollCanvasHeight();
-    const scrollRatio = scrollTop / (scrollHeight - clientHeight);
+    const scrollRatio = this._getScrollRatio();
+    // const viewportTop = this._getScrollAnchorItemPosition();
     const viewportTop = scrollRatio * (scrollCanvasHeight - viewportHeight);
+    // const factor = (scrollCanvasHeight - viewportHeight) / (scrollHeight - clientHeight) || 1;
+    // const viewportTop2 = scrollableContainer.getViewportTop() + scrollDelta * factor;
 
-    scrollableContainer.scroll(viewportTop);
+    // console.log('viewportTop:', viewportTop, 'viewportTop2:', viewportTop2);
+    // scrollableContainer.scroll(viewportTop);
+    scrollableContainer.setViewportTop(viewportTop);
+    this._renderItems(viewportTop, direction);
 
-    this._ignoreThumbAdjustment = true;
+    console.warn('_scrollContent scrollTop:', scrollTop, 'viewportTop:', viewportTop, 'scrollHeight:', scrollHeight, 'scrollCanvasHeight:', scrollCanvasHeight)
   };
 
   private _updateItemHeightRange = () => {
@@ -382,6 +523,7 @@ export default class DynamicListLayout {
 
   constructor({ overscanHeight = 100, container }: DynamicListLayoutOptions) {
     this._scrollableContainer = new ScrollableContainer(container);
+    this._itemsRemover = new ItemsRemover(this._scrollableContainer);
     this._overscanHeight = overscanHeight;
   }
 
