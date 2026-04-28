@@ -9,6 +9,7 @@ import type {
   IItemStore, 
   IEventEmitter,
   IEventMap,
+  ScrollDirection,
 } from "../types/types";
 import ScrollableContainer from "../ScrollableContainer/ScrollableContainer";
 
@@ -19,7 +20,7 @@ type SchedulerFn = {
   done(cb: () => void): SchedulerFn;
 };
 
-function subtractRange(start1: number, end1: number, start2: number, end2: number, direction: 'down' | 'up') {
+function subtractRange(start1: number, end1: number, start2: number, end2: number, direction: ScrollDirection) {
   // normalization in case start and end are swapped
   const min1 = Math.min(start1, end1);
   const max1 = Math.max(start1, end1);
@@ -84,13 +85,13 @@ class ItemsRemover {
   private _removedRangeStart = Infinity;
   private _removedRangeEnd = 0;
   private _overscanHeight: number = 0;
-  private _direction: 'down' | 'up' = 'down';
+  private _direction: ScrollDirection = 'down';
 
   constructor(scrollableContainer: ScrollableContainer) {
     this._scrollableContainer = scrollableContainer;
   }
 
-  init(direction: 'down' | 'up', overscanHeight: number = 0) {
+  init(direction: ScrollDirection, overscanHeight: number = 0) {
     this._direction = direction;
     this._overscanHeight = overscanHeight;
     this._itemsToRemove.length = 0;
@@ -137,7 +138,7 @@ export default class DynamicListLayout {
   private _renderedIndexRegistry = new WeakMap<Element, number>();
   private _minItemHeight = document.documentElement.clientHeight;
   private _maxItemHeight = 0;
-  private _previousDirection: 'down' | 'up' | '' = '';
+  private _previousDirection: ScrollDirection | '' = '';
   private _scrollAnchorItemOffsetTop = 0;
   private _scrollAnchorItemOffsetHeight = 0;
   private _scrollAnchorItemIndex = 0;
@@ -163,7 +164,7 @@ export default class DynamicListLayout {
     return Math.min(Math.round(this._getScrollRatio(offset) * lastIndex), lastIndex);
   }
 
-  private _renderRange(startIndex: number, endIndex: number, direction: 'down' | 'up') {
+  private _renderRange(startIndex: number, endIndex: number, direction: ScrollDirection) {
     console.log('_renderRange', startIndex, endIndex, direction)
     if (startIndex > endIndex) console.error('_renderRange', startIndex, endIndex, direction);
 
@@ -251,7 +252,7 @@ export default class DynamicListLayout {
     }
   }
 
-  private _detectScrollAnchorItemOffset(item: Element, direction: 'down' | 'up') {
+  private _detectScrollAnchorItemOffset(item: Element, direction: ScrollDirection) {
     const scrollableContainer = this._scrollableContainer;
     const viewportTop = scrollableContainer.getViewportTop();
     const viewportHeight = scrollableContainer.getViewportHeight();
@@ -283,7 +284,7 @@ export default class DynamicListLayout {
     return this._renderedIndexRegistry.get(renderedItem);
   }
 
-  private _renderItems = (scrollTop: number, direction: 'down' | 'up') => {
+  private _renderItems = (scrollTop: number, direction: ScrollDirection) => {
     const scrollableContainer = this._scrollableContainer;
     const itemsRemover = this._itemsRemover;
     const overscanHeight = this._overscanHeight;
@@ -392,7 +393,7 @@ export default class DynamicListLayout {
     }
   };
 
-  private _adjustScrollbarThumb = (viewportTop: number, direction: 'down' | 'up') => {
+  private _adjustScrollbarThumb = (viewportTop: number, direction: ScrollDirection) => {
     const scrollableContainer = this._scrollableContainer;
     // const viewportTop = scrollableContainer.getViewportTop();
     const viewportHeight = scrollableContainer.getViewportHeight();
@@ -465,7 +466,7 @@ export default class DynamicListLayout {
     return position;
   }
 
-  private _scrollContent = (scrollTop: number, direction: 'down' | 'up', scrollDelta: number) => {
+  private _scrollContent = (scrollTop: number, direction: ScrollDirection, scrollDelta: number) => {
 
     const scrollableContainer = this._scrollableContainer;
 

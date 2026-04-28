@@ -57,10 +57,12 @@ export interface IVirtualizedListEvents {
   onDelete: (index: number, count: number) => void;
 }
 
+export type ScrollDirection = 'down' | 'up';
+
 export interface IScrollableContainerEvents {
   onResize: (width: number, height: number) => void;
-  onScroll: (position: number, direction: 'up' | 'down') => void;
-  onContentScroll: (position: number, direction: 'up' | 'down') => void;
+  onScroll: (position: number, direction: ScrollDirection, scrollDelta: number) => void;
+  onContentScroll: (position: number, direction: ScrollDirection, scrollDelta: number) => void;
   onItemsOutOfView: (items: HTMLElement[]) => void;
 }
 
