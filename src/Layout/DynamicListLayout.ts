@@ -54,11 +54,62 @@ class RAFScheduler {
   };
 }
 
-export default class DynamicListLayout implements IDynamicListLayout {
+class ItemsRemover {
+  private _scrollableContainer: ScrollableContainer;
+  private _itemsToRemove: Element[] = [];
+  private _removedRangeStart = Infinity;
+  private _removedRangeEnd = 0;
+  private _overscanHeight: number = 0;
+  private _direction: 'down' | 'up' = 'down';
+
+  constructor(scrollableContainer: ScrollableContainer) {
+    this._scrollableContainer = scrollableContainer;
+  }
+
+  init(direction: 'down' | 'up', overscanHeight: number = 0) {
+    this._direction = direction;
+    this._overscanHeight = overscanHeight;
+    this._itemsToRemove.length = 0;
+    this._removedRangeStart = Infinity;
+    this._removedRangeEnd = 0;
+  }
+
+  check(item: Element) {
+    const scrollableContainer = this._scrollableContainer;
+    const viewportTop = scrollableContainer.getViewportTop();
+    const viewportHeight = scrollableContainer.getViewportHeight();
+    const overscanHeight = this._overscanHeight;
+
+    const itemTop = (item as HTMLElement).offsetTop;
+    const itemHeight = (item as HTMLElement).offsetHeight;
+    const isItemLeftOverscan = this._direction === 'down' 
+      ? itemTop + itemHeight < viewportTop - overscanHeight
+      : this._direction === 'up'
+        ? itemTop > viewportTop + viewportHeight + overscanHeight
+        : false;
+
+    if (isItemLeftOverscan) {
+      this._removedRangeStart = Math.min(this._removedRangeStart, itemTop);
+      this._removedRangeEnd = Math.max(this._removedRangeEnd, itemTop + itemHeight);
+      this._itemsToRemove.push(item);
+    }
+  }
+
+  getRemovedHeight(): number {
+    return this._removedRangeEnd - this._removedRangeStart;
+  }
+
+  getItems(): Element[] {
+    return this._itemsToRemove;
+  }
+}
+
+export default class DynamicListLayout {
   private _overscanHeight: number;
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _store: IItemStore<IItem> | null = null;
   private _scrollableContainer: ScrollableContainer;
+  private _itemsRemover: ItemsRemover;
   private _renderedIndexRegistry = new WeakMap<Element, number>();
   private _minItemHeight = document.documentElement.clientHeight;
   private _maxItemHeight = 0;
@@ -357,22 +408,5 @@ export default class DynamicListLayout implements IDynamicListLayout {
   } 
 
   detach() {
-  }
-
-  // remove the following methods
-  onMeasureStart(cb: IMeasurerEvents['onMeasureStart']) {
-    this._eventBus?.on('onMeasureStart', cb);
-  }
-
-  onMeasureEnd(cb: IMeasurerEvents['onMeasureEnd']) {
-    this._eventBus?.on('onMeasureEnd', cb);
-  }
-
-  onPortionMeasured(cb: IMeasurerEvents['onPortionMeasured']) {
-    this._eventBus?.on('onPortionMeasured', cb);
-  }
-
-  onItemsReady(cb: IMeasurerEvents['onItemsReady']) {
-    this._eventBus?.on('onItemsReady', cb);
   }
 }
