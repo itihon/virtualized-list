@@ -169,47 +169,6 @@ export default class DynamicListLayout {
 
   private _scheduleVisibleItemsUpdate = new RAFScheduler().schedule(this._updateVisibleItems);
 
-  private _addSpareSpace(startIndex: number, endIndex: number) {
-    const spareSpace = 1000;
-    const store = this._store;
-    const scrollableContainer = this._scrollableContainer;
-
-    if (!store) return;
-
-    if (startIndex > 0 && endIndex < store.size - 1) {
-      const topSpacerHeight = scrollableContainer.getTopSpacerHeight();
-      const bottomSpacerHeight = scrollableContainer.getBottomSpacerHeight(); 
-
-      if (topSpacerHeight < spareSpace || bottomSpacerHeight < spareSpace) {
-        console.warn('_addSpareSpace');
-      
-        scrollableContainer.setViewportTop(scrollableContainer.getViewportTop());
-        scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() + spareSpace);
-      }
-    }
-  }
-
-  private _cutBottomSpacer() {
-    const scrollableContainer = this._scrollableContainer;
-    const lastItem = scrollableContainer.getLastItem();
-    const store = this._store;
-
-    if (!store) return;
-
-    if (lastItem) {
-      const lastIndex = this._renderedIndexRegistry.get(lastItem);
-
-      if (lastIndex === store.size - 1) {
-        const scrollCanvasHeight = scrollableContainer.getScrollCanvasHeight();
-        const bottomSpacerHeight = scrollableContainer.getBottomSpacerHeight();
-
-        scrollableContainer.setBottomSpacerHeight(0);
-        scrollableContainer.setScrollCanvasHeight(scrollCanvasHeight - bottomSpacerHeight);
-        console.log('cut bottom spacer')
-      }
-    }
-  }
-
   private _detectScrollAnchorItemOffset(item: Element, direction: ScrollDirection) {
     const scrollableContainer = this._scrollableContainer;
     const viewportTop = scrollableContainer.getViewportTop();
