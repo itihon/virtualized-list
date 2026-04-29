@@ -120,6 +120,39 @@ export default class DynamicListLayout {
     }
   }
 
+  private _removeRange(startIndex: number, endIndex: number): number {
+    const itemsToRemove: Element[] = [];
+    const renderedIndeces = this._renderedIndexRegistry;
+    const renderedItems = this._renderedItemsRegistry;
+    let startRange = Infinity;
+    let endRange = 0;
+
+    for (let idx = startIndex; idx <= endIndex; idx++) {
+      const itemToRemove = renderedItems.get(idx); 
+
+      if (itemToRemove) {
+        const { offsetTop, offsetHeight } = itemToRemove as HTMLElement;
+
+        startRange = Math.min(startRange, offsetTop);
+        endRange = Math.max(endRange, offsetTop + offsetHeight);
+
+        itemsToRemove.push(itemToRemove);
+        renderedItems.delete(idx);
+        renderedIndeces.delete(itemToRemove);
+      }
+    }
+
+    const itemsCount = itemsToRemove.length;
+
+    for (let idx = 0; idx < itemsCount; idx++) {
+      itemsToRemove[idx]!.remove();
+    }
+
+    console.log('_removeItems startIndex:', startIndex, 'endIndex:', endIndex, 'removedHeight:', endRange > startRange ? endRange - startRange : 0);
+
+    return endRange > startRange ? endRange - startRange : 0;
+  }
+
   private _updateVisibleItems = () => {
     console.log('_updateVisibleItems')
     const scrollableContainer = this._scrollableContainer;
