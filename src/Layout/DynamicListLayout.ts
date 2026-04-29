@@ -391,7 +391,7 @@ export default class DynamicListLayout {
 
     if (!renderedItem1 || !renderedItem2) {
       console.error('Missing items for interpolation', index1, index2);
-      return 0;
+      return null;
     };
 
     const itemTop1 = renderedItem1.offsetTop;
