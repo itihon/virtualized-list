@@ -66,6 +66,7 @@ export default class DynamicListLayout {
   private _scrollAnchorItemOffsetTop = 0;
   private _scrollAnchorItemOffsetHeight = 0;
   private _scrollAnchorItemIndex = 0;
+  private _spareSpace = 5000;
 
   private _getScrollRatio(offset = 0): number {
     const scrollableContainer = this._scrollableContainer;
@@ -204,6 +205,8 @@ export default class DynamicListLayout {
   private _renderItems = (scrollTop: number, direction: ScrollDirection) => {
     const scrollableContainer = this._scrollableContainer;
     const overscanHeight = this._overscanHeight;
+    const store = this._store!;
+    const spareSpace = this._spareSpace;
 
     scrollableContainer.refresh();
 
@@ -239,7 +242,17 @@ export default class DynamicListLayout {
     let removedHeight = 0;
 
     if (direction === 'down') {
+      console.log('SCROLLING DOWN')
       const isFastScroll = scrollableContainer.getBottomSpacerTop() < scrollTop;
+      
+      // cut extra space below
+      if (lastRenderedIndex === store.size - 1) {
+        if (scrollableContainer.getBottomSpacerTop() < scrollableContainer.getViewportTop() + viewportHeight) {
+          console.error('cut extra space below')
+          scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() - scrollableContainer.getBottomSpacerHeight());
+          scrollableContainer.setBottomSpacerHeight(0);
+        }
+      }
 
       if (removeStartIndex !== undefined && lastRenderedIndex !== undefined) {
         removeEndIndex = Math.min(renderStartIndex - 1, lastRenderedIndex);
@@ -259,9 +272,28 @@ export default class DynamicListLayout {
         scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight() + removedHeight);
         scrollableContainer.setBottomSpacerHeight('auto');
       }
+
+      // add spare space below
+      if (renderEndIndex < store.size - 1) {
+        if (scrollableContainer.getBottomSpacerHeight() < spareSpace) {
+          scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() + spareSpace);
+          console.warn('Added spare space below');
+        }
+      }
     }
     else if (direction === 'up') {
+      console.log('SCROLLING UP')
       const isFastScroll = scrollableContainer.getTopSpacerBottom() > scrollTop + viewportHeight;
+
+      // cut extra space above
+      if (firstRenderedIndex === 0) {
+        if (scrollableContainer.getTopSpacerBottom() > scrollableContainer.getViewportTop()) {
+          console.error('cut extra space above')
+          scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() - scrollableContainer.getTopSpacerHeight());
+          scrollableContainer.setTopSpacerHeight(0);
+          scrollableContainer.setViewportTop(0);
+        }
+      }
 
       if (removeEndIndex !== undefined && firstRenderedIndex !== undefined) {
         removeStartIndex = Math.max(renderEndIndex + 1, firstRenderedIndex);
@@ -281,6 +313,16 @@ export default class DynamicListLayout {
       else {
         scrollableContainer.setTopSpacerHeight('auto');
         scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight() + removedHeight);
+      }
+
+      // Add spare space above.
+      if (renderStartIndex > 0) {
+        if (scrollableContainer.getTopSpacerHeight() < spareSpace) {
+          scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() + spareSpace);
+          scrollableContainer.setViewportTop(scrollableContainer.getViewportTop() + spareSpace);
+          this._scrollAnchorItemOffsetTop += spareSpace;
+          console.warn('Added spare space above.');
+        }
       }
     }
 
