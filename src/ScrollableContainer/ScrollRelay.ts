@@ -15,17 +15,17 @@ export default class ScrollRelay extends ElementMetricsCache {
   private _ignoreNextScroll = false;
 
   handleEvent() {
+    if (this._ignoreNextScroll) {
+      this._ignoreNextScroll = false;
+      return;
+    }
+
     const eventBus = this._eventBus;
     const eventType = this._eventType;
     const previousScrollTop = this.scrollTop;
     const scrollTop = this._container.scrollTop;
 
     this.refresh();
-
-    if (this._ignoreNextScroll) {
-      this._ignoreNextScroll = false;
-      return;
-    }
 
     if (!eventBus || !eventType) return;
 
