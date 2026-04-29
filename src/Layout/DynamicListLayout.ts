@@ -402,20 +402,22 @@ export default class DynamicListLayout {
     // scrollableContainer.refresh();
 
     const scrollHeight = scrollableContainer.getScrollHeight();
-    const clientHeight = scrollableContainer.getClientHeight();
-    // const clientHeight = scrollableContainer.getClientHeight();
     const viewportHeight = scrollableContainer.getViewportHeight();
     const scrollCanvasHeight = scrollableContainer.getScrollCanvasHeight();
     const scrollRatio = this._getScrollRatio();
-    // const viewportTop = this._getScrollAnchorItemPosition();
     const viewportTop = scrollRatio * (scrollCanvasHeight - viewportHeight);
-    // const factor = (scrollCanvasHeight - viewportHeight) / (scrollHeight - clientHeight) || 1;
-    // const viewportTop2 = scrollableContainer.getViewportTop() + scrollDelta * factor;
 
-    // console.log('viewportTop:', viewportTop, 'viewportTop2:', viewportTop2);
-    // scrollableContainer.scroll(viewportTop);
-    scrollableContainer.setViewportTop(viewportTop);
     this._renderItems(viewportTop, direction);
+
+    const scrollAnchorTop = this._getScrollAnchorItemPosition();
+
+    if (scrollAnchorTop !== null) {
+      scrollableContainer.setViewportTop(scrollAnchorTop);
+    }
+    else {
+      // less precise position in case scroll anchor item was not found for some reason (highly unlikely)
+      scrollableContainer.setViewportTop(viewportTop);
+    }
 
     console.warn('_scrollContent scrollTop:', scrollTop, 'viewportTop:', viewportTop, 'scrollHeight:', scrollHeight, 'scrollCanvasHeight:', scrollCanvasHeight)
   };
