@@ -88,6 +88,10 @@ export default class ScrollableContainer {
     return this._containerScroller.scrollTop;
   }
 
+  setViewportTop(viewportTop: number) {
+    this._viewportScroller.setScrollTop(viewportTop);
+  }
+
   getViewportTop(): number {
     return this._viewportScroller.scrollTop;
   }
