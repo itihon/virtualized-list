@@ -266,81 +266,67 @@ export default class DynamicListLayout {
 
     // calculate index range to be rendered
     const viewportHeight = scrollableContainer.getViewportHeight();
+    const halfViewportHeight = viewportHeight / 2;
+    const rangeToFill = halfViewportHeight + overscanHeight;
+    const middleIndex = this._getItemIndexByScrollTop();
+    const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
+    const lastRenderedIndex = this._getRenderedBoundaryIndex('last');
 
-    if (scrollableContainer.getBottomSpacerTop() < scrollTop || scrollableContainer.getTopSpacerBottom() > scrollTop + viewportHeight) {
-      // Fast scroll.
+    let renderStartIndex = Math.ceil(middleIndex - rangeToFill / this._minItemHeight);
+    let renderEndIndex = Math.ceil(middleIndex + rangeToFill / this._minItemHeight);
 
-      console.error('Fast scroll.');
-      const halfViewportHeight = viewportHeight / 2;
-      const rangeToFill = halfViewportHeight + overscanHeight;
-      const middleIndex = this._getItemIndexByScrollTop(halfViewportHeight);
-      let startIndex = Math.ceil(middleIndex - rangeToFill / this._minItemHeight);
-      let endIndex = Math.ceil(middleIndex + rangeToFill / this._minItemHeight);
+    let removeStartIndex = firstRenderedIndex;
+    let removeEndIndex = lastRenderedIndex;
+    let removedHeight = 0;
 
-      if (direction === 'down') {
-        const lastRenderedIndex = this._getRenderedBoundaryIndex('last');
+    if (direction === 'down') {
+      const isFastScroll = scrollableContainer.getBottomSpacerTop() < scrollTop;
 
-        if (lastRenderedIndex !== undefined) {
-          startIndex = Math.max(lastRenderedIndex + 1, startIndex);
+      if (removeStartIndex !== undefined && lastRenderedIndex !== undefined) {
+        removeEndIndex = Math.min(renderStartIndex - 1, lastRenderedIndex);
+        renderStartIndex = Math.max(lastRenderedIndex + 1, renderStartIndex);
+       
+        if (removeStartIndex < removeEndIndex) {
+          removedHeight = this._removeRange(removeStartIndex, removeEndIndex);
         }
+      }
 
+      if (isFastScroll) {
+        console.warn('Fast scroll down.');
         scrollableContainer.setTopSpacerHeight(scrollTop - overscanHeight);
         scrollableContainer.setBottomSpacerHeight('auto');
       }
-      else if (direction === 'up') {
-        const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
+      else {
+        scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight() + removedHeight);
+        scrollableContainer.setBottomSpacerHeight('auto');
+      }
+    }
+    else if (direction === 'up') {
+      const isFastScroll = scrollableContainer.getTopSpacerBottom() > scrollTop + viewportHeight;
 
-        if (firstRenderedIndex !== undefined) {
-          endIndex = Math.min(firstRenderedIndex - 1, endIndex);
+      if (removeEndIndex !== undefined && firstRenderedIndex !== undefined) {
+        removeStartIndex = Math.max(renderEndIndex + 1, firstRenderedIndex);
+        renderEndIndex = Math.min(firstRenderedIndex - 1, renderEndIndex);
+       
+        console.log('remove:', removeStartIndex, removeEndIndex)
+        if (removeStartIndex < removeEndIndex) {
+          removedHeight = this._removeRange(removeStartIndex, removeEndIndex);
         }
-
+      }
+    
+      if (isFastScroll) {
+        console.warn('Fast scroll up.');
         scrollableContainer.setTopSpacerHeight('auto');
         scrollableContainer.setBottomSpacerHeight(scrollableContainer.getScrollCanvasHeight() - (scrollTop + viewportHeight + overscanHeight));
       }
-
-      scrollableContainer.clear();
-      this._renderRange(startIndex, endIndex, direction);
-    }
-    else {
-      // Slow scroll, render from the last rendered item up to the overscan edge.
-
-      if (direction === 'down') {
-        const startOffset = scrollableContainer.getBottomSpacerTop();
-        const endOffset = scrollTop + viewportHeight + overscanHeight;
-        const rangeToFill = endOffset - startOffset;
-        const lastRenderedIndex = this._getRenderedBoundaryIndex('last');
-       
-        if (rangeToFill > 0 && lastRenderedIndex !== undefined) {
-          const startIndex = lastRenderedIndex + 1;
-          const endIndex = Math.ceil(startIndex + (rangeToFill) / this._minItemHeight);
-
-          this._renderRange(startIndex, endIndex, direction);
-        }
-
-        scrollableContainer.setBottomSpacerHeight('auto');
-        scrollableContainer.setTopSpacerHeight(scrollableContainer.getTopSpacerHeight() + itemsRemover.getRemovedHeight());
-      }
-      else if (direction === 'up') {
-        const startOffset = scrollTop - overscanHeight;
-        const endOffset = scrollableContainer.getTopSpacerBottom();
-        const rangeToFill = endOffset - startOffset;
-        const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
-
-        if (rangeToFill > 0 && firstRenderedIndex !== undefined) {
-          const endIndex = firstRenderedIndex - 1;
-          const startIndex = Math.ceil(endIndex - (rangeToFill) / this._minItemHeight);
-          
-          this._renderRange(startIndex, endIndex, direction);
-        }
-        
+      else {
         scrollableContainer.setTopSpacerHeight('auto');
-        scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight() + itemsRemover.getRemovedHeight());
+        scrollableContainer.setBottomSpacerHeight(scrollableContainer.getBottomSpacerHeight() + removedHeight);
       }
-      
-      // remove items
-      for (const item of itemsRemover.getItems()) {
-        item.remove();
-      }
+    }
+
+    if (renderStartIndex < renderEndIndex) {
+      this._renderRange(renderStartIndex, renderEndIndex, direction);
     }
   };
 
