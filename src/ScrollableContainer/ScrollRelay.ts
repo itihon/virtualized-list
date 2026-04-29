@@ -9,7 +9,7 @@ import ElementMetricsCache from './ElementMetricsCache';
 
 export default class ScrollRelay extends ElementMetricsCache {
   private _container: HTMLElement;
-  private _previousDirection: 'down' | 'up' = 'down'; // Keeping track of previous scroll direction prevents incorrect direction detection when scrollHeight changes during scrolling.
+  // private _previousDirection: 'down' | 'up' = 'down'; // Keeping track of previous scroll direction prevents incorrect direction detection when scrollHeight changes during scrolling.
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _eventType: 'onScroll' | 'onContentScroll' | null = null;
   private _ignoreNextScroll = false;
@@ -29,25 +29,27 @@ export default class ScrollRelay extends ElementMetricsCache {
 
     if (!eventBus || !eventType) return;
 
+    const scrollDelta = scrollTop - previousScrollTop;
+
     if (previousScrollTop < scrollTop) {
       const direction = 'down';
 
       // scrollHeight change protection
-      if (this._previousDirection === direction) {
-        eventBus.emit(eventType, scrollTop, direction);
-      }
+      // if (this._previousDirection === direction) {
+        eventBus.emit(eventType, scrollTop, direction, scrollDelta);
+      // }
 
-      this._previousDirection = direction;
+      // this._previousDirection = direction;
     }
     else if (previousScrollTop > scrollTop) {
       const direction = 'up';
 
       // scrollHeight change protection
-      if (this._previousDirection === direction) {
-        eventBus.emit(eventType, scrollTop, direction);
-      }
+      // if (this._previousDirection === direction) {
+        eventBus.emit(eventType, scrollTop, direction, scrollDelta);
+      // }
 
-      this._previousDirection = direction;
+      // this._previousDirection = direction;
     }
   };
 
