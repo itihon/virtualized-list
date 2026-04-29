@@ -59,6 +59,7 @@ export default class DynamicListLayout {
   private _store: IItemStore<IItem> | null = null;
   private _scrollableContainer: ScrollableContainer;
   private _renderedIndexRegistry = new WeakMap<Element, number>();
+  private _renderedItemsRegistry = new Map<number, Element>();
   private _minItemHeight = document.documentElement.clientHeight;
   private _maxItemHeight = 0;
   private _previousDirection: ScrollDirection | '' = '';
@@ -93,7 +94,8 @@ export default class DynamicListLayout {
 
     const store = this._store;
     const scrollableContainer = this._scrollableContainer;
-    const renderedItems = this._renderedIndexRegistry;
+    const renderedIndeces = this._renderedIndexRegistry;
+    const renderedItems = this._renderedItemsRegistry;
     const fragment = document.createDocumentFragment();
 
     if (!store) return;
@@ -104,9 +106,9 @@ export default class DynamicListLayout {
       if (item) {
         const element = item.render(item.data);
 
-        // scrollableContainer.appendItem(element);
         fragment.append(element);
-        renderedItems.set(element, idx);
+        renderedIndeces.set(element, idx);
+        renderedItems.set(idx, element);
       }
     }
 
@@ -334,17 +336,9 @@ export default class DynamicListLayout {
     scrollableContainer.setScrollTop(scrollbarThumbPosition);
   };
 
-  private _findRenderedItemByIndex(index: number): Element | undefined {
-    const renderedItems = this._scrollableContainer.getItems();
-    const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
-
-    if (firstRenderedIndex === undefined) return undefined;
-
-    return renderedItems[index - firstRenderedIndex];
-  }
-
-  private _getScrollAnchorItemPosition(): number {
+  private _getScrollAnchorItemPosition(): number | null {
     const scrollableContainer = this._scrollableContainer;
+    const renderedItems = this._renderedItemsRegistry;
     const totalItems = this._store?.size || 0;
     
     // scrollableContainer.refresh();
@@ -358,8 +352,8 @@ export default class DynamicListLayout {
     const fractionalIndex = totalItems * scrollRatio;
     const index1 = Math.min(Math.floor(fractionalIndex), lastIndex);
     const index2 = Math.min(Math.ceil(fractionalIndex), lastIndex);
-    const renderedItem1 = this._findRenderedItemByIndex(index1) as HTMLElement;
-    const renderedItem2 = this._findRenderedItemByIndex(index2) as HTMLElement || renderedItem1;
+    const renderedItem1 = renderedItems.get(index1) as HTMLElement | undefined;
+    const renderedItem2 = renderedItems.get(index2) as HTMLElement | undefined || renderedItem1;
     const indexFraction = fractionalIndex - index1;
 
     if (!renderedItem1 || !renderedItem2) {
