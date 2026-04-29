@@ -1,3 +1,10 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
 #virtualized-list {
   border: 16px solid gray;
   resize: vertical;
