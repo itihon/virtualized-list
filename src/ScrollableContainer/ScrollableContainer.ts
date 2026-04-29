@@ -63,8 +63,8 @@ export default class ScrollableContainer {
     this._container.classList.add(classes.scrollableContainer);
 
     this._viewportContainer.DOMRoot.onMounted(() => {
-      this._containerScroller.setScrollTop(0);
-      this._viewportScroller.setScrollTop(0);
+      this._container.scrollTop = 0;
+      this._viewportContainer.DOMRoot.scrollTop = 0;
       this.setTopSpacerHeight(0);
       this.setBottomSpacerHeight('auto');
     });
