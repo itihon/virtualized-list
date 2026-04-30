@@ -224,14 +224,6 @@ export default class DynamicListLayout {
     //   return;
     // }
 
-    for (const item of scrollableContainer.getItems()) {
-      
-      // update min and max item height
-      this._updateItemHeightBounds(item);
-
-      this._detectScrollAnchorItemOffset(item, direction);
-    }
-
     // calculate index range to be rendered
     const viewportHeight = scrollableContainer.getViewportHeight();
     const halfViewportHeight = viewportHeight / 2;
@@ -326,7 +318,6 @@ export default class DynamicListLayout {
         if (scrollableContainer.getTopSpacerHeight() < spareSpace) {
           scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() + spareSpace);
           scrollableContainer.setViewportTop(scrollableContainer.getViewportTop() + spareSpace);
-          this._scrollAnchorItemOffsetTop += spareSpace;
           console.warn('Added spare space above.');
         }
       }
@@ -458,6 +449,21 @@ export default class DynamicListLayout {
     console.log('_updateScrollHeight, minItemHeight:', this._minItemHeight, 'maxItemHeight:', this._maxItemHeight, 'avgHeight:', avgItemHeight, 'scrollHeight:', scrollHeight)
   };
 
+  private _updateScrollbar = (scrollTop: number, direction: ScrollDirection) => {
+    new ResizeObserver((_, observer) => {
+      const items = this._scrollableContainer.getItems();
+      const itemsCount = items.length;
+
+      for (let idx = 0; idx < itemsCount; idx++) {
+        if(this._detectScrollAnchorItemOffset(items[idx]!, direction)) break;
+      }
+      
+      this._adjustScrollbarThumb(scrollTop, direction);
+
+      observer.disconnect();
+    }).observe(document.body);
+  };
+
   private _scheduleScrollHeightUpdate = new RAFScheduler().schedule(this._updateScrollHeight);
 
   constructor({ overscanHeight = 100, container }: DynamicListLayoutOptions) {
@@ -482,8 +488,10 @@ export default class DynamicListLayout {
     this._eventBus.on('onDelete', scheduleUpdate);
     this._eventBus.on('onResize', scheduleUpdate);
 
-    this._eventBus.on('onContentScroll', this._adjustScrollbarThumb);
     this._eventBus.on('onContentScroll', this._renderItems);
+    // this._eventBus.on('onContentScroll', this._adjustScrollbarThumb);
+    this._eventBus.on('onContentScroll', this._updateScrollbar);
+
     this._eventBus.on('onScroll', this._scrollContent);
 
     console.log('attached')
