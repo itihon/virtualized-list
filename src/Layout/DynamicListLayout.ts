@@ -173,7 +173,7 @@ export default class DynamicListLayout {
 
   private _scheduleVisibleItemsUpdate = new RAFScheduler().schedule(this._updateVisibleItems);
 
-  private _detectScrollAnchorItemOffset(item: Element, direction: ScrollDirection) {
+  private _detectScrollAnchorItemOffset(item: Element, direction: ScrollDirection): boolean {
     const scrollableContainer = this._scrollableContainer;
     const viewportTop = scrollableContainer.getViewportTop();
     const viewportHeight = scrollableContainer.getViewportHeight();
@@ -184,13 +184,16 @@ export default class DynamicListLayout {
     const { offsetTop, offsetHeight } = (item as HTMLElement);
     const itemIndex = this._renderedIndexRegistry.get(item);
 
-    if (itemIndex === undefined) return;
+    if (itemIndex === undefined) return false;
 
     if (offsetTop <= offsetAnchor && offsetTop + offsetHeight >= offsetAnchor) {
       this._scrollAnchorItemOffsetTop = offsetTop;
       this._scrollAnchorItemOffsetHeight = offsetHeight;
       this._scrollAnchorItemIndex = itemIndex;
+      return true;
     }
+
+    return false;
   }
 
   private _getRenderedBoundaryIndex(boundary: 'first' | 'last'): number | undefined {
