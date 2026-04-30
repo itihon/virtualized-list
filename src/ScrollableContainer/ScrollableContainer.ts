@@ -68,6 +68,15 @@ export default class ScrollableContainer {
       this.setTopSpacerHeight(0);
       this.setBottomSpacerHeight('auto');
     });
+
+    this._container.addEventListener('pointerdown', event => {
+      const target = event.target as HTMLElement;
+
+      // handle clicks on arbitrary places on scrollbar
+      if (target.classList.contains(classes.scrollableContainer)) {
+        this._containerScroller.ignoreNextDirectionChangeProtection();
+      }
+    });
   }
 
   attach(eventBus: IEventEmitter<IEventMap>) {
