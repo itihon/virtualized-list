@@ -60,6 +60,13 @@ export default class ScrollRelay extends ElementMetricsCache {
   }
 
   setScrollTop(scrollTop: number) {
+    const maxScrollRange = this.scrollHeight - this.clientHeight;
+
+    if (scrollTop < .1 || scrollTop >= maxScrollRange) {
+      // There will not be scroll evenets anymore.
+      setTimeout(() => { this._ignoreNextScroll = false; }, 32);
+    }
+
     this._ignoreNextScroll = true;
     this._container.scrollTop = scrollTop;
   }
