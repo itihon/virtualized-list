@@ -47,6 +47,11 @@ export default class DOMConstructor extends ElementMetricsCache {
     });
   }
 
+  setWidth(width: number) {
+    const roundWidth = Math.round(width)
+    this._DOMRoot.style.width = `${roundWidth}px`;
+  }
+
   setHeight(height: number) {
     const roundHeight = Math.round(height)
     this._DOMRoot.style.height = `${roundHeight}px`;

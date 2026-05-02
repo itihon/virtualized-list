@@ -30,6 +30,8 @@ export default class ScrollableContainer {
 
     const { clientWidth, clientHeight } = this._container;
 
+    this._contentLayer.setWidth(this._viewportContainer.DOMRoot.clientWidth);
+
     this._eventBus?.emit('onResize', clientWidth, clientHeight);
   };
 
