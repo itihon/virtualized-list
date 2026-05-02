@@ -315,6 +315,13 @@ export default class DynamicListLayout {
 
       // Add spare space above.
       if (renderStartIndex > 0) {
+        
+        // prevents layout shift in WebKit and in Firefox
+        if (this._previousDirection !== direction) {
+          scrollableContainer.refresh();
+          console.error('Direction changed. Refresh.');
+        }
+
         if (scrollableContainer.getTopSpacerHeight() < spareSpace) {
           scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() + spareSpace);
           scrollableContainer.setViewportTop(scrollableContainer.getViewportTop() + spareSpace);
@@ -326,6 +333,8 @@ export default class DynamicListLayout {
     if (renderStartIndex < renderEndIndex) {
       this._renderRange(renderStartIndex, renderEndIndex, direction);
     }
+
+    this._previousDirection = direction;
   };
 
   private _adjustScrollbarThumb = (viewportTop: number, direction: ScrollDirection) => {
