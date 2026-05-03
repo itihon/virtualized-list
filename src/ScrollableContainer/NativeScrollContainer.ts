@@ -10,7 +10,7 @@
 import type { IEventEmitter, IEventMap } from '../types/types';
 import DOMConstructor from './DOMConstructor';
 import ScrollRelay from './ScrollRelay';
-import classes from './ScrollableContainer.module.css';
+import classes from './NativeScrollContainer.module.css';
 
 export default class ScrollableContainer {
   private _container: HTMLElement;

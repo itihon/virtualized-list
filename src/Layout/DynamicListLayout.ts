@@ -11,7 +11,7 @@ import type {
   IEventMap,
   ScrollDirection,
 } from "../types/types";
-import ScrollableContainer from "../ScrollableContainer/ScrollableContainer";
+import ScrollableContainer from "../ScrollableContainer/NativeScrollContainer";
 
 type DynamicListLayoutOptions = { overscanHeight: number, container: HTMLElement };
 
