@@ -1,4 +1,4 @@
-import ScrollableContainer from '../../../../src/ScrollableContainer/ScrollableContainer.ts';
+import ScrollableContainer from '../../../../src/ScrollableContainer/AbsoluteScrollContainer.ts';
 import EventBus from '../../../../src/EventBus/EventBus.ts';
 import type { IEventMap } from '../../../../src/types/types.ts';
 

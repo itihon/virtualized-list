@@ -9,7 +9,7 @@
 
 import type { IEventEmitter, IEventMap } from '../types/types';
 import DOMConstructor from './DOMConstructor';
-import classes from './ScrollableContainer.module.css';
+import classes from './AbsoluteScrollContainer.module.css';
 import extractTYValue from './extractTYValue';
 
 export default class ScrollableContainer {

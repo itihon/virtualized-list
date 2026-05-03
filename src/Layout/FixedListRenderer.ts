@@ -4,7 +4,7 @@
  * @author Alexandr Kalabin
  */
 
-import ScrollableContainer from "../ScrollableContainer/ScrollableContainer";
+import ScrollableContainer from "../ScrollableContainer/AbsoluteScrollContainer";
 import isRangeIntersecting from "./isRangeIntersecting";
 import type { 
   IFixedItem,

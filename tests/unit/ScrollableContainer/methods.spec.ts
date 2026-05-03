@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import type ScrollableContainer from '../../../src/ScrollableContainer/ScrollableContainer';
+import type ScrollableContainer from '../../../src/ScrollableContainer/AbsoluteScrollContainer';
 
 const BASE_URL = 'http://localhost:5173/scrollable-container.html';
 let page: Page;

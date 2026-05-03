@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import type ScrollableContainer from '../../../src/ScrollableContainer/ScrollableContainer';
+import type ScrollableContainer from '../../../src/ScrollableContainer/AbsoluteScrollContainer';
 import EventBus from '../../../src/EventBus/EventBus';
 import { IEventMap } from '../../../src/types/types';
 
