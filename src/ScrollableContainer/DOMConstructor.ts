@@ -42,9 +42,7 @@ export default class DOMConstructor extends ElementMetricsCache {
     // this._DOMRoot = new DOMDivElement();
     this._DOMRoot = this._element as VLDivElement;
     this._DOMRoot.classList.add(...classList);
-    requestAnimationFrame(() => {
-      this._parentContainer.appendChild(this._DOMRoot);
-    });
+    this._parentContainer.appendChild(this._DOMRoot);
   }
 
   setWidth(width: number) {
