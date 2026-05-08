@@ -5,8 +5,8 @@ import headers from "eslint-plugin-headers";
 import { defineConfig } from "eslint/config";
 
 const files = [
-  "src/**/*.{js,mjs,cjs,ts,mts,cts}",
-  "test/**/*.{js,mjs,cjs,ts,mts,cts}",
+  "src/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
+  "test/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
 ];
 
 export default defineConfig([
