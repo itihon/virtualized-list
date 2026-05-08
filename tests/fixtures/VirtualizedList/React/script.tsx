@@ -1,69 +1,61 @@
-import VirtualizedList from '../../../../src/VirtualizedList/VirtualizedList';
-import DynamicListLayout from '../../../../src/Layout/DynamicListLayout';
-import ArrayItemStore from '../../../../src/ItemStore/ArrayItemStore';
-import DOMRenderer from '../../../../src/Renderer/DOMRenderer';
+import { createRoot } from 'react-dom/client';
+import { memo } from 'react';
+import VirtualizedListReact from '../../../../src/VirtualizedList/VirtualizedListReact';
 
 const auto = new URLSearchParams(window.location.search).get('auto');
 const itemsCount = Number(new URLSearchParams(window.location.search).get('itemsCount')) || 1000;
-
-function render(data: { i: number } | unknown) {
-  const item = document.createElement('div');
-  const { i } = (data as { i: number });
-
-  item.classList.add('list-item');
-  item.id = `item-${i}`;
-  item.textContent = `Item ${i}.`
-
-  if (i % 2 === 0) {
-    const div2 = document.createElement('div');
-    div2.textContent = 'Second line.';
-    item.appendChild(div2);
-  }
-  else if (i % 3 === 0) {
-    const div2 = document.createElement('div');
-    div2.textContent = 'Second line.';
-    item.appendChild(div2);
-
-    const div3 = document.createElement('div');
-    div3.textContent = 'Third line.';
-    item.appendChild(div3);
-  }
-  else if (i % 5 === 0) {
-    const div2 = document.createElement('div');
-    div2.textContent = 'Second line.';
-    item.appendChild(div2);
-
-    const div3 = document.createElement('div');
-    div3.textContent = 'Third line.';
-    item.appendChild(div3);
-
-    const div4 = document.createElement('div');
-    div4.textContent = 'Fourth line.';
-    item.appendChild(div4);
-  }
-
-  return item;
-}
-
 const container = document.createElement('div');
-const store = new ArrayItemStore();
-const renderer = new DOMRenderer(container);
-const layout = new DynamicListLayout({ overscanHeight: 100, renderer });
-const list = new VirtualizedList({ layout, store });
 
-container.id = 'virtualized-list';
-container.style.width = '200px';
-container.style.height = '300px';
-container.style.overflow = 'auto';
+// container.id = 'virtualized-list';
+// container.style.width = '200px';
+// container.style.height = '300px';
+// container.style.overflow = 'auto';
+// document.body.appendChild(container);
 
-document.body.appendChild(container);
-
-for (let i = 0; i < itemsCount; i++) {
-  list.insert({
-    data: { i: i },
-    render,
-  }, i);
+interface ListItemProps {
+  data: { i: number };
+  ref: React.Ref<HTMLDivElement> | undefined;
+  index: number;
 }
+
+function ListItem({ data, ref, index }: ListItemProps) {
+  const i = data.i;
+
+  console.log('ListItem', i);
+
+  const extraLines =
+    i % 5 === 0 ? ['Second line.', 'Third line.', 'Fourth line.'] :
+    i % 3 === 0 ? ['Second line.', 'Third line.'] :
+    i % 2 === 0 ? ['Second line.'] :
+    [];
+
+  return (
+    <div ref={ref} className="list-item" id={`item-${i}`} data-index={index}>
+      {`Item ${i}.`}
+      {extraLines.map((text, idx) => <div key={idx}>{text}</div>)}
+    </div>
+  );
+};
+
+function App() {
+  const items = [];
+
+  for (let i = 0; i < itemsCount; i++) {
+    items.push({
+      data: { i: i },
+      render: ListItem,
+    });
+  }
+
+  return (
+    <VirtualizedListReact overscanHeight={100} items={items} />
+  );
+}
+
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);
+
+
 
 // ------------- Test conditions for manual testing and Playwright -------------------
 

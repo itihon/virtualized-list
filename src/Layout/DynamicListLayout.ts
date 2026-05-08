@@ -10,10 +10,11 @@ import type {
   IEventEmitter,
   IEventMap,
   ScrollDirection,
+  IRangeRenderer,
 } from "../types/types";
-import ScrollableContainer from "../ScrollableContainer/NativeScrollContainer";
+import type ScrollableContainer from "../Renderer/NativeScrollContainer";
 
-type DynamicListLayoutOptions = { overscanHeight: number, container: HTMLElement };
+type DynamicListLayoutOptions = { overscanHeight: number, renderer: IRangeRenderer };
 
 type SchedulerFn = {
   (): void;
@@ -57,9 +58,8 @@ export default class DynamicListLayout {
   private _overscanHeight: number;
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _store: IItemStore<IItem> | null = null;
+  private _renderer: IRangeRenderer;
   private _scrollableContainer: ScrollableContainer;
-  private _renderedIndexRegistry = new WeakMap<Element, number>();
-  private _renderedItemsRegistry = new Map<number, Element>();
   private _minItemHeight = document.documentElement.clientHeight;
   private _maxItemHeight = 0;
   private _previousDirection: ScrollDirection | '' = '';
@@ -89,74 +89,6 @@ export default class DynamicListLayout {
     return Math.min(Math.round(this._getScrollRatio(offset) * lastIndex), lastIndex);
   }
 
-  private _renderRange(startIndex: number, endIndex: number, direction: ScrollDirection) {
-    console.log('_renderRange', startIndex, endIndex, direction)
-    if (startIndex > endIndex) console.error('_renderRange', startIndex, endIndex, direction);
-
-    const store = this._store;
-    const scrollableContainer = this._scrollableContainer;
-    const renderedIndeces = this._renderedIndexRegistry;
-    const renderedItems = this._renderedItemsRegistry;
-    const fragment = document.createDocumentFragment();
-
-    if (!store) return;
-
-    for (let idx = startIndex; idx <= endIndex; idx++) {
-      const item = store.getByIndex(idx);
-
-      if (item) {
-        const element = item.render(item.data);
-
-        fragment.append(element);
-        renderedIndeces.set(element, idx);
-        renderedItems.set(idx, element);
-      }
-    }
-
-    if (direction === 'down') {
-      scrollableContainer.appendItem(fragment);
-    }
-    else if (direction === 'up') {
-      scrollableContainer.prependItem(fragment);
-    }
-  }
-
-  private _removeRange(startIndex: number, endIndex: number): number {
-    const itemsToRemove: Element[] = [];
-    const renderedIndeces = this._renderedIndexRegistry;
-    const renderedItems = this._renderedItemsRegistry;
-    let startRange = Infinity;
-    let endRange = 0;
-
-    for (let idx = startIndex; idx <= endIndex; idx++) {
-      const itemToRemove = renderedItems.get(idx); 
-
-      if (itemToRemove) {
-        const { offsetTop, offsetHeight } = itemToRemove as HTMLElement;
-
-        startRange = Math.min(startRange, offsetTop);
-        endRange = Math.max(endRange, offsetTop + offsetHeight);
-
-        itemsToRemove.push(itemToRemove);
-        renderedItems.delete(idx);
-        renderedIndeces.delete(itemToRemove);
-          
-        // update min and max item height
-        this._updateItemHeightBounds(itemToRemove);
-      }
-    }
-
-    const itemsCount = itemsToRemove.length;
-
-    for (let idx = 0; idx < itemsCount; idx++) {
-      itemsToRemove[idx]!.remove();
-    }
-
-    console.log('_removeItems startIndex:', startIndex, 'endIndex:', endIndex, 'removedHeight:', endRange > startRange ? endRange - startRange : 0);
-
-    return endRange > startRange ? endRange - startRange : 0;
-  }
-
   private _updateVisibleItems = () => {
     console.log('_updateVisibleItems')
     const scrollableContainer = this._scrollableContainer;
@@ -166,9 +98,11 @@ export default class DynamicListLayout {
     const startIndex = this._getItemIndexByScrollTop();
     const endIndex = startIndex + Math.ceil((viewportHeight + overscanHeight) / this._getAvgItemHeight());
 
-    scrollableContainer.clear();
+    // scrollableContainer.clear();
+    this._renderer.clear();
 
-    this._renderRange(startIndex, endIndex, 'down');
+    this._renderer.render(startIndex, endIndex, 'down');
+    this._renderer.flush();
   };
 
   private _scheduleVisibleItemsUpdate = new RAFScheduler().schedule(this._updateVisibleItems);
@@ -182,7 +116,7 @@ export default class DynamicListLayout {
       : viewportTop;
 
     const { offsetTop, offsetHeight } = (item as HTMLElement);
-    const itemIndex = this._renderedIndexRegistry.get(item);
+    const itemIndex = this._renderer.getIndex(item);
 
     if (itemIndex === undefined) return false;
 
@@ -205,7 +139,7 @@ export default class DynamicListLayout {
 
     if (!renderedItem) return;
 
-    return this._renderedIndexRegistry.get(renderedItem);
+    return this._renderer.getIndex(renderedItem);
   }
 
   private _renderItems = (scrollTop: number, direction: ScrollDirection) => {
@@ -231,14 +165,16 @@ export default class DynamicListLayout {
     const middleIndex = this._getItemIndexByScrollTop();
     const firstRenderedIndex = this._getRenderedBoundaryIndex('first');
     const lastRenderedIndex = this._getRenderedBoundaryIndex('last');
+    const renderStartIndex = Math.ceil(middleIndex - rangeToFill / this._minItemHeight);
+    const renderEndIndex = Math.ceil(middleIndex + rangeToFill / this._minItemHeight);
 
-    let renderStartIndex = Math.ceil(middleIndex - rangeToFill / this._minItemHeight);
-    let renderEndIndex = Math.ceil(middleIndex + rangeToFill / this._minItemHeight);
+    for (const item of scrollableContainer.getItems()) {
+      // update min and max item height
+      this._updateItemHeightBounds(item);
+    }
 
-    let removeStartIndex = firstRenderedIndex;
-    let removeEndIndex = lastRenderedIndex;
-    let removedHeight = 0;
-
+    const removedHeight = this._renderer.render(renderStartIndex, renderEndIndex, direction);
+    
     if (direction === 'down') {
       console.log('SCROLLING DOWN')
       const isFastScroll = scrollableContainer.getBottomSpacerTop() < scrollTop;
@@ -249,15 +185,6 @@ export default class DynamicListLayout {
           console.error('cut extra space below')
           scrollableContainer.setScrollCanvasHeight(scrollableContainer.getScrollCanvasHeight() - scrollableContainer.getBottomSpacerHeight());
           scrollableContainer.setBottomSpacerHeight(0);
-        }
-      }
-
-      if (removeStartIndex !== undefined && lastRenderedIndex !== undefined) {
-        removeEndIndex = Math.min(renderStartIndex - 1, lastRenderedIndex);
-        renderStartIndex = Math.max(lastRenderedIndex + 1, renderStartIndex);
-       
-        if (removeStartIndex < removeEndIndex) {
-          removedHeight = this._removeRange(removeStartIndex, removeEndIndex);
         }
       }
 
@@ -293,16 +220,6 @@ export default class DynamicListLayout {
         }
       }
 
-      if (removeEndIndex !== undefined && firstRenderedIndex !== undefined) {
-        removeStartIndex = Math.max(renderEndIndex + 1, firstRenderedIndex);
-        renderEndIndex = Math.min(firstRenderedIndex - 1, renderEndIndex);
-       
-        console.log('remove:', removeStartIndex, removeEndIndex)
-        if (removeStartIndex < removeEndIndex) {
-          removedHeight = this._removeRange(removeStartIndex, removeEndIndex);
-        }
-      }
-    
       if (isFastScroll) {
         console.warn('Fast scroll up.');
         scrollableContainer.setTopSpacerHeight('auto');
@@ -330,9 +247,7 @@ export default class DynamicListLayout {
       }
     }
 
-    if (renderStartIndex < renderEndIndex) {
-      this._renderRange(renderStartIndex, renderEndIndex, direction);
-    }
+    this._renderer.flush();
 
     this._previousDirection = direction;
   };
@@ -364,7 +279,7 @@ export default class DynamicListLayout {
 
   private _getScrollAnchorItemPosition(): number | null {
     const scrollableContainer = this._scrollableContainer;
-    const renderedItems = this._renderedItemsRegistry;
+    const renderer = this._renderer;
     const totalItems = this._store?.size || 0;
     
     // scrollableContainer.refresh();
@@ -378,8 +293,8 @@ export default class DynamicListLayout {
     const fractionalIndex = totalItems * scrollRatio;
     const index1 = Math.min(Math.floor(fractionalIndex), lastIndex);
     const index2 = Math.min(Math.ceil(fractionalIndex), lastIndex);
-    const renderedItem1 = renderedItems.get(index1) as HTMLElement | undefined;
-    const renderedItem2 = renderedItems.get(index2) as HTMLElement | undefined || renderedItem1;
+    const renderedItem1 = renderer.getItem(index1) as HTMLElement | undefined;
+    const renderedItem2 = renderer.getItem(index2) as HTMLElement | undefined || renderedItem1;
     const indexFraction = fractionalIndex - index1;
 
     if (!renderedItem1 || !renderedItem2) {
@@ -460,6 +375,7 @@ export default class DynamicListLayout {
 
   private _updateScrollbar = (scrollTop: number, direction: ScrollDirection) => {
     new ResizeObserver((_, observer) => {
+      console.warn('ResizeObserver')
       const items = this._scrollableContainer.getItems();
       const itemsCount = items.length;
 
@@ -475,8 +391,9 @@ export default class DynamicListLayout {
 
   private _scheduleScrollHeightUpdate = new RAFScheduler().schedule(this._updateScrollHeight);
 
-  constructor({ overscanHeight = 100, container }: DynamicListLayoutOptions) {
-    this._scrollableContainer = new ScrollableContainer(container);
+  constructor({ overscanHeight = 100, renderer }: DynamicListLayoutOptions) {
+    this._renderer = renderer;
+    this._scrollableContainer = renderer.scrollableContainer;
     this._overscanHeight = overscanHeight;
   }
 
@@ -484,6 +401,7 @@ export default class DynamicListLayout {
     this._eventBus = eventBus;
     this._store = store;
     this._scrollableContainer.attach(this._eventBus);
+    this._renderer.attach(store);
 
     const scheduleUpdate = this._scheduleVisibleItemsUpdate
       .done(this._scheduleItemHeightRangeUpdate)

@@ -4,12 +4,22 @@
  * @author Alexandr Kalabin
  */
 
+import type ScrollableContainer from "../Renderer/NativeScrollContainer"; // !!! define interface instead and let ScrollableContainer class implement that interface
+
 /**
  * A list item with unknown height.
  */
 export interface IItem<T = unknown> {
   data: T;
   render: (data: T) => HTMLElement;
+}
+
+/**
+ * A React list item with unknown height.
+ */
+export interface IReactItem<T = unknown> {
+  data: T;
+  render: React.FC<{ data: T, ref: React.Ref<HTMLDivElement> | undefined, index: number }>;
 }
 
 /**
@@ -52,12 +62,32 @@ export interface IItemStore<ItemType extends StoredItem = unknown> {
   readonly size: number;
 }
 
+// Minimal interface sufficient for DynamicListLayout, basically it's just a Map
+// export interface IItemStore<ItemType extends StoredItem = unknown> {
+//   insertAt: (index: number, item: ItemType) => void; 
+//   deleteAt: (index: number) => void;
+//   getByIndex: (index: number) => MeasuredItem<ItemType> | undefined;
+//   readonly size: number;
+// }
+
 export interface IVirtualizedListEvents {
   onInsert: (index: number, item: IItem) => void;
   onDelete: (index: number, count: number) => void;
 }
 
 export type ScrollDirection = 'down' | 'up';
+
+export interface IRangeRenderer {
+  render: (startIndex: number, endIndex: number, direction: ScrollDirection) => number;
+  renderRange: (startIndex: number, endIndex: number, direction: ScrollDirection) => void;
+  removeRange: (startIndex: number, endIndex: number, direction: ScrollDirection) => number;
+  getIndex: (item: Element) => number | undefined;
+  getItem: (index: number) => Element | undefined;
+  attach: (store: IItemStore<IItem>) => void;
+  clear: () => void;
+  flush: () => void;
+  scrollableContainer: ScrollableContainer;
+}
 
 export interface IScrollableContainerEvents {
   onResize: (width: number, height: number) => void;

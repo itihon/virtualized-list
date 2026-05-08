@@ -5,7 +5,7 @@
  */
 
 import type { IEventEmitter, IEventMap } from '../types/types';
-import ElementMetricsCache from './ElementMetricsCache';
+import ElementMetricsCache from '../Renderer/ElementMetricsCache';
 
 export default class ScrollRelay extends ElementMetricsCache {
   private _container: HTMLElement;

@@ -8,18 +8,27 @@
  */
 
 import type { IEventEmitter, IEventMap } from '../types/types';
-import DOMConstructor from './DOMConstructor';
+import type ReactConstructor from '../Renderer/DOMConstructor';
 import ScrollRelay from './ScrollRelay';
-import classes from './NativeScrollContainer.module.css';
+
+type ScrollableContainerOptions = {
+  container: HTMLElement;
+  scrollHeightFiller: ReactConstructor;
+  viewportContainer: ReactConstructor;
+  scrollCanvas: ReactConstructor;
+  topSpacer: ReactConstructor;
+  contentLayer: ReactConstructor;
+  bottomSpacer: ReactConstructor;
+}
 
 export default class ScrollableContainer {
   private _container: HTMLElement;
-  private _scrollHeightFiller: DOMConstructor;
-  private _viewportContainer: DOMConstructor;
-  private _scrollCanvas: DOMConstructor;
-  private _topSpacer: DOMConstructor;
-  private _bottomSpacer: DOMConstructor;
-  private _contentLayer: DOMConstructor;
+  private _scrollHeightFiller: ReactConstructor;
+  private _viewportContainer: ReactConstructor;
+  private _scrollCanvas: ReactConstructor;
+  private _topSpacer: ReactConstructor;
+  private _bottomSpacer: ReactConstructor;
+  private _contentLayer: ReactConstructor;
   private _eventBus: IEventEmitter<IEventMap> | null = null;
   private _containerScroller: ScrollRelay;
   private _viewportScroller: ScrollRelay;
@@ -35,7 +44,7 @@ export default class ScrollableContainer {
     this._eventBus?.emit('onResize', clientWidth, clientHeight);
   };
 
-  private _setSpacerHeight(spacer: DOMConstructor, height: number | 'auto') {
+  private _setSpacerHeight(spacer: ReactConstructor, height: number | 'auto') {
     if (height === 'auto') {
       spacer.setHeight(0);
       spacer.DOMRoot.style.flexGrow = '1';
@@ -46,14 +55,14 @@ export default class ScrollableContainer {
     }
   }
 
-  constructor(container: HTMLElement) {
-    this._container = container;
-    this._scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
-    this._viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
-    this._scrollCanvas = new DOMConstructor(this._viewportContainer.DOMRoot, [classes.scrollCanvas]);
-    this._topSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.topSpacer]);
-    this._contentLayer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.contentLayer]);
-    this._bottomSpacer = new DOMConstructor(this._scrollCanvas.DOMRoot, [classes.bottomSpacer]);
+  constructor(opts: ScrollableContainerOptions) {
+    this._container = opts.container;
+    this._scrollHeightFiller = opts.scrollHeightFiller;
+    this._viewportContainer = opts.viewportContainer;
+    this._scrollCanvas = opts.scrollCanvas;
+    this._topSpacer = opts.topSpacer;
+    this._contentLayer = opts.contentLayer;
+    this._bottomSpacer = opts.bottomSpacer;
     this._containerScroller = new ScrollRelay(this._container);
     this._viewportScroller = new ScrollRelay(this._viewportContainer.DOMRoot);
 
@@ -62,9 +71,7 @@ export default class ScrollableContainer {
     resizeObserver.observe(this._container);
     resizeObserver.observe(this._viewportContainer.DOMRoot);
 
-    this._container.classList.add(classes.scrollableContainer);
-
-    this._viewportContainer.DOMRoot.onMounted(() => {
+    requestAnimationFrame(() => {
       this._container.scrollTop = 0;
       this._viewportContainer.DOMRoot.scrollTop = 0;
       this.setTopSpacerHeight(0);
@@ -75,7 +82,7 @@ export default class ScrollableContainer {
       const target = event.target as HTMLElement;
 
       // handle clicks on arbitrary places on scrollbar
-      if (target.classList.contains(classes.scrollableContainer)) {
+      if (target === this._container) {
         this._containerScroller.ignoreNextDirectionChangeProtection();
       }
     });
