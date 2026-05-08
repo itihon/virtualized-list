@@ -12,6 +12,7 @@
     ],
     "outDir": "./dist",
     "declaration": true,
+    "jsx": "react-jsx",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
