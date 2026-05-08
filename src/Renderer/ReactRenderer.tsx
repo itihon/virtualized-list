@@ -5,7 +5,6 @@
  */
 
 import { flushSync } from 'react-dom';
-import { memo } from 'react';
 import DOMConstructor from './DOMConstructor';
 import ScrollableContainer from "./NativeScrollContainer";
 import type { IRangeRenderer, ScrollDirection, IItemStore, IItem, IReactItem } from "../types/types";
@@ -37,16 +36,6 @@ export default class ReactRenderer implements IRangeRenderer, IReactRenderer {
   private _renderedRangeRefPool = new Map<number, IndexedRef>();
   private _listItems: React.ReactNode[] = [];
   private _flushItems = () => { this._itemsSetter(this._listItems); };
-  private _memoizedComponents = new WeakMap<Function, React.ComponentType<any>>();
-
-  private _getMemoizedComponent(render: IReactItem['render']) {
-    let Component = this._memoizedComponents.get(render);
-    if (!Component) {
-      Component = memo(render);
-      this._memoizedComponents.set(render, Component);
-    }
-    return Component;
-  }
 
   private _getRenderedBoundaryIndex(boundary: 'first' | 'last'): number | undefined {
     const renderedItem = boundary === 'first'
@@ -142,7 +131,7 @@ export default class ReactRenderer implements IRangeRenderer, IReactRenderer {
       const item = store.getByIndex(idx) as unknown as IReactItem | undefined;
 
       if (item) {
-        const ListItem = this._getMemoizedComponent(item.render);
+        const ListItem = item.render;
 
         const ref: IndexedRef | undefined = refPool.get(idx) || { current: null, idx };
 
