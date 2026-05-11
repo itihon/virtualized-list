@@ -133,7 +133,7 @@ export default class ReactRenderer implements IRangeRenderer, IReactRenderer {
       if (item) {
         const ListItem = item.render;
 
-        const ref: IndexedRef | undefined = refPool.get(idx) || { current: null, idx };
+        const ref: IndexedRef = refPool.get(idx) || { current: null, idx };
 
         refPool.set(idx, ref);
         itemsToAdd.push(<ListItem data={item.data} key={idx} ref={ref} index={idx} />);
