@@ -33,7 +33,7 @@ export default function VirtualizedListReact<T>(props: VirtualizedListReactProps
   const topSpacerRef = useRef<HTMLDivElement>(null);
   const contentLayerRef = useRef<HTMLDivElement>(null);
   const bottomSpacerRef = useRef<HTMLDivElement>(null);
-  const [listItems, setListItems] = useState<React.ReactNode[]>([]);
+  const [visibleItems, setVisibleItems] = useState<React.ReactNode[]>([]);
   const renderer = useRef<ReactRenderer | undefined>(undefined);
 
   useLayoutEffect(() => {
@@ -45,7 +45,7 @@ export default function VirtualizedListReact<T>(props: VirtualizedListReactProps
       topSpacer: topSpacerRef.current!,
       contentLayer: contentLayerRef.current!,
       bottomSpacer: bottomSpacerRef.current!,
-      itemsSetter: setListItems,
+      itemsSetter: setVisibleItems,
     });
 
     const store = new ArrayItemStore();
@@ -59,14 +59,14 @@ export default function VirtualizedListReact<T>(props: VirtualizedListReactProps
 
   useEffect(() => {
     renderer.current?.commit();
-  }, [listItems]);
+  }, [visibleItems]);
 
   const scrollerContent = <>
     <div ref={scrollHeightFillerRef}></div>
     <div ref={viewportContainerRef}>
       <div ref={scrollCanvasRef}>
         <div ref={topSpacerRef}></div>
-        <div ref={contentLayerRef}>{ listItems }</div>
+        <div ref={contentLayerRef}>{ visibleItems }</div>
         <div ref={bottomSpacerRef}></div>
       </div>
     </div>
