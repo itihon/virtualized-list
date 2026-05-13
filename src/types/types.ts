@@ -5,6 +5,7 @@
  */
 
 import type ScrollableContainer from "../Renderer/NativeScrollContainer"; // !!! define interface instead and let ScrollableContainer class implement that interface
+import type { ShallowRef, VNodeChild } from "vue";
 
 /**
  * A list item with unknown height.
@@ -20,6 +21,14 @@ export interface IItem<T = unknown> {
 export interface IReactItem<T = unknown> {
   data: T;
   render: React.FC<{ data: T, ref: React.Ref<HTMLDivElement> | undefined, index: number }>;
+}
+
+/**
+ * A Vue list item with unknown height.
+ */
+export interface IVueItem<T = unknown> {
+  data: T;
+  render: (props: { data: T, ref: ShallowRef<HTMLDivElement> | undefined, index: number }) => VNodeChild;
 }
 
 /**
@@ -77,13 +86,13 @@ export interface IVirtualizedListEvents {
 
 export type ScrollDirection = 'down' | 'up';
 
-export interface IRangeRenderer {
+export interface IRangeRenderer<T> {
   render: (startIndex: number, endIndex: number, direction: ScrollDirection) => number;
   renderRange: (startIndex: number, endIndex: number, direction: ScrollDirection) => void;
   removeRange: (startIndex: number, endIndex: number, direction: ScrollDirection) => number;
   getIndex: (item: Element) => number | undefined;
   getItem: (index: number) => Element | undefined;
-  attach: (store: IItemStore<IItem>) => void;
+  attach: (store: IItemStore<IItem<T>>) => void;
   clear: () => void;
   flush: () => void;
   scrollableContainer: ScrollableContainer;
