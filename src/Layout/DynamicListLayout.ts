@@ -247,9 +247,9 @@ export default class DynamicListLayout {
       }
     }
 
-    this._renderer.flush();
-
     this._previousDirection = direction;
+
+    return this._renderer.flush();
   };
 
   private _adjustScrollbarThumb = (viewportTop: number, direction: ScrollDirection) => {
@@ -317,7 +317,7 @@ export default class DynamicListLayout {
     return position;
   }
 
-  private _scrollContent = (scrollTop: number, direction: ScrollDirection, scrollDelta: number) => {
+  private _scrollContent = async (scrollTop: number, direction: ScrollDirection, scrollDelta: number) => {
 
     const scrollableContainer = this._scrollableContainer;
 
@@ -329,7 +329,7 @@ export default class DynamicListLayout {
     const scrollRatio = this._getScrollRatio();
     const viewportTop = scrollRatio * (scrollCanvasHeight - viewportHeight);
 
-    this._renderItems(viewportTop, direction);
+    await this._renderItems(viewportTop, direction);
 
     const scrollAnchorTop = this._getScrollAnchorItemPosition();
 

@@ -207,6 +207,7 @@ export default class ReactRenderer implements IRangeRenderer, IReactRenderer {
 
   flush() {
     flushSync(this._flushItems);
+    return Promise.resolve();
   }
 
   commit() {

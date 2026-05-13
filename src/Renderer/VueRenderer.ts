@@ -4,7 +4,7 @@
  * @author Alexandr Kalabin
  */
 
-import { type Ref, type VNodeChild } from 'vue';
+import { nextTick, type Ref, type VNodeChild } from 'vue';
 import DOMConstructor from './DOMConstructor';
 import ScrollableContainer from './NativeScrollContainer';
 import type { IItem, IItemStore, IRangeRenderer, ScrollDirection } from '../types/types';
@@ -203,6 +203,7 @@ export default class VueRenderer<T> implements IRangeRenderer<T> {
   flush() {
     console.error('flush', this._listItems)
     this._itemsSetter(this._listItems);
+    return nextTick();
   }
 
   commit(renderedRefs: Map<number, Ref<HTMLElement | undefined>>) {

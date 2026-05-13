@@ -86,7 +86,7 @@ export interface IVirtualizedListEvents {
 
 export type ScrollDirection = 'down' | 'up';
 
-export interface IRangeRenderer<T> {
+export interface IRangeRenderer<T = unknown> {
   render: (startIndex: number, endIndex: number, direction: ScrollDirection) => number;
   renderRange: (startIndex: number, endIndex: number, direction: ScrollDirection) => void;
   removeRange: (startIndex: number, endIndex: number, direction: ScrollDirection) => number;
@@ -94,7 +94,7 @@ export interface IRangeRenderer<T> {
   getItem: (index: number) => Element | undefined;
   attach: (store: IItemStore<IItem<T>>) => void;
   clear: () => void;
-  flush: () => void;
+  flush: () => Promise<void>;
   scrollableContainer: ScrollableContainer;
 }
 
