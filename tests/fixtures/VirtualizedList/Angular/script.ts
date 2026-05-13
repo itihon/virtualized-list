@@ -17,7 +17,7 @@ type Data = { i: number };
       <ng-template #renderItem let-data="data" let-index="index">
         <div class="list-item" [id]="'item-' + data.i" [attr.data-index]="index">
           Item {{ data.i }}.
-          <div *ngFor="let text of extraLines(data.i); trackBy: trackByText">{{ text }}</div>
+          <div *ngFor="let text of extraLines(data.i)">{{ text }}</div>
         </div>
       </ng-template>
     </virtualized-list-angular>
@@ -34,10 +34,6 @@ class AppComponent {
         : i % 2 === 0
           ? ['Second line.']
           : [];
-  }
-
-  trackByText(_idx: number, text: string) {
-    return text;
   }
 }
 
