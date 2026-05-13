@@ -41,6 +41,7 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
             unknownScrollHeight: fixture('VirtualizedList/DynamicListLayout/unknown-scroll-height.html'),
             react: fixture('VirtualizedList/React/index.html'),
             vue: fixture('VirtualizedList/Vue/index.html'),
+            angular: fixture('VirtualizedList/Angular/index.html'),
           },
         },
         emptyOutDir: true,
