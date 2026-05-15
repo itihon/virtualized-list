@@ -26,5 +26,14 @@
   "scripts": {
     "test": "test"
   },
+  "dependencies": {
+    "layout-virtual": "0.0.1"
+  },
+  "peerDependencies": {
+    "@angular/common": "^21.0.0",
+    "@angular/compiler": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/platform-browser": "^21.0.0"
+  },
   "devDependencies": {}
 }

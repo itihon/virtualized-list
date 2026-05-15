@@ -26,5 +26,12 @@
   "scripts": {
     "test": "test"
   },
+  "dependencies": {
+    "layout-virtual": "0.0.1"
+  },
+  "peerDependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
   "devDependencies": {}
 }
