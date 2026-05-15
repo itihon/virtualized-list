@@ -86,17 +86,6 @@
   "overrides": {
     "vite": "$vite"
   },
-  "dependencies": {
-    "@angular/common": "^21.0.0",
-    "@angular/compiler": "^21.0.0",
-    "@angular/core": "^21.0.0",
-    "@angular/platform-browser": "^21.0.0",
-    "avl": "^2.0.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "request-animation-frame-loop": "^1.0.2",
-    "vue": "^3.5.34"
-  },
   "workspaces": [
     "packages/layout-virtual",
     "packages/react-layout-virtual",
