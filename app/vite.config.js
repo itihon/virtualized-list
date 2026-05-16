@@ -1,0 +1,38 @@
+import { resolve } from "node:path";
+import { defineConfig } from "vite";
+import vue from '@vitejs/plugin-vue';
+
+const root = import.meta.dirname;
+
+export default defineConfig(({ mode }) => {
+  if (mode === 'development') {
+    return {
+      // css: {
+      //   modules: {
+      //     generateScopedName: '[local]',
+      //   },
+      // },
+      root: './src/',
+      server: {
+        host: '0.0.0.0',
+      },
+      plugins: [vue()],
+    };
+  }
+  else {
+    return {
+      root: 'src',
+      build: {
+        rollupOptions: {
+          input: {
+            index: resolve(root, "src/index.html"),
+            vanilla: resolve(root, "src/vanilla/index.html"),
+            react: resolve(root, "src/react/index.html"),
+            vue: resolve(root, "src/vue/index.html"),
+            angular: resolve(root, "src/angular/index.html"),
+          },
+        },
+      },
+    };
+  }
+});

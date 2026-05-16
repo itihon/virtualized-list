@@ -2,7 +2,9 @@
   "name": "layout-virtual-monorepo",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev:app": "npm run dev -w app",
+    "build:app": "npm run build -w app",
+    "preview:app": "npm run preview -w app",
     "build": "npm run build:bundle && npm run build:types",
     "build:types": "tsc --emitDeclarationOnly",
     "build:bundle": "vite build",
@@ -56,6 +58,7 @@
     "vite": "$vite"
   },
   "workspaces": [
+    "app",
     "packages/layout-virtual",
     "packages/react-layout-virtual",
     "packages/vue-layout-virtual",
