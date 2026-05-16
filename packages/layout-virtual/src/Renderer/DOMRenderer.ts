@@ -4,7 +4,6 @@
  * @author Alexandr Kalabin
  */
 
-import DOMConstructor from './DOMConstructor';
 import ScrollableContainer from "./NativeScrollContainer";
 import type { IRangeRenderer, ScrollDirection, IItemStore, IItem } from "../types/types";
 import classes from './NativeScrollContainer.module.css';
@@ -28,24 +27,8 @@ export default class DOMRenderer implements IRangeRenderer {
   }
 
   constructor(container: HTMLElement) {
-    const scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller]);
-    const viewportContainer = new DOMConstructor(container, [classes.viewportContainer]);
-    const scrollCanvas = new DOMConstructor(viewportContainer.DOMRoot, [classes.scrollCanvas]);
-    const topSpacer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.topSpacer]);
-    const contentLayer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.contentLayer]);
-    const bottomSpacer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.bottomSpacer]);
-    
     container.classList.add(classes.scrollableContainer);
-
-    this._scrollableContainer = new ScrollableContainer({ 
-      container, 
-      scrollHeightFiller, 
-      viewportContainer, 
-      scrollCanvas, 
-      topSpacer, 
-      contentLayer, 
-      bottomSpacer,
-    });
+    this._scrollableContainer = new ScrollableContainer({ container });
   }
 
   render(startIndex: number, endIndex: number, direction: ScrollDirection): number {

@@ -100,12 +100,12 @@ export interface IRangeRenderer<T = unknown> {
 
 export type VirtualScrollStructure = {
   container: HTMLElement;
-  scrollHeightFiller: HTMLElement;
-  viewportContainer: HTMLElement;
-  scrollCanvas: HTMLElement;
-  topSpacer: HTMLElement;
-  contentLayer: HTMLElement;
-  bottomSpacer: HTMLElement;
+  scrollHeightFiller?: HTMLElement;
+  viewportContainer?: HTMLElement;
+  scrollCanvas?: HTMLElement;
+  topSpacer?: HTMLElement;
+  contentLayer?: HTMLElement;
+  bottomSpacer?: HTMLElement;
 }
 
 export interface IScrollableContainerEvents {
