@@ -36,7 +36,8 @@
     }
   },
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "build": "vite build"
   },
   "dependencies": {
     "layout-virtual": "0.0.1"

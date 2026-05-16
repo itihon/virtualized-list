@@ -5,21 +5,12 @@
  */
 
 import { flushSync } from 'react-dom';
-import DOMConstructor from './DOMConstructor';
-import ScrollableContainer from "./NativeScrollContainer";
-import type { IRangeRenderer, ScrollDirection, IItemStore, IItem, IReactItem } from "../types/types";
-import classes from './NativeScrollContainer.module.css';
+import { ScrollableContainer } from "layout-virtual";
+import type { IRangeRenderer, ScrollDirection, IItemStore, IItem, IReactItem, VirtualScrollStructure } from "layout-virtual/types";
 
 type ReactRendererOptions = {
-  container: HTMLElement;
-  scrollHeightFiller: HTMLElement;
-  viewportContainer: HTMLElement;
-  scrollCanvas: HTMLElement;
-  topSpacer: HTMLElement;
-  contentLayer: HTMLElement;
-  bottomSpacer: HTMLElement;
   itemsSetter: React.Dispatch<React.SetStateAction<React.ReactNode[]>>;
-}
+} & VirtualScrollStructure;
 
 interface IReactRenderer {
   commit: () => void;
@@ -50,26 +41,7 @@ export default class ReactRenderer implements IRangeRenderer, IReactRenderer {
   }
 
   constructor(opts: ReactRendererOptions) {
-    const container = opts.container;
-    const scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller], opts.scrollHeightFiller);
-    const viewportContainer = new DOMConstructor(container, [classes.viewportContainer], opts.viewportContainer);
-    const scrollCanvas = new DOMConstructor(viewportContainer.DOMRoot, [classes.scrollCanvas], opts.scrollCanvas);
-    const topSpacer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.topSpacer], opts.topSpacer);
-    const contentLayer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.contentLayer], opts.contentLayer);
-    const bottomSpacer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.bottomSpacer], opts.bottomSpacer);
-    
-    opts.container.classList.add(classes.scrollableContainer);
-
-    this._scrollableContainer = new ScrollableContainer({ 
-      container, 
-      scrollHeightFiller, 
-      viewportContainer, 
-      scrollCanvas, 
-      topSpacer, 
-      contentLayer, 
-      bottomSpacer,
-    });
-
+    this._scrollableContainer = new ScrollableContainer({ ...opts });
     this._itemsSetter = opts.itemsSetter;
   }
 

@@ -5,10 +5,8 @@
  */
 
 import { nextTick, type Ref, type VNodeChild } from 'vue';
-import DOMConstructor from './DOMConstructor';
-import ScrollableContainer from './NativeScrollContainer';
-import type { IItem, IItemStore, IRangeRenderer, ScrollDirection } from '../types/types';
-import classes from './NativeScrollContainer.module.css';
+import { ScrollableContainer } from 'layout-virtual';
+import type { IItem, IItemStore, IRangeRenderer, ScrollDirection, VirtualScrollStructure } from 'layout-virtual/types';
 
 export interface ListItemProps<T = unknown> {
   data: T;
@@ -16,15 +14,8 @@ export interface ListItemProps<T = unknown> {
 }
 
 type VueRendererOptions<T> = {
-  container: HTMLElement;
-  scrollHeightFiller: HTMLElement;
-  viewportContainer: HTMLElement;
-  scrollCanvas: HTMLElement;
-  topSpacer: HTMLElement;
-  contentLayer: HTMLElement;
-  bottomSpacer: HTMLElement;
   itemsSetter: (items: ListItemProps<T>[]) => void;
-};
+} & VirtualScrollStructure;
 
 export type VueListItem<T = unknown> = {
   data: T;
@@ -58,26 +49,7 @@ export default class VueRenderer<T> implements IRangeRenderer<T> {
   }
 
   constructor(opts: VueRendererOptions<T>) {
-    const { container } = opts;
-    const scrollHeightFiller = new DOMConstructor(container, [classes.scrollHeightFiller!], opts.scrollHeightFiller);
-    const viewportContainer = new DOMConstructor(container, [classes.viewportContainer!], opts.viewportContainer);
-    const scrollCanvas = new DOMConstructor(viewportContainer.DOMRoot, [classes.scrollCanvas!], opts.scrollCanvas);
-    const topSpacer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.topSpacer!], opts.topSpacer);
-    const contentLayer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.contentLayer!], opts.contentLayer);
-    const bottomSpacer = new DOMConstructor(scrollCanvas.DOMRoot, [classes.bottomSpacer!], opts.bottomSpacer);
-
-    container.classList.add(classes.scrollableContainer!);
-
-    this._scrollableContainer = new ScrollableContainer({
-      container,
-      scrollHeightFiller,
-      viewportContainer,
-      scrollCanvas,
-      topSpacer,
-      contentLayer,
-      bottomSpacer,
-    });
-
+    this._scrollableContainer = new ScrollableContainer({ ...opts });
     this._itemsSetter = opts.itemsSetter;
   }
 

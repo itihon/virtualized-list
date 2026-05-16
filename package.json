@@ -5,7 +5,7 @@
     "dev:app": "npm run dev -w app",
     "build:app": "npm run build -w app",
     "preview:app": "npm run preview -w app",
-    "build": "npm run build:bundle && npm run build:types",
+    "build:ws": "npm run build --workspaces",
     "build:types": "tsc --emitDeclarationOnly",
     "build:bundle": "vite build",
     "build:demo": "vite build -c vite.demo.config.js -m DEMO_BUILD",

@@ -14,6 +14,8 @@ export default defineConfig(({ mode }) => {
       plugins: [vue()],
     };
   } else {
+    console.log('building app workspace...');
+
     return {
       root: "src",
       plugins: [vue()],

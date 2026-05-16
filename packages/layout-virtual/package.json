@@ -1,7 +1,7 @@
 {
   "name": "layout-virtual",
   "version": "0.0.1",
-  "description": "Virtualization engine for responsive lists and grids with dynamic item sizes. Includes the core layout virtualizer and DOM renderer.",
+  "description": "Virtualization engine for scrollable responsive lists and grids with dynamic item sizes. Includes the core layout virtualizer and DOM renderer.",
   "keywords": [
     "virtual",
     "virtualized",
@@ -38,7 +38,8 @@
     }
   },
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "build": "vite build"
   },
   "devDependencies": {}
 }

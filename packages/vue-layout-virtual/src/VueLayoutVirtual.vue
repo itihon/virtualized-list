@@ -7,10 +7,8 @@
 <script setup lang="ts" generic="T">
 import { type Ref } from 'vue';
 import { onMounted, onUpdated, ref, useSlots } from 'vue';
-import VirtualizedList from './VirtualizedList';
-import VueRenderer, { type ListItemProps } from '../Renderer/VueRenderer';
-import DynamicListLayout from '../Layout/DynamicListLayout';
-import ArrayItemStore from '../ItemStore/ArrayItemStore';
+import VirtualizedList, { DynamicListLayout, ArrayItemStore } from 'layout-virtual';
+import VueRenderer, { type ListItemProps } from './VueRenderer';
 
 export interface VirtualizedListVueProps<T> {
   scrollerRef?: Ref<HTMLDivElement>;

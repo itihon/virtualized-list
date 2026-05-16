@@ -98,6 +98,16 @@ export interface IRangeRenderer<T = unknown> {
   scrollableContainer: ScrollableContainer;
 }
 
+export type VirtualScrollStructure = {
+  container: HTMLElement;
+  scrollHeightFiller: HTMLElement;
+  viewportContainer: HTMLElement;
+  scrollCanvas: HTMLElement;
+  topSpacer: HTMLElement;
+  contentLayer: HTMLElement;
+  bottomSpacer: HTMLElement;
+}
+
 export interface IScrollableContainerEvents {
   onResize: (width: number, height: number) => void;
   onScroll: (position: number, direction: ScrollDirection, scrollDelta: number) => void;

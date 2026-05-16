@@ -18,11 +18,9 @@ import {
   inject,
 } from '@angular/core';
 import type { AfterViewInit } from '@angular/core';
-import type { IItem, IRangeRenderer } from '../types/types';
-import VirtualizedList from './VirtualizedList';
+import type { IItem, IRangeRenderer } from 'layout-virtual/types';
+import VirtualizedList, { DynamicListLayout, ArrayItemStore } from 'layout-virtual';
 import AngularRenderer, { type ListItemProps } from './AngularRenderer';
-import DynamicListLayout from '../Layout/DynamicListLayout';
-import ArrayItemStore from '../ItemStore/ArrayItemStore';
 
 export type VirtualizedListItemContext<T> = ListItemProps<T> & {
   $implicit: T;
