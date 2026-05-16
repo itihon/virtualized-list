@@ -5,10 +5,13 @@ import "../styles.css";
 
 @Component({
   selector: "app-root",
+  standalone: true,
   template: "<main><h1>Hello world</h1></main>",
 })
 class AppComponent {}
 
 bootstrapApplication(AppComponent, {
   providers: [provideZonelessChangeDetection()],
+}).catch((error: unknown) => {
+  console.error(error);
 });
