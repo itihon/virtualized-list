@@ -1,37 +1,6 @@
 {
-  "name": "@itihon/virtualized-list",
-  "version": "0.0.1",
-  "description": "A virtualized list powered by AVL-tree and based on Web Components API",
-  "homepage": "https://itihon.github.io/virtualized-list/",
-  "keywords": [
-    "virtualized",
-    "virtualized-list",
-    "window",
-    "windowing"
-  ],
-  "author": "Alexandr Kalabin",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/itihon/virtualized-list.git"
-  },
-  "bugs": {
-    "url": "https://github.com/itihon/virtualized-list/issues"
-  },
-  "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "browser": "dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
+  "name": "layout-virtual-monorepo",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "npm run build:bundle && npm run build:types",
