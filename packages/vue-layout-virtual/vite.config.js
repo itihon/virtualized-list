@@ -6,6 +6,7 @@ export default defineConfig({
   build: {
     copyPublicDir: false,
     emptyOutDir: true,
+    minify: "terser",
     lib: {
       entry: resolve(import.meta.dirname, "src/index.ts"),
       fileName: "index",
@@ -13,6 +14,14 @@ export default defineConfig({
     },
     rollupOptions: {
       external: ["layout-virtual", "vue"],
+    },
+    terserOptions: {
+      mangle: {
+        properties: {
+          keep_quoted: true,
+          regex: /^_/,
+        },
+      },
     },
   },
   plugins: [vue()],

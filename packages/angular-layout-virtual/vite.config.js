@@ -5,6 +5,7 @@ export default defineConfig({
   build: {
     copyPublicDir: false,
     emptyOutDir: true,
+    minify: "terser",
     lib: {
       entry: resolve(import.meta.dirname, "src/index.ts"),
       fileName: "index",
@@ -12,6 +13,14 @@ export default defineConfig({
     },
     rollupOptions: {
       external: ["layout-virtual", /@angular\/.*/],
+    },
+    terserOptions: {
+      mangle: {
+        properties: {
+          keep_quoted: true,
+          regex: /^_/,
+        },
+      },
     },
   },
 });

@@ -6,10 +6,19 @@ export default defineConfig({
   build: {
     copyPublicDir: false,
     emptyOutDir: true,
+    minify: "terser",
     lib: {
       entry: resolve(import.meta.dirname, "src/index.ts"),
       fileName: "index",
       formats: ["es"],
+    },
+    terserOptions: {
+      mangle: {
+        properties: {
+          keep_quoted: true,
+          regex: /^_/,
+        },
+      },
     },
   },
   css: {
