@@ -11,7 +11,7 @@ export default defineConfig({
       formats: ["es"],
     },
     rollupOptions: {
-      external: ["layout-virtual", "@angular", "@angular/*"],
+      external: ["layout-virtual", /@angular\/.*/],
     },
   },
 });
