@@ -17,7 +17,7 @@
     "layout-virtual": "0.0.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-layout-virtual": "0.0.1",
+    "react-layout-virtual": "^0.0.2",
     "rxjs": "^7.8.2",
     "vue": "^3.5.34",
     "vue-layout-virtual": "0.0.1"
