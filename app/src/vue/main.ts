@@ -1,4 +1,4 @@
 import { createApp } from "vue";
-import HelloWorld from "./HelloWorld.vue";
+import VirtualizedList from "./script.vue";
 
-createApp(HelloWorld).mount("#app");
+createApp(VirtualizedList).mount("#app");
