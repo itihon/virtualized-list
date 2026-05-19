@@ -1,6 +1,6 @@
 {
   "name": "angular-layout-virtual",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Angular virtual scrolling component for responsive lists and grids with dynamic item sizes.",
   "keywords": [
     "virtual",
