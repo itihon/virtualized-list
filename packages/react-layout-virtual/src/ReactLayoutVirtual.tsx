@@ -24,7 +24,8 @@ export interface VirtualizedListReactProps<T> {
 
 export default function VirtualizedListReact<T>(props: VirtualizedListReactProps<T>) {
   const { overscanHeight = 200, data, renderItem, scrollerRef } = props;
-  const containerRef = scrollerRef || useRef<HTMLDivElement>(null);
+  const internalContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = scrollerRef ?? internalContainerRef;
   const scrollHeightFillerRef = useRef<HTMLDivElement>(null);
   const viewportContainerRef = useRef<HTMLDivElement>(null);
   const scrollCanvasRef = useRef<HTMLDivElement>(null);
