@@ -49,3 +49,15 @@ a {
 a:hover {
   border-color: #0b5cad;
 }
+
+.list-item {
+  outline: 1px solid lightgray;
+}
+
+main > *:first-child {
+  border: 16px solid gray;
+  resize: vertical;
+  width: 200px;
+  height: 300px;
+  overflow-y: auto;
+}
