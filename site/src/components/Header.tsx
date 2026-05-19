@@ -1,5 +1,6 @@
 import { githubUrl } from "../config/site";
 import type { Example, Framework, Page } from "../types";
+import { HeaderNav } from "./HeaderNav";
 
 type HeaderProps = {
   currentPage: Page["name"];
@@ -16,9 +17,6 @@ export function Header({
   examplesByFramework,
   onNavigate,
 }: HeaderProps) {
-  const currentExamples = examplesByFramework[currentFramework] ?? [];
-  const firstExampleSlug = currentExamples[0]?.slug ?? "example-1";
-
   return (
     <header className="site-header">
       <div className="header-inner">
@@ -29,45 +27,13 @@ export function Header({
         <a className="github-link" href={githubUrl} rel="noreferrer" target="_blank">
           GitHub
         </a>
-        <nav className="site-nav" aria-label="Primary navigation">
-          <button
-            className={currentPage === "about" ? "nav-link active" : "nav-link"}
-            type="button"
-            onClick={() => onNavigate("/")}
-          >
-            About
-          </button>
-          <div className="nav-menu">
-            <button
-              className={currentPage === "examples" ? "nav-link active" : "nav-link"}
-              type="button"
-              onClick={() => onNavigate(`/examples/${currentFramework}/${firstExampleSlug}`)}
-            >
-              Examples
-            </button>
-            <div className="nav-menu-panel">
-              {currentExamples.map((example) => (
-                <button
-                  className={
-                    currentExampleSlug === example.slug ? "menu-link active" : "menu-link"
-                  }
-                  key={example.slug}
-                  type="button"
-                  onClick={() => onNavigate(`/examples/${currentFramework}/${example.slug}`)}
-                >
-                  {example.title}
-                </button>
-              ))}
-            </div>
-          </div>
-          <button
-            className={currentPage === "api" ? "nav-link active" : "nav-link"}
-            type="button"
-            onClick={() => onNavigate(`/API/${currentFramework}`)}
-          >
-            API
-          </button>
-        </nav>
+        <HeaderNav
+          currentPage={currentPage}
+          currentFramework={currentFramework}
+          currentExampleSlug={currentExampleSlug}
+          examplesByFramework={examplesByFramework}
+          onNavigate={onNavigate}
+        />
       </div>
     </header>
   );
