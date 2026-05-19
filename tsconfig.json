@@ -32,5 +32,5 @@
   "angularCompilerOptions": {
     "strictTemplates": true
   },
-  "include": ["src/**/*", "app/**/*", "packages/**/*"]
+  "include": ["src/**/*", "app/**/*", "site/**/*", "packages/**/*"]
 }
