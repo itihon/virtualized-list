@@ -29,7 +29,7 @@ export function ExamplesPage({
     <section className="content-section page-section">
       <div className="section-heading">
         <p className="eyebrow">Examples</p>
-        <h1>{activeExample.title}</h1>
+        <h2>{activeExample.title}</h2>
       </div>
       <FrameworkTabs selectedFramework={selectedFramework} onSelectFramework={onSelectFramework} />
       <div className="example-layout">

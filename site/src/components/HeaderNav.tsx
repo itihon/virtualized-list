@@ -16,8 +16,7 @@ export function HeaderNav({
   onNavigate,
 }: HeaderNavProps) {
   const currentExamples = examplesByFramework[currentFramework] ?? [];
-  const firstExampleSlug = currentExamples[0]?.slug ?? "example-1";
-
+  
   return (
     <nav className="site-nav" aria-label="Primary navigation">
       <button
@@ -31,7 +30,6 @@ export function HeaderNav({
         <button
           className={currentPage === "examples" ? "nav-link active" : "nav-link"}
           type="button"
-          onClick={() => onNavigate(`/examples/${currentFramework}/${firstExampleSlug}`)}
         >
           Examples
         </button>

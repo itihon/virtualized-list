@@ -12,7 +12,7 @@ export function ApiPage({ selectedFramework, onSelectFramework }: ApiPageProps) 
     <section className="content-section page-section">
       <div className="section-heading">
         <p className="eyebrow">API</p>
-        <h1>{frameworkLabels[selectedFramework]} API</h1>
+        <h2>{frameworkLabels[selectedFramework]} API</h2>
       </div>
       <FrameworkTabs selectedFramework={selectedFramework} onSelectFramework={onSelectFramework} />
       <div className="api-placeholder">
