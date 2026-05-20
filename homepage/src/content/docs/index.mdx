@@ -1,0 +1,66 @@
+---
+title: Virtualization has never been easier.
+description: Framework agnostic virtualized layout.
+template: splash # Remove or comment out this line to display the site sidebar on this page.
+hero:
+  tagline: Layout Virtual renders dynamic lists and responsive grids without making application code measure item heights, predict layout, or reshape content for a special container.
+  image:
+    file: ../../assets/hero-image-1.png
+  actions:
+    - text: View examples
+      link: /examples/
+      icon: right-arrow
+    - text: Source on GitHub
+      link: https://github.com/itihon/layout-virtual
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Installation
+
+<Tabs syncKey='frameworks'>
+  <TabItem label="JS / TS" icon='third-party:ts'>
+    ```bash
+    npm install layout-virtual
+    ``` 
+  </TabItem>
+  <TabItem label="React" icon='third-party:react'>
+    ```bash
+    npm install react-layout-virtual
+    ``` 
+  </TabItem>
+  <TabItem label="Vue" icon='third-party:vue'>
+    ```bash
+    npm install vue-layout-virtual
+    ``` 
+  </TabItem>
+  <TabItem label="Angular" icon='third-party:angular'>
+    ```bash
+    npm install angular-layout-virtual
+    ``` 
+  </TabItem>
+</Tabs>
+
+## Next steps
+
+<CardGrid stagger>
+	<Card title="Update content" icon="pencil">
+		Edit `src/content/docs/index.mdx` to see this page change.
+	</Card>
+	<Card title="Change page layout" icon="document">
+		Delete `template: splash` in `src/content/docs/index.mdx` to display a
+		sidebar on this page.
+	</Card>
+	<Card title="Add new content" icon="add-document">
+		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	</Card>
+	<Card title="Configure your site" icon="setting">
+		Edit your `sidebar` and other config in `astro.config.mjs`.
+	</Card>
+	<Card title="Read the docs" icon="open-book">
+		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	</Card>
+</CardGrid>

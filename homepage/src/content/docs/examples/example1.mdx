@@ -1,0 +1,39 @@
+---
+title: Example 1
+description: A reference page in my new Starlight docs site.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Installation
+
+<Tabs syncKey='frameworks'>
+  <TabItem label="JS / TS" icon='third-party:ts'>
+    ```bash
+    npm install layout-virtual
+    ``` 
+  </TabItem>
+  <TabItem label="React" icon='third-party:react'>
+    ```bash
+    npm install react-layout-virtual
+    ``` 
+  </TabItem>
+  <TabItem label="Vue" icon='third-party:vue'>
+    ```bash
+    npm install vue-layout-virtual
+    ``` 
+  </TabItem>
+  <TabItem label="Angular" icon='third-party:angular'>
+    ```bash
+    npm install angular-layout-virtual
+    ``` 
+  </TabItem>
+</Tabs>
+
+Reference pages are ideal for outlining how things work in terse and clear terms.
+Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what you're documenting.
+
+## Further reading
+
+- Read [about reference](https://diataxis.fr/reference/) in the Diátaxis framework
