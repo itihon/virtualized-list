@@ -16,8 +16,13 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
-import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { 
+  Card, 
+  CardGrid, 
+  Tabs, 
+  TabItem, 
+  LinkCard, 
+} from '@astrojs/starlight/components';
 
 ## Installation
 
@@ -44,23 +49,51 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   </TabItem>
 </Tabs>
 
-## Next steps
+## Features
+
+#### Built for content that refuses to stay one size
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="Dynamic heights" icon="pencil">
+		Items render naturally, then the layout adapts as their measured size changes.
 	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
+	<Card title="Responsive grids" icon="document">
+    A list can become a grid as the container grows, without manual row math.
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="Framework adapters" icon="add-document">
+		Use the core engine directly or reach for React, Vue, and Angular packages.
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
+	<Card title="Window scrolling" icon="setting">
+    Virtualize inside a local scroller or coordinate with the document viewport.
 	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
+</CardGrid>
+
+## Use cases
+
+<CardGrid>
+  <LinkCard
+    title="Unknown height article feeds"
+    href="/guides/i18n/"
+    description="No need to crop article titles and adjust all cards to one fixed size."
+  />
+  <LinkCard
+    title="Contact lists with sticky groups"
+    href="/guides/i18n/"
+    description="Group list items easily."
+  />
+  <LinkCard
+    title="Chat messages and live insertion"
+    href="/guides/i18n/"
+    description="A list with scroll to bottom functionality."
+  />
+  <LinkCard
+    title="Grids with dynamic row heights and column number"
+    href="/guides/i18n/"
+    description="No need to calculate rows and columns manually."
+  />
+  <LinkCard
+    title="Lazy loaded ranges at arbitrary scroll position"
+    href="/guides/i18n/"
+    description="Not necessary to load all items before the user reaches intended scroll position."
+  />
 </CardGrid>

@@ -9,6 +9,7 @@ export default defineConfig({
       favicon: './src/assets/hero-image-1.png',
 			title: 'Layout virtual',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/itihon/layout-virtual' }],
+      pagefind: false,
 			sidebar: [
 				{
 					label: 'Examples',
